@@ -5,7 +5,6 @@ import collections
 import hashlib
 
 import imagehash
-import cv2
 import numpy as np
 from PIL import Image as PIL_Img
 
@@ -13,7 +12,7 @@ from hamming_distance import hamming_distance
 from model import Image, Tag, Session
 
 
-path = '/home/andrei/Pictures/'
+path = '/home/andrei/Downloads/Telegram Desktop/DataExport_06_12_2018/chats/chat_001/photos/'
 # precompiled regex to get file extension
 file_extension_re = re.compile('([.]\w{3,4}$)')
 
@@ -67,13 +66,13 @@ def index_folder_files(path: str)->list:
     for index, meme_file in enumerate(memes_files):
         # check if file - image
         if is_image(meme_file):
-            # open image file and convert it to grayscale
-            img = cv2.imread(path+meme_file, 0)
-            # resize image
-            resized_image = cv2.resize(img, (9,8))
-            
-            # get image dhash
-            hash_result = dhash(resized_image)
+            # open image
+            img = PIL_Img.open(path+meme_file)
+            # resize image to 20*19 format
+            img.thumbnail(size=(9,8))
+            img.convert('LA')
+            # get image hash
+            hash_result = str(imagehash.dhash(img))
 
             result_image_dict.update({
                                         index: {
@@ -98,6 +97,7 @@ def save_files(indexed_files: collections.defaultdict, file_type: str):
     if file_type=='image':
         print('Save images files to DB')
         for _, image_data in indexed_files.items():
+            break
             session.add(Image(image_path=path+image_data['name'],
                               image_dhash=image_data['dhash'],
                               image_md5_hash=image_data['md5_hash'],
@@ -118,7 +118,7 @@ image_pairs_list = collections.deque((first, second) for first in result_image_d
 
 save_files(result_image_dict, 'image')
 save_files(result_video_dict, 'video')
-
+'''
 for pair in image_pairs_list:
     result = hamming_distance(first_hash=result_image_dict[pair[0]]['dhash'], 
                               second_hash=result_image_dict[pair[1]]['dhash'])
@@ -127,6 +127,6 @@ for pair in image_pairs_list:
         print(result_image_dict[pair[1]]['name'])
         print('Image similarity (low is better) - ', result)
         print('\n')
-
+'''
 
 print(f'Needed time for {len(result_image_dict)} images - {time.time()-start_time}')
