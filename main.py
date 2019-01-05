@@ -5,6 +5,8 @@ import collections
 import hashlib
 
 import imagehash
+import cv2
+import numpy as np
 from PIL import Image as PIL_Img
 
 from hamming_distance import hamming_distance
@@ -23,11 +25,12 @@ def is_image(file_name: str)->bool:
     file_extension = re.findall(file_extension_re, file_name.lower())
 
     if file_extension:
-        return True if file_extension[0] in (".png", ".jpg", ".jpeg", ".bmp", ".gif") else False
+        return True if file_extension[0] in (".png", ".jpg", ".jpeg", ".bmp", '.jpe', '.dib') else False
     else:
         return False
 
 def is_video(file_name: str)->bool:
+
     """
     Function check if file is image
     """
@@ -38,6 +41,14 @@ def is_video(file_name: str)->bool:
         return True if file_extension[0] in (".mp4", ".webm") else False
     else:
         return False
+
+def dhash(image): 
+	# compute the (relative) horizontal gradient between adjacent
+	# column pixels
+	diff = image[:, 1:] > image[:, :-1]
+ 
+	# convert the difference image to a hash
+	return str(sum([2 ** i for (i, v) in enumerate(diff.flatten()) if v]))
 
 def index_folder_files(path: str)->list:
     """
@@ -57,11 +68,12 @@ def index_folder_files(path: str)->list:
         # check if file - image
         if is_image(meme_file):
             # open image file and convert it to grayscale
-            img = PIL_Img.open(path+meme_file).convert('LA')
-            # resize image to 20*19 format
-            img.thumbnail(size=(20,19))
-            # get image hash
-            hash_result = str(imagehash.dhash(img))
+            img = cv2.imread(path+meme_file, 0)
+            # resize image
+            resized_image = cv2.resize(img, (9,8))
+            
+            # get image dhash
+            hash_result = dhash(resized_image)
 
             result_image_dict.update({
                                         index: {
@@ -102,13 +114,11 @@ start_time = time.time()
 
 result_image_dict, result_video_dict = index_folder_files(path=path)
 
-print(result_image_dict)
-
 image_pairs_list = collections.deque((first, second) for first in result_image_dict for second in result_image_dict if first != second)
 
 save_files(result_image_dict, 'image')
 save_files(result_video_dict, 'video')
-'''
+
 for pair in image_pairs_list:
     result = hamming_distance(first_hash=result_image_dict[pair[0]]['dhash'], 
                               second_hash=result_image_dict[pair[1]]['dhash'])
@@ -117,6 +127,6 @@ for pair in image_pairs_list:
         print(result_image_dict[pair[1]]['name'])
         print('Image similarity (low is better) - ', result)
         print('\n')
-'''
+
 
 print(f'Needed time for {len(result_image_dict)} images - {time.time()-start_time}')
