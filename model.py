@@ -32,16 +32,13 @@ class Image(Base):
     image_dhash = Column(String(200))
     # image md5 hash
     image_md5_hash = Column(String(200))
-    # image size
-    image_size = Column(Integer, default=0)
     # image tags
     image_tags = relationship('Tag', secondary=association_table, backref="images")
     
-    def __init__(self, image_path, image_dhash, image_md5_hash, image_size):
+    def __init__(self, image_path, image_dhash, image_md5_hash):
         self.image_path = image_path
         self.image_dhash = image_dhash
         self.image_md5_hash = image_md5_hash
-        self.image_size = image_size
 
 class Tag(Base):
     """
