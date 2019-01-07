@@ -1,14 +1,17 @@
 import time
 import collections
+import sqlite3
 
+import sqlalchemy
 from image_processing import hamming_distance
 from model import Image, Tag, Session
-from indexing import index_folder_files
+from indexing import index_folder_files, index_folders
 from image_processing import image_processing
 
 
-path = '/home/andrei/Downloads/Telegram Desktop/DataExport_06_12_2018/chats/chat_001/photos/'
+#path = '/home/andrei/Downloads/Telegram Desktop/DataExport_06_12_2018/chats/chat_001/photos/'
 #path = '/home/andrei/Pictures/'
+path = '/home/andrei/Documents/My Drawings/'
 
 def save_files(indexed_files: collections.defaultdict, file_type: str):
     """
@@ -20,18 +23,24 @@ def save_files(indexed_files: collections.defaultdict, file_type: str):
     """
     session = Session()
 
-    if file_type=='image':
-        for _, image_data in indexed_files.items():
-            session.add(Image(image_path=path+image_data['name'],
-                              image_dhash=image_data['dhash'],
-                              image_md5_hash=image_data['md5_hash'])
-                        )
-        print('Image saved to DB')
-    elif file_type=='video':
-        print('Save video files to DB')
+    try:
+        if file_type=='image':
+            for _, image_data in indexed_files.items():
+                session.add(Image(image_path=path+image_data['name'],
+                                  image_dhash=image_data['dhash'],
+                                  image_md5_hash=image_data['md5_hash'])
+                                 )
 
-    session.commit()
-    session.close()
+            print('Image saved to DB')
+        elif file_type=='video':
+            print('Save video files to DB')
+
+        session.commit()
+
+    except Exception as err:
+        print(err)
+    finally:
+        session.close()
 
 start_time = time.time()
 

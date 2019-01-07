@@ -31,7 +31,7 @@ class Image(Base):
     # image dhash
     image_dhash = Column(String(200))
     # image md5 hash
-    image_md5_hash = Column(String(200))
+    image_md5_hash = Column(String(200), unique=True)
     # image tags
     image_tags = relationship('Tag', secondary=association_table, backref="images")
     
