@@ -5,12 +5,13 @@ import imagehash
 from PIL import Image as PIL_Img
 
 
-def image_processing(image_list: collections.deque, path: str)->collections.defaultdict:
+def image_processing(image_list: collections.deque)->collections.defaultdict:
     """
     Function preprocess image files, count hash, dhash and return files info in dict format
 
     :param image_list: List of images in folder
-    :param path: To folder with files
+                        0 - files name
+                        1 - file full path
 
     :return: Dict of parsed images
     """
@@ -19,7 +20,7 @@ def image_processing(image_list: collections.deque, path: str)->collections.defa
 
     for image_file in image_list:
         # open image
-        img = PIL_Img.open(path+image_file)
+        img = PIL_Img.open(image_file[1])
         # resize image to 20*19 format
         img.thumbnail(size=(9,8))
         img.convert('LA')
@@ -27,10 +28,10 @@ def image_processing(image_list: collections.deque, path: str)->collections.defa
         hash_result = str(imagehash.dhash(img))
 
         result_image_dict.update({
-                                    image_file: {
-                                        'name': image_file,
+                                    image_file[0]: {
+                                        'namepath': image_file,
                                         'dhash': hash_result,
-                                        'md5_hash': hashlib.md5(image_file.encode()).hexdigest(),
+                                        'md5_hash': hashlib.md5(image_file[0].encode()).hexdigest(),
                                     }
                                 })
     print(len(result_image_dict),' - Images processed.')
