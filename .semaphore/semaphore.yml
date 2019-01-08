@@ -15,7 +15,8 @@ blocks:
           - python3 --version
           - sudo apt install python3-pip -y
           - pip3 -V
-          - ls
+          - git clone https://github.com/AndreiDrang/SimilarMemes.git
+          - cd SimilarMemes
           - sudo pip3 install -r requirements.txt
 
       - name: QT5 install
