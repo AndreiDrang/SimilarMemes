@@ -13,9 +13,9 @@ blocks:
         commands:
           - sem-version python 3.7
           - python3 --version
-          - apt install python3-pip
+          - sudo apt install python3-pip
           - pip3 -V
-          - pip3 install -r requirements.txt
+          - pip3 install -r requirements.txt --user
 
       - name: QT5 install
         commands:
