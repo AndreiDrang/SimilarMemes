@@ -15,6 +15,7 @@ blocks:
           - python3 --version
           - sudo apt install python3-pip -y
           - pip3 -V
+          - ls
           - sudo pip3 install -r requirements.txt
 
       - name: QT5 install
