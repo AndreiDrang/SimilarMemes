@@ -4,15 +4,14 @@ import sqlite3
 
 import sqlalchemy
 from image_processing import hamming_distance
-from model import Image, Tag, Session
-from indexing import index_folder_files, index_folders
+from indexing import index_folder_files, folders_files_walk
 from image_processing import image_processing
 from models import Image
 
 
 #path = '/home/andrei/Downloads/Telegram Desktop/DataExport_06_12_2018/chats/chat_001/photos/'
 #path = '/home/andrei/Pictures/'
-path = '/home/andrei/Documents/My Drawings/'
+path = '/home/andrei/Pictures'
 
 def save_files(indexed_files: collections.defaultdict, file_type: str):
     """
@@ -22,7 +21,6 @@ def save_files(indexed_files: collections.defaultdict, file_type: str):
 
     :param file_type: Files type - `image` or `video`
     """
-    session = Session()
 
     try:
         if file_type=='image':
@@ -35,29 +33,30 @@ def save_files(indexed_files: collections.defaultdict, file_type: str):
         elif file_type=='video':
             print('Save video files to DB')
 
-        session.commit()
 
     except Exception as err:
         print(err)
-    finally:
-        session.close()
 
 start_time = time.time()
 
-# get photo and video files lists
-image_files_list, video_files_list = index_folder_files(path=path)
+files_paths = folders_files_walk(path=path)
+print(files_paths)
 
+# get photo and video files lists
+image_files_list, video_files_list = index_folder_files(files_paths=files_paths)
+print(image_files_list)
 # parse images and get dict
-result_image_dict = image_processing(image_files_list, path)
+result_image_dict = image_processing(image_files_list)
+print(result_image_dict)
 
 print('Images pairs list created')
 
 # save all images to DB
-#save_files(result_image_dict, 'image')
+save_files(result_image_dict, 'image')
 
 
 # count hamming_distance betwen images hash
-hamming_pairs = hamming_distance(images_dict=result_image_dict)
+#hamming_pairs = hamming_distance(images_dict=result_image_dict)
 
 
 print(f'Needed time for {len(result_image_dict)} images - {time.time()-start_time}')
