@@ -8,56 +8,16 @@ agent:
 blocks:
   - name: "Build"
     task:
-      env_vars:
-        - name: APP_ENV
-          value: prod
       jobs:
-      - name: Docker build
+      - name: Python requirements install
         commands:
-          - checkout
-          - ls -1
-          - echo $APP_ENV
-          - echo "Docker build..."
-          - echo "done"
+          - sem-version python 3.6
+          - python3 --version
+          - apt install python3-pip
+          - pip3 -V
+          - pip3 install -r requirements.txt
 
-  - name: "Smoke tests"
-    task:
-      jobs:
-      - name: Smoke
+      - name: QT5 install
         commands:
-          - checkout
-          - echo "make smoke"
+          - apt-get install python3-pyqt5 pyqt5-dev-tools
 
-  - name: "Unit tests"
-    task:
-      jobs:
-      - name: RSpec
-        commands:
-          - checkout
-          - echo "make rspec"
-
-      - name: Lint code
-        commands:
-          - checkout
-          - echo "make lint"
-
-      - name: Check security
-        commands:
-          - checkout
-          - echo "make security"
-
-  - name: "Integration tests"
-    task:
-      jobs:
-      - name: Cucumber
-        commands:
-          - checkout
-          - echo "make cucumber"
-
-  - name: "Push Image"
-    task:
-      jobs:
-      - name: Push
-        commands:
-          - checkout
-          - echo "make docker.push"
