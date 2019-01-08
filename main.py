@@ -6,7 +6,7 @@ import sqlalchemy
 from image_processing import hamming_distance
 from indexing import index_folder_files, folders_files_walk
 from image_processing import image_processing
-from models import Image
+from database import Image
 
 
 #path = '/home/andrei/Downloads/Telegram Desktop/DataExport_06_12_2018/chats/chat_001/photos/'
