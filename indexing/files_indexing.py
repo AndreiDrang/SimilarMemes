@@ -30,31 +30,33 @@ def is_video(file_name: str)->bool:
         return False
 
 
-def index_folder_files(path: str)->list:
+def index_folder_files(files_paths: collections.deque)->(collections.deque, collections.deque):
     """
     Function indexing image/video files in folder
 
-    :param path: Full path adress
+    :param files_paths: List of full files path adresses
+                            0 - file name
+                            1 - file full path
 
     :return: List of two lists: image files and video files
+                0 - file name
+                1 - file full path
     """
-    # get folder files
-    memes_files = os.listdir(path)
 
     # prepare video and photo files lists
     image_files_list = collections.deque()
     video_files_list = collections.deque()
 
-    for meme_file in memes_files:
+    for file_ in files_paths:
         # check if file - image
-        if is_image(meme_file):
+        if is_image(file_[0]):
             # add to image list
-            image_files_list.append(meme_file)
+            image_files_list.append(file_)
 
         # if file - video
-        elif is_video(meme_file):
+        elif is_video(file_[0]):
             # add to video list
-            video_files_list.append(meme_file)
+            video_files_list.append(file_)
 
 
     return image_files_list, video_files_list
