@@ -7,6 +7,7 @@ from image_processing import hamming_distance
 from model import Image, Tag, Session
 from indexing import index_folder_files, index_folders
 from image_processing import image_processing
+from models import Image
 
 
 #path = '/home/andrei/Downloads/Telegram Desktop/DataExport_06_12_2018/chats/chat_001/photos/'
@@ -26,10 +27,9 @@ def save_files(indexed_files: collections.defaultdict, file_type: str):
     try:
         if file_type=='image':
             for _, image_data in indexed_files.items():
-                session.add(Image(image_path=path+image_data['name'],
-                                  image_dhash=image_data['dhash'],
-                                  image_md5_hash=image_data['md5_hash'])
-                                 )
+                Image.insert_new(image_path=image_data['namepath'][1],
+                                 image_dhash=image_data['dhash'],
+                                 image_md5_hash=image_data['md5_hash'])
 
             print('Image saved to DB')
         elif file_type=='video':
