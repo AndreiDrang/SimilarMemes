@@ -1,3 +1,4 @@
 imagehash
 numpy
 pillow-simd
+pony==0.7.6
