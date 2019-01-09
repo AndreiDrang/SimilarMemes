@@ -34,6 +34,5 @@ def image_processing(image_list: collections.deque)->collections.defaultdict:
                                         'md5_hash': hashlib.md5(image_file[0].encode()).hexdigest(),
                                     }
                                 })
-    print(len(result_image_dict),' - Images processed.')
     
     return result_image_dict

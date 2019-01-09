@@ -2,13 +2,13 @@ import collections
 import itertools
 
 
-def hamming_distance(hashes_list: list)->collections.deque:
+def hamming_distance(hashes_list: collections.deque)->collections.deque:
     """
     Return the Hamming distance between equal-length sequences
 
-    :param hashes_list: List contains hashes list:
+    :param hashes_list: List contains hashes and DB image ID list:
                             0 - dhash
-                            1 - md5 unique hash
+                            1 - image unique ID
 
     :return: List of pair with hamming distance param
     """
@@ -29,7 +29,7 @@ def hamming_distance(hashes_list: list)->collections.deque:
             diff = sum(element_1 != element_2 for element_1, element_2 in zip(first_hash, second_hash))
             # if dhahs different < 10 - images ar similar
             if diff<10:
-                # get hash different
+                # save hash different
                 hamming_pairs.append((pair, diff))
 
     return hamming_pairs
