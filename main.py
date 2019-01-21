@@ -2,8 +2,8 @@ import time
 import collections
 import sqlite3
 
-import sqlalchemy
 from image_processing import hamming_distance
+from video_processing import video_processing
 from indexing import index_folder_files, folders_files_walk
 from image_processing import image_processing
 from database import save_new_files, Image, save_images_duplicates
