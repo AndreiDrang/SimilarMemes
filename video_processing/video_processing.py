@@ -7,8 +7,8 @@ def video_processing(video_list: collections.deque)->collections.defaultdict:
     """
     Function cut video file on chunks and count hash
 
-    :param video_list: List of images in folder
-                        0 - files name
+    :param video_list: List of videos in folder
+                        0 - file name
                         1 - file full path
 
     :return: Dict of parsed videos
@@ -17,6 +17,7 @@ def video_processing(video_list: collections.deque)->collections.defaultdict:
     result_video_dict = collections.defaultdict()
 
     for video in video_list:
+        print(video[0])
 
         with open(video[1], 'rb') as video_file:
 
@@ -24,7 +25,7 @@ def video_processing(video_list: collections.deque)->collections.defaultdict:
 
             while True:
                 try:
-                    buf = video_file.read(128)
+                    buf = video_file.read(1028)
                     if buf:
                         hasher.update(buf)
                     else:
@@ -37,5 +38,6 @@ def video_processing(video_list: collections.deque)->collections.defaultdict:
             print(hasher.hexdigest())
 
         # hashlib.md5(image_file[0].encode()).hexdigest()
+        print('Next video\n\n')
 
     return collections.defaultdict()
