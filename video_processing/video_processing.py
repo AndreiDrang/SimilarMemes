@@ -1,6 +1,9 @@
 import collections
 import hashlib
 
+from moviepy.editor import *
+
+from .audio_processing import audio_processing
 
 
 def video_processing(video_list: collections.deque)->collections.defaultdict:
@@ -19,6 +22,15 @@ def video_processing(video_list: collections.deque)->collections.defaultdict:
     for video in video_list:
         print(video[0])
 
+        # read video from file
+        video_clip = VideoFileClip(video[1])
+        # try get audio from readed video
+        audio_clip = video_clip.audio
+
+        # if sound exist in video_clip - send it to processing
+        if audio_clip:
+            audio_processing(audio_clip)
+
         with open(video[1], 'rb') as video_file:
 
             hasher = hashlib.md5()
@@ -33,9 +45,6 @@ def video_processing(video_list: collections.deque)->collections.defaultdict:
                 except Exception as err:
                     print(err)
                     break
-                print(hasher.hexdigest())
-
-            print(hasher.hexdigest())
 
         # hashlib.md5(image_file[0].encode()).hexdigest()
         print('Next video\n\n')

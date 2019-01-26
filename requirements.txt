@@ -2,3 +2,4 @@ imagehash
 numpy
 pillow-simd
 pony
+moviepy==0.2.3.5
