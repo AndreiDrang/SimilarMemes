@@ -1,6 +1,4 @@
 import time
-import collections
-import sqlite3
 
 from image_processing import hamming_distance
 from video_processing import video_processing
