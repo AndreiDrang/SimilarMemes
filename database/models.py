@@ -39,7 +39,7 @@ class Image(db.Entity):
 
     @staticmethod
     @db_session(retry=3)
-    def get_dhash_id()->core.Query:
+    def get_dhash_id()->collections.deque:
         return collections.deque(select((image.image_dhash, image.id) for image in Image)[:])
 
 class Video(db.Entity):

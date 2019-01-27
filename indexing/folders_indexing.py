@@ -10,7 +10,7 @@ def get_depth(start_path: str, end_path: str):
     return depth
 
 
-def folders_files_walk(path: str, max_depth: int = 3)->list:
+def folders_files_walk(path: str, max_depth: int = 3)->collections.deque:
     """
     Function walking trought folder and indexing image/video files
 
