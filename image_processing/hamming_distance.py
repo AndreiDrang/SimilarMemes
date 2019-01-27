@@ -1,6 +1,8 @@
 import collections
 import itertools
 
+from .settings import get_settings
+
 
 def hamming_distance(hashes_list: collections.deque)->collections.deque:
     """
@@ -12,6 +14,7 @@ def hamming_distance(hashes_list: collections.deque)->collections.deque:
 
     :return: List of pair with hamming distance param
     """
+    HAMMING_PARAM = get_settings()['hamming_param']
     # make unique photo files combinations
     images_pairs = itertools.combinations(hashes_list, 2)
 
@@ -28,7 +31,7 @@ def hamming_distance(hashes_list: collections.deque)->collections.deque:
             # count dhash different
             diff = sum(element_1 != element_2 for element_1, element_2 in zip(first_hash, second_hash))
             # if dhahs different < 10 - images ar similar
-            if diff<10:
+            if diff<HAMMING_PARAM:
                 # save hash different
                 hamming_pairs.append((pair, diff))
 
