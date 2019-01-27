@@ -1,9 +1,10 @@
+import os
 import collections
 import hashlib
 
-from moviepy.editor import *
 
 from .audio_processing import audio_processing
+from .settings import get_settings
 
 
 def video_processing(video_list: collections.deque)->collections.defaultdict:
@@ -19,34 +20,33 @@ def video_processing(video_list: collections.deque)->collections.defaultdict:
     # prepare result dict
     result_video_dict = collections.defaultdict()
 
+    # video parts amount to separate
+    video_parts = get_settings()['video_parts']
+
+    print(video_list)
     for video in video_list:
         print(video[0])
+        # get video size and separate on `video_parts` parts and read them + get video parts hash
+        read_byte_step = os.path.getsize(video[1])//video_parts+1
 
-        # read video from file
-        video_clip = VideoFileClip(video[1])
-        # try get audio from readed video
-        audio_clip = video_clip.audio
-
-        # if sound exist in video_clip - send it to processing
-        if audio_clip:
-            audio_processing(audio_clip)
-
+        # read video file
         with open(video[1], 'rb') as video_file:
-
+            # prepare hash
             hasher = hashlib.md5()
 
             while True:
-                try:
-                    buf = video_file.read(1028)
-                    if buf:
-                        hasher.update(buf)
-                    else:
-                        break
-                except Exception as err:
-                    print(err)
+                # strip file bytes by prepared `read_byte_step`
+                buf = video_file.read(read_byte_step)
+                # if bytes is available - insert in hash
+                if buf:
+                    hasher.update(buf)
+                # if file is ended - stop reading
+                else:
                     break
 
-        # hashlib.md5(image_file[0].encode()).hexdigest()
+                # TODO write hash-data to DB
+                print(hasher.hexdigest())
+
         print('Next video\n\n')
 
     return collections.defaultdict()
