@@ -30,7 +30,7 @@ def hamming_distance(hashes_list: collections.deque)->collections.deque:
         else:
             # count dhash different
             diff = sum(element_1 != element_2 for element_1, element_2 in zip(first_hash, second_hash))
-            # if dhahs different < 10 - images ar similar
+            # if dhahs different < HAMMING_PARAM(presetted param) - images ar similar
             if diff<HAMMING_PARAM:
                 # save hash different
                 hamming_pairs.append((pair, diff))
