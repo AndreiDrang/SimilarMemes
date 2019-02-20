@@ -6,7 +6,7 @@ from .settings import get_settings
 
 def hamming_distance(hashes_list: collections.deque)->collections.deque:
     """
-    Return the Hamming distance between equal-length sequences
+    Return the images pairs with `good`(distance < preseted param) Hamming distance
 
     :param hashes_list: List contains hashes and DB image ID list:
                             0 - dhash
