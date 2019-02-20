@@ -1,3 +1,4 @@
 {
-    "hamming_param": 10
+    "hamming_param": 10,
+    "feature_description": 60
 }
