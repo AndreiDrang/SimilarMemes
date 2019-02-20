@@ -6,11 +6,11 @@ from pony.orm import *
 db = Database()
 
 db.bind(provider='postgres', 
-        user='vkbot_admin', 
-        password='vkbot_pass', 
-        #host='80.211.243.157', 
-        host='localhost',
-        database='vkbot')
+        user='vkbot_user',
+        password='vkbot_password',
+        host='85.255.8.26',
+        #host='localhost',
+        database='vkbot_db')
 
 
 class Image(db.Entity):
