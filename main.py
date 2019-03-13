@@ -1,6 +1,6 @@
 import time
 
-from indexing import index_folder_files, folders_files_walk
+from indexing import index_folder_files
 from image_processing import hamming_distance, image_processing, feature_description
 from video_processing import video_processing
 from database import save_new_files, Image, save_images_duplicates
@@ -9,20 +9,26 @@ from database import save_new_files, Image, save_images_duplicates
 
 
 #path = '/home/andrei/Downloads/Telegram Desktop/DataExport_06_12_2018/chats/chat_001/photos'
-path = '/home/andrey.rachalovsky/Pictures'
+path = '/home/andrei/Pictures'
 
 
 
 start_time = time.time()
 
-files_paths = folders_files_walk(path=path)
-
 print('Folders walked')
 print(time.time()-start_time)
 
 # get photo and video files lists
-image_files_list, video_files_list = index_folder_files(files_paths=files_paths)
+image_files_list, video_files_list = index_folder_files(
+                                            path=path, 
+                                            max_depth=4,
+                                            indexing_type='all'
+                                        )
 
+print(image_files_list)
+print(video_files_list)
+
+time.sleep(50)
 #print('Images indexed')
 
 
