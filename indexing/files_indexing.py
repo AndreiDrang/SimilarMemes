@@ -1,8 +1,4 @@
-from indexing import os, collections, re
-
-
-# precompiled regex to get file extension
-FILE_EXTENSION_RE = re.compile('([.]\w{3,4}$)')
+from indexing import os, collections, re, IMAGE_FORMATS, VIDEO_FORMATS, FILE_EXTENSION_RE
 
 
 def is_image(file_name: str)->bool:
@@ -10,10 +6,10 @@ def is_image(file_name: str)->bool:
     Function check if file is image
     """
     # get file extension by regex
-    file_extension = re.findall(FILE_EXTENSION_RE, file_name.lower())
+    file_extension = re.findall(re.compile(FILE_EXTENSION_RE), file_name.lower())
 
     if file_extension:
-        return True if file_extension[0] in (".png", ".jpg", ".jpeg", ".bmp", '.jpe', '.dib', '.gif') else False
+        return True if file_extension[0] in IMAGE_FORMATS else False
     else:
         return False
 
@@ -22,10 +18,10 @@ def is_video(file_name: str)->bool:
     Function check if file is image
     """
     # get file extension by regex
-    file_extension = re.findall(FILE_EXTENSION_RE, file_name.lower())
+    file_extension = re.findall(re.compile(FILE_EXTENSION_RE), file_name.lower())
 
     if file_extension:
-        return True if file_extension[0] in (".mp4", ".webm") else False
+        return True if file_extension[0] in VIDEO_FORMATS else False
     else:
         return False
 
