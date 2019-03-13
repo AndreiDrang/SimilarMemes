@@ -1,29 +1,22 @@
-'''
-For the best experience put a folder 'memes' into the same folder where 'gui.py' is.
-Add several files with different extensions (see IMAGE_EXTENSIONS and VIDEO_EXTENSIONS) in it.
-Put a file named '2.gif' in folder 'memes' to see the entire program structure.
-'''
-
-
 ##TODO:
 # Add folder tree (process all images in subfolders) upon folderTreeCheckbox.isChecked()
-# Show image upon clicking its name (depending on extension, e.g: jpeg: QPixmap, gif: QMovie)
 # "Show similar" checkbox
 # Menu settings
-# Table sorting
-# GUI updates (stretching, scales, fixed sizes, etc.)
-# Fix QVector warning
 
 
 import sys
 import os
-from   PyQt5.QtWidgets import *
-from   PyQt5.QtGui	   import *
-from   PyQt5.QtCore	   import *
+from   PIL                       import Image
+from   PyQt5.QtWidgets           import *
+from   PyQt5.QtGui               import *
+from   PyQt5.QtCore              import *
+from   PyQt5.QtMultimedia        import *
+from   PyQt5.QtMultimediaWidgets import *
 
 
 IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.bmp', '.ico', '.gif')
-VIDEO_EXTENSIONS = ('.mp4', '.webm', '.3gp')
+VIDEO_EXTENSIONS = ('.mp4', '.avi', '.webm', '.3gp')
+ITEM_PATH_DICT   = {}
 
 
 class ProcessingThread(QThread):
@@ -36,38 +29,47 @@ class ProcessingThread(QThread):
 		self.imageListTable = imageListTable
 		self.videoListTable = videoListTable
 		self.folderTreeCheckbox = folderTreeCheckbox
-			
+	
 	
 	def run(self):
 		rowImages, rowVideos = 0, 0
-		if self.folderTreeCheckbox.isChecked():
-			print('HERE GOES SOME CODE')														# TODO
 		
+		## Processes all multimedia in the main folder and its sub-folders as well:
+		if self.folderTreeCheckbox.isChecked():
+			print('HERE GOES SOME CODE')                                   # TODO
+		
+		## Processes multimedia in the selected folder only:
 		else:
-			files = os.listdir(self.folderField.text())											# list of folder content 
-			images = [file for file in files if file.endswith(IMAGE_EXTENSIONS)]				# exclude subfolders and unwanted extensions
-			videos = [file for file in files if file.endswith(VIDEO_EXTENSIONS)]
+			## List of folder content:
+			files = os.listdir(self.folderField.text())
+			
+			## Excludes sub-folders and unwanted extensions from the lists:
+			images = [file_ for file_ in files if file_.lower().endswith(IMAGE_EXTENSIONS)]
+			videos = [file_ for file_ in files if file_.lower().endswith(VIDEO_EXTENSIONS)]
+			
 			for image in images:
-				self.sleep(1)																	# process simulation (TODO: delete)
+				self.sleep(1)                                          # process simulation (TODO: delete)
 				self.imageListTable.setRowCount(rowImages + 1)
 				self.imageListTable.setItem(rowImages, 0, QTableWidgetItem(image))
-				self.imageListTable.setItem(rowImages, 1, QTableWidgetItem(image.split('.')[-1]))
+				self.imageListTable.setItem(rowImages, 1, QTableWidgetItem((image.split('.')[-1]).lower()))
 				rowImages += 1
-				value = (rowImages + rowVideos) / len(images + videos) * 100
-				self.progressTrigger.emit(value)
+				progress = (rowImages + rowVideos) / len(images + videos) * 100
+				self.progressTrigger.emit(progress)
+				ITEM_PATH_DICT[image] = os.path.join(self.folderField.text(), image)
 				
 			for video in videos:
-				self.sleep(1)																	# process simulation (TODO: delete)
+				self.sleep(1)                                          # process simulation (TODO: delete)
 				self.videoListTable.setRowCount(rowVideos + 1)
 				self.videoListTable.setItem(rowVideos, 0, QTableWidgetItem(video))
-				self.videoListTable.setItem(rowVideos, 1, QTableWidgetItem(video.split('.')[-1]))
+				self.videoListTable.setItem(rowVideos, 1, QTableWidgetItem((video.split('.')[-1]).lower()))
 				rowVideos += 1
-				value = (rowImages + rowVideos) / len(images + videos) * 100
-				self.progressTrigger.emit(value)	
+				progress = (rowImages + rowVideos) / len(images + videos) * 100
+				self.progressTrigger.emit(progress)
+				ITEM_PATH_DICT[video] = os.path.join(self.folderField.text(), video)
 			
 		self.finishedTrigger.emit()
 
-	
+
 class MainWindow(QMainWindow):
 	def __init__(self):
 		super().__init__()
@@ -90,18 +92,20 @@ class MainWindow(QMainWindow):
 		settingsMenu.addAction('Other')
 		
 		self.window = Window(self.statusBar)
-		self.setCentralWidget(self.window)
-		
+		self.setCentralWidget(self.window)	
 		
 
 class Window(QWidget):
 	def __init__(self, statusBar):
 		super().__init__()
-		self.statusBar = statusBar																# get that status bar to work with
-				
+		
+		## Gets status bar from QMainWindow:
+		self.statusBar = statusBar
+		
+		## Initializes all window elements:
 		self.folderField = QLineEdit()
 		self.folderButton = QPushButton()
-		self.folderTreeCheckbox = QCheckBox('Consider subfolders')
+		self.folderTreeCheckbox = QCheckBox('Include sub-folders')
 		self.processButton = QPushButton('Start')
 		self.progressBar = QProgressBar()
 		self.tableTabs = QTabWidget()
@@ -109,65 +113,90 @@ class Window(QWidget):
 		self.videoListTable = QTableWidget()
 		self.showCheckbox = QCheckBox('Show similar')
 		self.imageField = QLabel()
-		
+		self.videoField = QVideoWidget()
+		self.videoPlayer = QMediaPlayer()
+				
+		## Adjusts settings for the window elements:
 		self.folderField.setEnabled(False)
-		
+				
 		self.folderButton.setIcon(self.style().standardIcon(QStyle.SP_DialogOpenButton))
 		self.folderButton.clicked.connect(self.set_folder)
-		
-		self.processButton.clicked.connect(self.process_images)
+				
+		self.processButton.clicked.connect(self.process_files)
+		self.processButton.setFixedWidth(100)
 		
 		self.progressBar.setAlignment(Qt.AlignCenter)
 		
 		self.imagesTab = self.tableTabs.insertTab(0, self.imageListTable, 'Images')
 		self.videosTab = self.tableTabs.insertTab(1, self.videoListTable, 'Videos')
-				
+		
 		self.imageListTable.setColumnCount(2)
 		self.imageListTable.setHorizontalHeaderLabels(['List of images', 'Extension'])
-		self.imageListTable.resizeColumnsToContents()
+		self.imageListTable.setColumnWidth(0, 227)
 		self.imageListTable.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+		self.imageListTable.setSortingEnabled(True)
+		
+		self.imageListTable.cellClicked.connect(self.show_image)
 		
 		self.videoListTable.setColumnCount(2)
 		self.videoListTable.setHorizontalHeaderLabels(['List of videos', 'Extension'])
-		self.videoListTable.resizeColumnsToContents()
+		self.videoListTable.setColumnWidth(0, 227)
 		self.videoListTable.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-		
-		
-		## Show picture (test):
-		#self.imageField.setPixmap(QPixmap(r'memes/1.jpg').scaled(500, 500, Qt.KeepAspectRatio,Qt.SmoothTransformation))
-		
-		## Show gif (test):
-		self.gif = QMovie(r'memes/2.gif')
-		self.imageField.setMovie(self.gif)
-		self.gif.start()
-		
+		self.videoListTable.setSortingEnabled(True)
+		self.videoListTable.cellClicked.connect(self.show_video)
 		
 		self.showCheckbox.clicked.connect(self.show_similar)
+		
+		## Places the window elements on the window:
+		### Top-left cell of main grid box:
+		subGridBox = QWidget()
+		subGrid = QGridLayout()
+		subGrid.addWidget(self.folderField, 0, 0)
+		subGrid.addWidget(self.folderButton, 0, 1)
+		subGrid.addWidget(self.folderTreeCheckbox, 1, 0)
+		subGrid.addWidget(self.processButton, 2, 0, 1, 2, Qt.AlignCenter)
+		subGrid.addWidget(self.progressBar, 3, 0, 1, 2)
+		subGridBox.setLayout(subGrid)
+		
+		### Main grid box:
+		self.mainGrid = QGridLayout()
+		self.mainGrid.addWidget(subGridBox, 0, 0)
+		self.mainGrid.addWidget(self.tableTabs, 1, 0)
+		self.mainGrid.addWidget(self.showCheckbox, 2, 0)
+		self.mainGrid.addWidget(self.imageField, 0, 1, 2, 1, Qt.AlignCenter)
+		self.mainGrid.addWidget(self.videoField, 0, 1, 2, 1)
 				
-		grid = QGridLayout()
-		grid.addWidget(self.folderField, 0, 0)
-		grid.addWidget(self.folderButton, 0, 1)
-		grid.addWidget(self.folderTreeCheckbox, 1, 0)
-		grid.addWidget(self.processButton, 2, 0, 2, 2)
-		grid.addWidget(self.progressBar, 3, 0, 3, 2)
-		grid.addWidget(self.tableTabs, 0, 2, 3, 2)
-		grid.addWidget(self.showCheckbox, 4, 2)
-		grid.addWidget(self.imageField, 0, 4, 3, 4)
-		self.setLayout(grid)
-				
+		self.mainGrid.setColumnMinimumWidth(0, 350)
+		self.mainGrid.setRowMinimumHeight(1, 500)
+		self.mainGrid.setColumnStretch(1, 1)
+		
+		self.setLayout(self.mainGrid)
+		
+		## Creates a QThread instance:
 		self.thread = ProcessingThread(self.folderField, self.imageListTable, self.videoListTable, self.folderTreeCheckbox)
 		self.thread.progressTrigger.connect(self.update_progressbar)
-		self.thread.finishedTrigger.connect(self.finished)
-		
+		self.thread.finishedTrigger.connect(self.finish_thread)
 	
-	def set_folder(self):																		# get folder full of images
-		folderPath = QFileDialog.getExistingDirectory(self)
-		self.folderField.setText(folderPath)
+	
+	# Get a folder full of multimedia files to work with
+	def set_folder(self):
+		self.folderPath = QFileDialog.getExistingDirectory(self)
+		if self.folderPath == '':
+			self.folderPath = self.folderField.text()
+		self.folderField.setText(self.folderPath)
 		self.statusBar.clearMessage()
+	
+	
+	# Start the thread and fill the table with those files
+	def process_files(self):
+		## Clears both tables upon restarting function:
+		self.imageListTable.clearContents()
+		self.imageListTable.setRowCount(0)
+		self.videoListTable.clearContents()
+		self.videoListTable.setRowCount(0)
 		
-		
-	def process_images(self):																	# start thread and fill the table with those images
-		self.statusBar.clearMessage()
+		self.statusBar.setStyleSheet('color: black')
+		self.statusBar.showMessage('Processing...')
 		
 		if self.folderField.text() == '':
 			self.statusBar.setStyleSheet('color: red')
@@ -182,25 +211,89 @@ class Window(QWidget):
 			self.thread.terminate()
 			self.processButton.setText('Start')
 			self.update_progressbar(0)
-			
-			
-	def update_progressbar(self, value):														# update progress bar with values via signal
-		self.progressBar.setValue(value)
 	
 	
-	def finished(self):																			# thread done and ded
+	# Update the progress bar with values via pyqtSignal		
+	def update_progressbar(self, progress):
+		self.progressBar.setValue(progress)
+	
+	
+	# Thread done and ded
+	def finish_thread(self):	
 		self.statusBar.setStyleSheet('color: black')
 		self.statusBar.showMessage('Finished!')
 		self.processButton.setText('Start')
 	
+	
+	# Show an image upon clicking its name in the table
+	def show_image(self, row, column):
+		imageItem = self.imageListTable.item(row, column)
 		
-	def show_similar(self):																		# TODO
+		## Prevents from KeyError when clicking the second column:
+		if imageItem.text() in ITEM_PATH_DICT:
+			imageItemPath = ITEM_PATH_DICT[imageItem.text()]
+			
+			## Removes a video from screen if shown:
+			self.videoPlayer.stop()
+			self.videoField.hide()
+			self.imageField.show()
+			
+			## Shows animated images:
+			if imageItemPath.lower().endswith('gif'):
+				gif = QMovie(imageItemPath)
+				gifSize = QSize(*self.smooth_gif_resize(imageItemPath, 600, 600))
+				gif.setScaledSize(gifSize)
+				self.imageField.setMovie(gif)
+				gif.start()
+			
+			## Shows static images:
+			else:
+				self.imageField.setPixmap(QPixmap(imageItemPath).scaled(600, 600, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+	
+	
+	# Show a video upon clicking its name in the table
+	def show_video(self, row, column):
+		videoItem = self.videoListTable.item(row, column)
+		self.mainGrid.setColumnMinimumWidth(1, 800)
+	
+		## Prevents from KeyError when clicking the second column:
+		if videoItem.text() in ITEM_PATH_DICT:
+			videoItemPath = ITEM_PATH_DICT[videoItem.text()]
+			videoContent = QMediaContent(QUrl.fromLocalFile(videoItemPath))
+			self.videoPlayer.setMedia(videoContent)
+			self.videoPlayer.setVideoOutput(self.videoField)
+			
+			## Removes an image from screen if shown and starts video:
+			self.imageField.clear()
+			self.imageField.hide()
+			self.videoField.show()
+			self.videoPlayer.play()
+			
+	
+	# Show similar multimedia when checkbox is set
+	def show_similar(self):                                                         # TODO
 		if self.showCheckbox.isChecked():
 			print('SHOW SIMILAR ONLY')
 		else:
 			print('SHOW ALL IMAGES')
+	
+	# An amazing workaround for gif resizing procedure because PyQt's native one doesn't work for some reason:
+	def smooth_gif_resize(self, gif, frameWidth, frameHeight):
+		gif = Image.open(gif)
+		gifWidth0, gifHeight0 = gif.size
 		
+		widthRatio = frameWidth / gifWidth0
+		heightRatio = frameHeight / gifHeight0
 		
+		if widthRatio >= heightRatio:
+			gifWidth1 = gifWidth0 * heightRatio
+			gifHeight1 = frameHeight
+			return gifWidth1, gifHeight1
+			
+		gifWidth1 = frameWidth
+		gifHeight1 = gifHeight0 * widthRatio
+		return gifWidth1, gifHeight1
+
 app = QApplication(sys.argv)
 screen = MainWindow()
 screen.show()
