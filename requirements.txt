@@ -1,5 +1,5 @@
 imagehash
 numpy
-cv2
+opencv-python
 pillow-simd
 pony
