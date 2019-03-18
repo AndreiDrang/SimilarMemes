@@ -1,8 +1,6 @@
 ##TODO:
-# Add folder tree (process all images in subfolders) upon folderTreeCheckbox.isChecked()
 # "Show similar" checkbox
 # Menu settings
-
 
 import sys
 import os
@@ -13,10 +11,13 @@ from   PyQt5.QtCore              import *
 from   PyQt5.QtMultimedia        import *
 from   PyQt5.QtMultimediaWidgets import *
 
+import json_settings
+sys.path.append('..')
+import indexing
 
-IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.bmp', '.ico', '.gif')
-VIDEO_EXTENSIONS = ('.mp4', '.avi', '.webm', '.3gp')
-ITEM_PATH_DICT   = {}
+
+# The global to store image/video paths:
+ITEM_PATH_DICT = {}
 
 
 class ProcessingThread(QThread):
@@ -31,41 +32,37 @@ class ProcessingThread(QThread):
 		self.folderTreeCheckbox = folderTreeCheckbox
 	
 	
+	# The process to fill the image/video tables with image/video names and ITEM_PATH_DICT with their paths:
 	def run(self):
 		rowImages, rowVideos = 0, 0
 		
-		## Processes all multimedia in the main folder and its sub-folders as well:
+		## Processes all multimedia in the main folder and its sub-folders as well (depending on depth from settings):
 		if self.folderTreeCheckbox.isChecked():
-			print('HERE GOES SOME CODE')                                   # TODO
+			images, videos = indexing.index_folder_files(self.folderField.text(), max_depth = json_settings.json_read('folderDepth'))
 		
 		## Processes multimedia in the selected folder only:
 		else:
-			## List of folder content:
-			files = os.listdir(self.folderField.text())
+			images, videos = indexing.index_folder_files(self.folderField.text(), max_depth = 0)
 			
-			## Excludes sub-folders and unwanted extensions from the lists:
-			images = [file_ for file_ in files if file_.lower().endswith(IMAGE_EXTENSIONS)]
-			videos = [file_ for file_ in files if file_.lower().endswith(VIDEO_EXTENSIONS)]
+		for image in images:
+			self.sleep(1)                                              # process simulation (TODO: delete)
+			self.imageListTable.setRowCount(rowImages + 1)
+			self.imageListTable.setItem(rowImages, 0, QTableWidgetItem(image[0]))
+			self.imageListTable.setItem(rowImages, 1, QTableWidgetItem((image[0].split('.')[-1]).lower()))
+			rowImages += 1
+			progress = (rowImages + rowVideos) / len(images + videos) * 100
+			self.progressTrigger.emit(progress)
+			ITEM_PATH_DICT[image[0]] = os.path.join(image[1], image[0])
 			
-			for image in images:
-				self.sleep(1)                                          # process simulation (TODO: delete)
-				self.imageListTable.setRowCount(rowImages + 1)
-				self.imageListTable.setItem(rowImages, 0, QTableWidgetItem(image))
-				self.imageListTable.setItem(rowImages, 1, QTableWidgetItem((image.split('.')[-1]).lower()))
-				rowImages += 1
-				progress = (rowImages + rowVideos) / len(images + videos) * 100
-				self.progressTrigger.emit(progress)
-				ITEM_PATH_DICT[image] = os.path.join(self.folderField.text(), image)
-				
-			for video in videos:
-				self.sleep(1)                                          # process simulation (TODO: delete)
-				self.videoListTable.setRowCount(rowVideos + 1)
-				self.videoListTable.setItem(rowVideos, 0, QTableWidgetItem(video))
-				self.videoListTable.setItem(rowVideos, 1, QTableWidgetItem((video.split('.')[-1]).lower()))
-				rowVideos += 1
-				progress = (rowImages + rowVideos) / len(images + videos) * 100
-				self.progressTrigger.emit(progress)
-				ITEM_PATH_DICT[video] = os.path.join(self.folderField.text(), video)
+		for video in videos:
+			self.sleep(1)                                              # process simulation (TODO: delete)
+			self.videoListTable.setRowCount(rowVideos + 1)
+			self.videoListTable.setItem(rowVideos, 0, QTableWidgetItem(video[0]))
+			self.videoListTable.setItem(rowVideos, 1, QTableWidgetItem((video[0].split('.')[-1]).lower()))
+			rowVideos += 1
+			progress = (rowImages + rowVideos) / len(images + videos) * 100
+			self.progressTrigger.emit(progress)
+			ITEM_PATH_DICT[video[0]] = os.path.join(video[1], video[0])
 			
 		self.finishedTrigger.emit()
 
@@ -86,13 +83,17 @@ class MainWindow(QMainWindow):
 		
 		settingsMenu = menu.addMenu('&Settings')
 		settingsMenu.addAction('DB settings')
-		settingsMenu.addAction('Indexing settings')
+		settingsMenu.addAction('Indexing settings', self.show_indexing_settings)
 		settingsMenu.addAction('Matching settings')
 		settingsMenu.addSeparator()
 		settingsMenu.addAction('Other')
 		
 		self.window = Window(self.statusBar)
-		self.setCentralWidget(self.window)	
+		self.setCentralWidget(self.window)
+		
+	def show_indexing_settings(self):
+		self.indexingSettings = IndexingSettings()
+		self.indexingSettings.show()
 		
 
 class Window(QWidget):
@@ -293,6 +294,33 @@ class Window(QWidget):
 		gifWidth1 = frameWidth
 		gifHeight1 = gifHeight0 * widthRatio
 		return gifWidth1, gifHeight1
+
+
+# Allows to set a custom folder depth value in the json file:
+class IndexingSettings(QWidget):
+	def __init__(self):
+		super().__init__()
+		self.setWindowTitle('Indexing settings')
+		self.setFixedSize(250, 100)
+		
+		self.folderDepthLabel = QLabel('Folder depth:')
+		self.folderDepthField = QLineEdit()
+		self.okButton = QPushButton('Ok')
+		
+		self.folderDepthField.setText(str(json_settings.json_read('folderDepth')))
+		self.okButton.clicked.connect(self.ok_event)
+		
+		self.grid = QGridLayout()
+		self.grid.addWidget(self.folderDepthLabel, 0, 0)
+		self.grid.addWidget(self.folderDepthField, 0, 1)
+		self.grid.addWidget(self.okButton, 1, 1)
+		self.setLayout(self.grid)
+	
+	## Updates the json settings with the new folder depth value:
+	def ok_event(self):
+		json_settings.json_update('folderDepth', self.folderDepthField.text())
+		self.close()
+
 
 app = QApplication(sys.argv)
 screen = MainWindow()
