@@ -29,7 +29,7 @@ def get_depth(start_path: str, end_path: str):
     """
     Get start path and current path - count current path walk depth
     """
-    depth = len(end_path.split('/'))-len(start_path.split('/'))
+    depth = len(end_path.split(os.sep))-len(start_path.split(os.sep))
     
     return depth
 

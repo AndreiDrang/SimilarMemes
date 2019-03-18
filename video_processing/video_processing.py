@@ -30,7 +30,7 @@ def video_processing(video_list: collections.deque)->collections.defaultdict:
         read_byte_step = os.path.getsize(video[1])//video_parts+1
 
         # read video file
-        with open(video[1], 'rb') as video_file:
+        with open(video[1]+os.sep+video[0], 'rb') as video_file:
             # prepare hash
             hasher = hashlib.md5()
 
@@ -45,7 +45,7 @@ def video_processing(video_list: collections.deque)->collections.defaultdict:
                     break
 
                 # TODO write hash-data to DB
-                print(hasher.hexdigest())
+                #print(hasher.hexdigest())
 
         print('Next video\n\n')
 

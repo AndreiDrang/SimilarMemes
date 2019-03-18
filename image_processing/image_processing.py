@@ -1,5 +1,6 @@
 import collections
 import hashlib
+import os
 
 import imagehash
 from PIL import Image as PIL_Img
@@ -20,7 +21,7 @@ def image_processing(image_list: collections.deque)->collections.defaultdict:
 
     for image_file in image_list:
         # open image
-        img = PIL_Img.open(image_file[1])
+        img = PIL_Img.open(image_file[1]+os.sep+image_file[0])
         # resize image to 20*19 format
         img.thumbnail(size=(9,8))
         img.convert('LA')
