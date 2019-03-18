@@ -1,7 +1,7 @@
 import time
 
 from indexing import index_folder_files
-from image_processing import hamming_distance, image_processing, feature_description
+from image_processing import image_processing, feature_description, hamming_distance
 from video_processing import video_processing
 from database import save_new_files, Image, save_images_duplicates
 
@@ -9,7 +9,7 @@ from database import save_new_files, Image, save_images_duplicates
 
 
 #path = '/home/andrei/Downloads/Telegram Desktop/DataExport_06_12_2018/chats/chat_001/photos'
-path = '/home/andrei/Pictures'
+path = '/home/andrey.rachalovsky/Pictures/'
 
 
 
@@ -28,18 +28,20 @@ image_files_list, video_files_list = index_folder_files(
 print(image_files_list)
 print(video_files_list)
 
-time.sleep(50)
-#print('Images indexed')
+print('Files indexed')
 
 
 result_image_features_list = feature_description(images_list=image_files_list)
 print(result_image_features_list)
+
 print(time.time()-start_time)
-time.sleep(100)
+
 result_video_dict = video_processing(video_files_list)
+print(result_video_dict)
+result_image_dict = image_processing(image_files_list)
+print(result_image_dict)
 
 # parse images and get dict
-result_image_dict = image_processing(image_files_list)
 #print(len(result_image_dict),' - Images processed.')
 
 #print(time.time()-start_time)
