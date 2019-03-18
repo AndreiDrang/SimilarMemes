@@ -1,5 +1,6 @@
 import collections
 import itertools
+import os
 
 import cv2
 
@@ -26,15 +27,16 @@ def feature_description(images_list: collections.deque)->collections.deque:
 
     for pair in images_pairs:
         # get hash values for images in pair
-        first_image = cv2.imread(pair[0][1], 0)
-        second_image = cv2.imread(pair[1][1], 0)
+        first_image = cv2.imread(pair[0][1]+os.sep+pair[0][0], 0)
+        second_image = cv2.imread(pair[1][1]+os.sep+pair[1][0], 0)
 
         _, descriptor_first = orb.detectAndCompute(first_image, None)
         _, descriptor_second = orb.detectAndCompute(second_image, None)
-
+        
         bf_match = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
         # count matches between two images
         match = bf_match.match(descriptor_first, descriptor_second)
+
         if len(match) > FEATURE_PARAM:
             print(len(match))
             print(pair)
