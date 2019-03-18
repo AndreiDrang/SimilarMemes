@@ -21,26 +21,27 @@ class Image(db.Entity):
     _table_ = 'Image'
 
     # image path
-    image_path = Required(str, unique=True)
+    image_path = Required(str)
     # image name
     image_name = Required(str)
-    # image dhash
-    image_dhash = Required(str)
     # image md5 hash
-    image_md5_hash = Required(str)
+    image_md5_hash = Required(str, unique=True)
     # image creation datetime(in DB)
     image_creation = Required(datetime, default=datetime.now)
     # image tags
     image_tags = Set('ImageTag', nullable=True)
     # image duplicates
-    image_duplicates = Set('ImageDuplicates', nullable=True)
+    duplicates = Set('ImageDuplicates', nullable=True)
 
     composite_key(image_path, image_md5_hash)
 
     @staticmethod
     @db_session(retry=3)
-    def get_dhash_id()->collections.deque:
-        return collections.deque(select((image.image_dhash, image.id) for image in Image)[:])
+    def get_files_paths()->collections.deque:
+        """
+        Return all images names, paths and ID's
+        """
+        return collections.deque(select((image.image_name, image.image_path, image.id) for image in Image)[:])
 
 class Video(db.Entity):
     """
@@ -50,7 +51,7 @@ class Video(db.Entity):
     _table_ = 'Video'
 
     # video path
-    video_path = Required(str, unique=True)
+    video_path = Required(str)
     # video name
     video_name = Required(str)
     # video tags
@@ -93,11 +94,11 @@ class ImageDuplicates(db.Entity):
     _table_ = 'Images_Duplicates'
     
     # bounded image id
-    image_hamming_id = Required(int)
-    # hamming distance param
-    images_hamming_distance = Required(int)
+    image_id = Required(int)
+    # similarity param
+    images_similarity = Required(float)
     # images duplicates
-    image_duplicates = Set(Image)
+    images = Set(Image)
 
 
 class VideoDuplicates(db.Entity):
