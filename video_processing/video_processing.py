@@ -23,9 +23,7 @@ def video_processing(video_list: collections.deque)->collections.defaultdict:
     # video parts amount to separate
     video_parts = get_settings()['video_parts']
 
-    print(video_list)
     for video in video_list:
-        print(video[0])
         # get video size and separate on `video_parts` parts and read them + get video parts hash
         read_byte_step = os.path.getsize(video[1])//video_parts+1
 

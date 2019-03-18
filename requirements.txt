@@ -1,5 +1,4 @@
-imagehash
 numpy
 opencv-python
 pillow-simd
-pony
+pony==0.7
