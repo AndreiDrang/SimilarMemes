@@ -5,7 +5,7 @@ from   PyQt5.QtWidgets  import *
 # Reads the json settings file and returns a needed setting value:
 def json_read(settingName: str):
 	try:
-		with open('user_settings.json', 'r') as jsonFile:
+		with open(f'gui{os.sep}user_settings.json', 'r') as jsonFile:
 			jsonData = json.load(jsonFile)
 		return jsonData[settingName]
 	
@@ -16,12 +16,12 @@ def json_read(settingName: str):
 # Updates a needed setting and rewrites the json settings file:
 def json_update(settingName: str, settingNewValue: int):
 	try:
-		with open('user_settings.json', 'r') as jsonFile:
+		with open(f'gui{os.sep}user_settings.json', 'r') as jsonFile:
 			jsonData = json.load(jsonFile)
 			
 		jsonData[settingName] = int(settingNewValue)
 		
-		with open('user_settings.json', 'w') as jsonFile:
+		with open(f'gui{os.sep}user_settings.json', 'w') as jsonFile:
 			json.dump(jsonData, jsonFile)
 	
 	except Exception as ex:

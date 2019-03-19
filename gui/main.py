@@ -12,8 +12,8 @@ from   PyQt5.QtMultimedia        import *
 from   PyQt5.QtMultimediaWidgets import *
 
 import json_settings
-sys.path.append('..')
-import indexing
+sys.path.append('.')
+from indexing import index_folder_files
 
 
 # The global to store image/video paths:
@@ -38,11 +38,11 @@ class ProcessingThread(QThread):
 		
 		## Processes all multimedia in the main folder and its sub-folders as well (depending on depth from settings):
 		if self.folderTreeCheckbox.isChecked():
-			images, videos = indexing.index_folder_files(self.folderField.text(), max_depth = json_settings.json_read('folderDepth'))
+			images, videos = index_folder_files(self.folderField.text(), max_depth = json_settings.json_read('folderDepth'))
 		
 		## Processes multimedia in the selected folder only:
 		else:
-			images, videos = indexing.index_folder_files(self.folderField.text(), max_depth = 0)
+			images, videos = index_folder_files(self.folderField.text(), max_depth = 0)
 			
 		for image in images:
 			self.sleep(1)                                              # process simulation (TODO: delete)
