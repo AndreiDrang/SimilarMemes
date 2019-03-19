@@ -2,7 +2,6 @@
 # "Show similar" checkbox
 # Menu settings
 
-import sys
 import os
 from   PIL                       import Image
 from   PyQt5.QtWidgets           import *
@@ -11,8 +10,7 @@ from   PyQt5.QtCore              import *
 from   PyQt5.QtMultimedia        import *
 from   PyQt5.QtMultimediaWidgets import *
 
-import json_settings
-sys.path.append('.')
+from gui import json_settings
 from indexing import index_folder_files
 
 
@@ -320,9 +318,3 @@ class IndexingSettings(QWidget):
 	def ok_event(self):
 		json_settings.json_update('folderDepth', self.folderDepthField.text())
 		self.close()
-
-
-app = QApplication(sys.argv)
-screen = MainWindow()
-screen.show()
-sys.exit(app.exec_())
