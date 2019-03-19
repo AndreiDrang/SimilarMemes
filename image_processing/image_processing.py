@@ -5,7 +5,7 @@ import os
 from PIL import Image as PIL_Img
 
 
-def image_processing(image_list: collections.deque)->collections.defaultdict:
+def image_processing(image_list: collections.deque) -> collections.defaultdict:
     """
     Function preprocess image files, count hash and return files info in dict format
 
@@ -20,16 +20,20 @@ def image_processing(image_list: collections.deque)->collections.defaultdict:
 
     for index, image_file in enumerate(image_list):
         # open image
-        img = PIL_Img.open(image_file[1]+os.sep+image_file[0])
+        img = PIL_Img.open(image_file[1] + os.sep + image_file[0])
         # resize image to 20*19 format
-        img.thumbnail(size=(9,8))
-        img.convert('LA')
+        img.thumbnail(size=(9, 8))
+        img.convert("LA")
 
-        result_image_dict.update({
-                                    index: {
-                                        'namepath': image_file,
-                                        'md5_hash': hashlib.md5((image_file[1]+os.sep+image_file[0]).encode()).hexdigest(),
-                                    }
-                                })
-    
+        result_image_dict.update(
+            {
+                index: {
+                    "namepath": image_file,
+                    "md5_hash": hashlib.md5(
+                        (image_file[1] + os.sep + image_file[0]).encode()
+                    ).hexdigest(),
+                }
+            }
+        )
+
     return result_image_dict

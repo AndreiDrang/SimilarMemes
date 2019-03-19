@@ -7,7 +7,7 @@ from .audio_processing import audio_processing
 from .settings import get_settings
 
 
-def video_processing(video_list: collections.deque)->collections.defaultdict:
+def video_processing(video_list: collections.deque) -> collections.defaultdict:
     """
     Function cut video file on chunks and count hash
 
@@ -21,14 +21,14 @@ def video_processing(video_list: collections.deque)->collections.defaultdict:
     result_video_dict = collections.defaultdict()
 
     # video parts amount to separate
-    video_parts = get_settings()['video_parts']
+    video_parts = get_settings()["video_parts"]
 
     for video in video_list:
         # get video size and separate on `video_parts` parts and read them + get video parts hash
-        read_byte_step = os.path.getsize(video[1])//video_parts+1
+        read_byte_step = os.path.getsize(video[1]) // video_parts + 1
 
         # read video file
-        with open(video[1]+os.sep+video[0], 'rb') as video_file:
+        with open(video[1] + os.sep + video[0], "rb") as video_file:
             # prepare hash
             hasher = hashlib.md5()
 
@@ -43,8 +43,8 @@ def video_processing(video_list: collections.deque)->collections.defaultdict:
                     break
 
                 # TODO write hash-data to DB
-                #print(hasher.hexdigest())
+                # print(hasher.hexdigest())
 
-        print('Next video\n\n')
+        print("Next video\n\n")
 
     return collections.defaultdict()

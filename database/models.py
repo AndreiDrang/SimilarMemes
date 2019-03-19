@@ -5,12 +5,14 @@ from pony.orm import *
 
 db = Database()
 
-db.bind(provider='postgres', 
-        user='similar_memes',
-        password='veryhardpass',
-        host='85.255.8.26',
-        #host='localhost',
-        database='similar_memes_db')
+db.bind(
+    provider="postgres",
+    user="similar_memes",
+    password="veryhardpass",
+    host="85.255.8.26",
+    # host='localhost',
+    database="similar_memes_db",
+)
 
 
 class Image(db.Entity):
@@ -18,7 +20,7 @@ class Image(db.Entity):
     Image model
     """
 
-    _table_ = 'Image'
+    _table_ = "Image"
 
     # image path
     image_path = Required(str)
@@ -29,35 +31,38 @@ class Image(db.Entity):
     # image creation datetime(in DB)
     image_creation = Required(datetime, default=datetime.now)
     # image tags
-    image_tags = Set('ImageTag', nullable=True)
+    image_tags = Set("ImageTag", nullable=True)
     # image duplicates
-    duplicates = Set('ImageDuplicates', nullable=True)
+    duplicates = Set("ImageDuplicates", nullable=True)
 
     composite_key(image_path, image_md5_hash)
 
     @staticmethod
     @db_session(retry=3)
-    def get_files_paths()->collections.deque:
+    def get_files_paths() -> collections.deque:
         """
         Return all images names, paths and ID's
         """
-        return collections.deque(select((image.image_name, image.image_path, image.id) for image in Image)[:])
+        return collections.deque(
+            select((image.image_name, image.image_path, image.id) for image in Image)[:]
+        )
+
 
 class Video(db.Entity):
     """
     Video model
     """
 
-    _table_ = 'Video'
+    _table_ = "Video"
 
     # video path
     video_path = Required(str)
     # video name
     video_name = Required(str)
     # video tags
-    video_tags = Set('VideoTag', nullable=True)
+    video_tags = Set("VideoTag", nullable=True)
     # video duplicates
-    video_duplicates = Set('VideoDuplicates', nullable=True)
+    video_duplicates = Set("VideoDuplicates", nullable=True)
 
 
 class ImageTag(db.Entity):
@@ -65,8 +70,8 @@ class ImageTag(db.Entity):
     Image tag model
     """
 
-    _table_ = 'Image_Tag'
-    
+    _table_ = "Image_Tag"
+
     # image tags
     tag_text = Required(str, max_len=40)
     # tag images list
@@ -78,8 +83,8 @@ class VideoTag(db.Entity):
     Video tag model
     """
 
-    _table_ = 'Video_Tag'
-    
+    _table_ = "Video_Tag"
+
     # image tags
     tag_text = Required(str, max_len=40)
     # tag video list
@@ -91,8 +96,8 @@ class ImageDuplicates(db.Entity):
     Duplicates model
     """
 
-    _table_ = 'Images_Duplicates'
-    
+    _table_ = "Images_Duplicates"
+
     # bounded image id
     image_id = Required(int)
     # similarity param
@@ -106,8 +111,8 @@ class VideoDuplicates(db.Entity):
     Duplicates model
     """
 
-    _table_ = 'Video_Duplicates'
-    
+    _table_ = "Video_Duplicates"
+
     # video duplicates
     video_duplicates = Set(Video)
 

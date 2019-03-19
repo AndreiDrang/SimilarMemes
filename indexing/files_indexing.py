@@ -1,7 +1,14 @@
-from indexing import os, collections, re, IMAGE_FORMATS, VIDEO_FORMATS, FILE_EXTENSION_RE
+from indexing import (
+    os,
+    collections,
+    re,
+    IMAGE_FORMATS,
+    VIDEO_FORMATS,
+    FILE_EXTENSION_RE,
+)
 
 
-def is_image(file_name: str)->bool:
+def is_image(file_name: str) -> bool:
     """
     Function check if file is image
     """
@@ -13,7 +20,8 @@ def is_image(file_name: str)->bool:
     else:
         return False
 
-def is_video(file_name: str)->bool:
+
+def is_video(file_name: str) -> bool:
     """
     Function check if file is image
     """
@@ -25,15 +33,19 @@ def is_video(file_name: str)->bool:
     else:
         return False
 
+
 def get_depth(start_path: str, end_path: str):
     """
     Get start path and current path - count current path walk depth
     """
-    depth = len(end_path.split(os.sep))-len(start_path.split(os.sep))
-    
+    depth = len(end_path.split(os.sep)) - len(start_path.split(os.sep))
+
     return depth
 
-def index_folder_files(path: collections.deque, max_depth: int = 3, indexing_type: str = 'all')->(collections.deque, collections.deque):
+
+def index_folder_files(
+    path: collections.deque, max_depth: int = 3, indexing_type: str = "all"
+) -> (collections.deque, collections.deque):
     """
     Function indexing image/video files in folder
 
@@ -55,15 +67,15 @@ def index_folder_files(path: collections.deque, max_depth: int = 3, indexing_typ
     # looping throught tree
     for data in tree:
         # if max depth not reached
-        if get_depth(path, data[0])<=max_depth:
+        if get_depth(path, data[0]) <= max_depth:
             for file_ in data[2]:
                 # check if file - image
-                if is_image(file_) and indexing_type in ('image', 'all'):
+                if is_image(file_) and indexing_type in ("image", "all"):
                     # add to image list
                     image_files_list.append((file_, data[0]))
 
                 # if file - video
-                elif is_video(file_) and indexing_type in ('video', 'all'):
+                elif is_video(file_) and indexing_type in ("video", "all"):
                     # add to video list
                     video_files_list.append((file_, data[0]))
         else:
