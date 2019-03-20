@@ -78,3 +78,36 @@ def get_image_duplicates(image_id: int)->[Image]:
         )[:]
 
     return [Image[img_id] for img_id in duplicates]
+
+
+@db_session(retry=3)
+def group_image_files()->dict:
+    """
+    Function group image files to dict with key - path, value - images in this path
+
+    :return: Dict with path's and files
+                {
+                    <path name>: [
+                        (<filename>, <image ID>),
+                        (<filename>, <image ID>),
+                    ],
+                    <path name>: [
+                        (<filename>, <image ID>),
+                        (<filename>, <image ID>),
+                    ]
+                }
+    """
+    result = {}
+    all_images_paths = Image.group_images_paths()
+    for path in all_images_paths:
+        path_files = select(
+                        (image.image_name, image.id) for image in Image 
+                        if image.image_path == path
+                    )[:]
+        result.update(
+            {
+                path: path_files
+            }
+        )
+
+    return result

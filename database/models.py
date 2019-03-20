@@ -39,12 +39,22 @@ class Image(db.Entity):
 
     @staticmethod
     @db_session(retry=3)
-    def get_files_paths() -> collections.deque:
+    def get_images_paths() -> collections.deque:
         """
         Return all images names, paths and ID's
         """
         return collections.deque(
             select((image.image_name, image.image_path, image.id) for image in Image)[:]
+        )
+
+    @staticmethod
+    @db_session(retry=3)
+    def group_images_paths() -> collections.deque:
+        """
+        Return unique paths from Images
+        """
+        return collections.deque(
+            select(image.image_path for image in Image)[:]
         )
 
 
