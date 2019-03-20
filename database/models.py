@@ -98,12 +98,12 @@ class ImageDuplicates(db.Entity):
 
     _table_ = "Images_Duplicates"
 
-    # bounded image id
-    image_id = Required(int)
+    # source image
+    image_src_id = Required(int)
+    # src image duplicate
+    image_dup = Required(Image)
     # similarity param
     images_similarity = Required(float)
-    # images duplicates
-    images = Set(Image)
 
 
 class VideoDuplicates(db.Entity):
