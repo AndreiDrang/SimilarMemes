@@ -1,11 +1,16 @@
+import sys
+import os
+import collections
+import re
+
 from indexing import (
-    os,
-    collections,
-    re,
     IMAGE_FORMATS,
     VIDEO_FORMATS,
     FILE_EXTENSION_RE,
 )
+
+sys.path.append('.')
+from database import group_image_files
 
 
 def is_image(file_name: str) -> bool:
@@ -82,3 +87,18 @@ def index_folder_files(
             break
 
     return image_files_list, video_files_list
+
+
+def reindex_image_files():
+    """
+    Function reindex all Image files in DB
+    """
+    image_files = group_image_files()
+    print(image_files.keys())
+    for path, files in image_files.items():
+        # get path data
+        path_data = os.listdir(path)
+        print(path_data)
+        print(files)
+        print('\n\n\n')
+
