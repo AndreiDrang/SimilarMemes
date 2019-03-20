@@ -3,7 +3,7 @@ import time
 from indexing import index_folder_files
 from image_processing import image_processing, feature_description
 from video_processing import video_processing
-from database import save_new_files, Image, save_images_duplicates
+from database import save_new_files, Image, save_images_duplicates, get_image_duplicates
 
 
 
@@ -25,16 +25,16 @@ image_files_list, video_files_list = index_folder_files(
                                             indexing_type='all'
                                         )
 
-#print(image_files_list)
-#print(video_files_list)
+print(image_files_list)
+print(video_files_list)
 
 print('Files indexed')
 
 
-#result_video_dict = video_processing(video_files_list)
-#print(result_video_dict)
+result_video_dict = video_processing(video_files_list)
+print(result_video_dict)
 result_image_dict = image_processing(image_files_list)
-#print(result_image_dict)
+print(result_image_dict)
 
 # save all images to DB
 save_new_files(result_image_dict, 'image')
@@ -50,8 +50,15 @@ print(time.time()-start_time)
 
 save_images_duplicates(pairs=result_image_features_list)
 
-#print(f'Needed time for {len(result_image_dict)} images - {time.time()-start_time}')
+print(f'Needed time for {len(result_image_dict)} images - {time.time()-start_time}')
 
 print(len(image_files_list))
 print(len(result_image_dict))
 print(len(image_files_query))
+
+
+# get certain image all duplicates
+result = get_image_duplicates(image_id=8)
+print(result)
+
+# reindex DB files
