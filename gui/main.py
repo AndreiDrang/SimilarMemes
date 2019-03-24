@@ -1,5 +1,5 @@
 ##TODO:
-# "Show similar" checkbox
+# Thread processing duplicates
 # Menu settings
 
 import os
@@ -111,12 +111,12 @@ class Window(QWidget):
         self.folderField = QLineEdit()
         self.folderButton = QPushButton()
         self.folderTreeCheckbox = QCheckBox("Include sub-folders")
-        self.processButton = QPushButton("Start")
+        self.processButton = QPushButton("Process media files")
+        self.duplicateButton = QPushButton("Find duplicates")
         self.progressBar = QProgressBar()
         self.tableTabs = QTabWidget()
         self.imageListTable = QTableWidget()
         self.videoListTable = QTableWidget()
-        self.showCheckbox = QCheckBox("Show similar")
         self.imageField = QLabel()
         self.videoField = QVideoWidget()
         self.videoPlayer = QMediaPlayer()
@@ -129,7 +129,10 @@ class Window(QWidget):
 
         self.processButton.clicked.connect(self.process_files)
         self.processButton.setFixedWidth(100)
-
+        
+        self.duplicateButton.clicked.connect(self.find_duplicates)
+        self.duplicateButton.setFixedWidth(100)
+        
         self.progressBar.setAlignment(Qt.AlignCenter)
 
         self.imagesTab = self.tableTabs.insertTab(0, self.imageListTable, "Images")
@@ -150,8 +153,6 @@ class Window(QWidget):
         self.videoListTable.setSortingEnabled(True)
         self.videoListTable.cellClicked.connect(self.show_video)
 
-        self.showCheckbox.clicked.connect(self.show_similar)
-
         ## Places the window elements on the window:
         ### Top-left cell of main grid box:
         subGridBox = QWidget()
@@ -160,14 +161,14 @@ class Window(QWidget):
         subGrid.addWidget(self.folderButton, 0, 1)
         subGrid.addWidget(self.folderTreeCheckbox, 1, 0)
         subGrid.addWidget(self.processButton, 2, 0, 1, 2, Qt.AlignCenter)
-        subGrid.addWidget(self.progressBar, 3, 0, 1, 2)
+        subGrid.addWidget(self.duplicateButton, 3, 0, 1, 2, Qt.AlignCenter)        
+        subGrid.addWidget(self.progressBar, 4, 0, 1, 2)
         subGridBox.setLayout(subGrid)
 
         ### Main grid box:
         self.mainGrid = QGridLayout()
         self.mainGrid.addWidget(subGridBox, 0, 0)
         self.mainGrid.addWidget(self.tableTabs, 1, 0)
-        self.mainGrid.addWidget(self.showCheckbox, 2, 0)
         self.mainGrid.addWidget(self.imageField, 0, 1, 2, 1, Qt.AlignCenter)
         self.mainGrid.addWidget(self.videoField, 0, 1, 2, 1)
 
@@ -197,6 +198,8 @@ class Window(QWidget):
 
     # Start the thread and fill the table with those files
     def process_files(self):
+        self.duplicateButton.setEnabled(False)
+        
         ## Clears both tables upon restarting function:
         self.imageListTable.clearContents()
         self.imageListTable.setRowCount(0)
@@ -229,7 +232,21 @@ class Window(QWidget):
         self.statusBar.setStyleSheet("color: black")
         self.statusBar.showMessage("Finished!")
         self.processButton.setText("Start")
-
+        self.duplicateButton.setEnabled(True)
+        
+    # Start the second thread and remove all unique files from the table
+    def find_duplicates(self):
+        if ITEM_PATH_DICT == {}:
+            self.statusBar.setStyleSheet("color: red")
+            self.statusBar.showMessage("Please process your media files first")
+            return None
+        
+        self.processButton.setEnabled(False)
+        self.statusBar.setStyleSheet("color: black")
+        self.statusBar.showMessage("Finding duplicates...")
+        # TODO: new thread removing all unique media. Only duplicates remain
+        
+        
     # Show an image upon clicking its name in the table
     def show_image(self, row, column):
         imageItem = self.imageListTable.item(row, column)
@@ -276,13 +293,6 @@ class Window(QWidget):
             self.imageField.hide()
             self.videoField.show()
             self.videoPlayer.play()
-
-    # Show similar multimedia when checkbox is set
-    def show_similar(self):  # TODO
-        if self.showCheckbox.isChecked():
-            print("SHOW SIMILAR ONLY")
-        else:
-            print("SHOW ALL IMAGES")
 
     # An amazing workaround for gif resizing procedure because PyQt's native one doesn't work for some reason:
     def smooth_gif_resize(self, gif, frameWidth, frameHeight):
