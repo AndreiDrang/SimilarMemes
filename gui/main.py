@@ -129,10 +129,10 @@ class Window(QWidget):
 
         self.processButton.clicked.connect(self.process_files)
         self.processButton.setFixedWidth(100)
-        
+
         self.duplicateButton.clicked.connect(self.find_duplicates)
         self.duplicateButton.setFixedWidth(100)
-        
+
         self.progressBar.setAlignment(Qt.AlignCenter)
 
         self.imagesTab = self.tableTabs.insertTab(0, self.imageListTable, "Images")
@@ -161,7 +161,7 @@ class Window(QWidget):
         subGrid.addWidget(self.folderButton, 0, 1)
         subGrid.addWidget(self.folderTreeCheckbox, 1, 0)
         subGrid.addWidget(self.processButton, 2, 0, 1, 2, Qt.AlignCenter)
-        subGrid.addWidget(self.duplicateButton, 3, 0, 1, 2, Qt.AlignCenter)        
+        subGrid.addWidget(self.duplicateButton, 3, 0, 1, 2, Qt.AlignCenter)
         subGrid.addWidget(self.progressBar, 4, 0, 1, 2)
         subGridBox.setLayout(subGrid)
 
@@ -199,7 +199,7 @@ class Window(QWidget):
     # Start the thread and fill the table with those files
     def process_files(self):
         self.duplicateButton.setEnabled(False)
-        
+
         ## Clears both tables upon restarting function:
         self.imageListTable.clearContents()
         self.imageListTable.setRowCount(0)
@@ -233,20 +233,19 @@ class Window(QWidget):
         self.statusBar.showMessage("Finished!")
         self.processButton.setText("Start")
         self.duplicateButton.setEnabled(True)
-        
+
     # Start the second thread and remove all unique files from the table
     def find_duplicates(self):
         if ITEM_PATH_DICT == {}:
             self.statusBar.setStyleSheet("color: red")
             self.statusBar.showMessage("Please process your media files first")
             return None
-        
+
         self.processButton.setEnabled(False)
         self.statusBar.setStyleSheet("color: black")
         self.statusBar.showMessage("Finding duplicates...")
         # TODO: new thread removing all unique media. Only duplicates remain
-        
-        
+
     # Show an image upon clicking its name in the table
     def show_image(self, row, column):
         imageItem = self.imageListTable.item(row, column)

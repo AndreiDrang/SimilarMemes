@@ -3,14 +3,18 @@ import os
 import collections
 import re
 
-from indexing import (
-    IMAGE_FORMATS,
-    VIDEO_FORMATS,
-    FILE_EXTENSION_RE,
-)
+from indexing import IMAGE_FORMATS, VIDEO_FORMATS, FILE_EXTENSION_RE
 
-sys.path.append('.')
-from database import group_image_files, group_video_files, Image, Video, delete, db_session, select
+sys.path.append(".")
+from database import (
+    group_image_files,
+    group_video_files,
+    Image,
+    Video,
+    delete,
+    db_session,
+    select,
+)
 
 
 def is_image(file_name: str) -> bool:
@@ -107,12 +111,14 @@ def reindex_image_files():
             # filter files
             # if files not exist in FS but exist in DB - they deleted by user
             # and we need clean DB
-            deletable_files = (image[1] for image in files if image[0] not in path_files)
+            deletable_files = (
+                image[1] for image in files if image[0] not in path_files
+            )
             # looping in cycle and delete already deleted files(in FS) from DB
             for deleted_file in deletable_files:
                 # delete file selected by ID
                 Image[deleted_file].delete()
-    
+
         else:
             # delete path if not exist
             delete(image for image in Image if image.image_path == path)
@@ -136,13 +142,14 @@ def reindex_video_files():
             # filter files
             # if files not exist in FS but exist in DB - they deleted by user
             # and we need clean DB
-            deletable_files = (video[1] for video in files if video[0] not in path_files)
+            deletable_files = (
+                video[1] for video in files if video[0] not in path_files
+            )
             # looping in cycle and delete already deleted files(in FS) from DB
             for deleted_file in deletable_files:
                 # delete file selected by ID
                 Video[deleted_file].delete()
-    
+
         else:
             # delete path if not exist
             delete(video for video in Video if video.video_path == path)
-

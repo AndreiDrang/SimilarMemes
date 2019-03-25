@@ -55,13 +55,15 @@ def save_images_duplicates(pairs: collections.deque):
         )[:]
         # if current pair not exist
         if not image_duplicates:
-            ImageDuplicates(image_src_id=pair[0],
-                            image_dup=Image[pair[1]],
-                            images_similarity=pair[2])
+            ImageDuplicates(
+                image_src_id=pair[0],
+                image_dup=Image[pair[1]],
+                images_similarity=pair[2],
+            )
 
 
 @db_session(retry=3)
-def get_image_duplicates(image_id: int)->[Image]:
+def get_image_duplicates(image_id: int) -> [Image]:
     """
     Return list of Image-objects - duplicates of certain image
 
@@ -71,17 +73,18 @@ def get_image_duplicates(image_id: int)->[Image]:
     """
     # find image duplicates
     duplicates = select(
-            duplicate.image_src_id if duplicate.image_src_id!=image_id else duplicate.image_dup.id
-            for duplicate in ImageDuplicates
-            if duplicate.image_src_id == image_id
-            or duplicate.image_dup.id == image_id
-        )[:]
+        duplicate.image_src_id
+        if duplicate.image_src_id != image_id
+        else duplicate.image_dup.id
+        for duplicate in ImageDuplicates
+        if duplicate.image_src_id == image_id or duplicate.image_dup.id == image_id
+    )[:]
 
     return [Image[img_id] for img_id in duplicates]
 
 
 @db_session(retry=3)
-def group_image_files()->dict:
+def group_image_files() -> dict:
     """
     Function group image files to dict with key - path, value - images in this path
 
@@ -101,20 +104,15 @@ def group_image_files()->dict:
     all_images_paths = Image.group_images_paths()
     for path in all_images_paths:
         path_files = select(
-                        (image.image_name, image.id) for image in Image 
-                        if image.image_path == path
-                    )[:]
-        result.update(
-            {
-                path: path_files
-            }
-        )
+            (image.image_name, image.id) for image in Image if image.image_path == path
+        )[:]
+        result.update({path: path_files})
 
     return result
 
 
 @db_session(retry=3)
-def group_video_files()->dict:
+def group_video_files() -> dict:
     """
     Function group video files to dict with key - path, value - video in this path
 
@@ -134,13 +132,8 @@ def group_video_files()->dict:
     all_video_paths = Video.group_video_paths()
     for path in all_video_paths:
         path_files = select(
-                        (video.video_name, video.id) for video in Video 
-                        if video.video_path == path
-                    )[:]
-        result.update(
-            {
-                path: path_files
-            }
-        )
+            (video.video_name, video.id) for video in Video if video.video_path == path
+        )[:]
+        result.update({path: path_files})
 
     return result

@@ -53,9 +53,7 @@ class Image(db.Entity):
         """
         Return unique paths from Images
         """
-        return collections.deque(
-            select(image.image_path for image in Image)[:]
-        )
+        return collections.deque(select(image.image_path for image in Image)[:])
 
 
 class Video(db.Entity):
@@ -80,9 +78,7 @@ class Video(db.Entity):
         """
         Return unique paths from Video
         """
-        return collections.deque(
-            select(video.video_path for video in Video)[:]
-        )
+        return collections.deque(select(video.video_path for video in Video)[:])
 
 
 class ImageTag(db.Entity):
