@@ -74,6 +74,16 @@ class Video(db.Entity):
     # video duplicates
     video_duplicates = Set("VideoDuplicates", nullable=True)
 
+    @staticmethod
+    @db_session(retry=3)
+    def group_video_paths() -> collections.deque:
+        """
+        Return unique paths from Video
+        """
+        return collections.deque(
+            select(video.video_path for video in Video)[:]
+        )
+
 
 class ImageTag(db.Entity):
     """

@@ -111,3 +111,36 @@ def group_image_files()->dict:
         )
 
     return result
+
+
+@db_session(retry=3)
+def group_video_files()->dict:
+    """
+    Function group video files to dict with key - path, value - video in this path
+
+    :return: Dict with path's and files
+                {
+                    <path name>: [
+                        (<filename>, <video ID>),
+                        (<filename>, <video ID>),
+                    ],
+                    <path name>: [
+                        (<filename>, <video ID>),
+                        (<filename>, <video ID>),
+                    ]
+                }
+    """
+    result = {}
+    all_video_paths = Video.group_video_paths()
+    for path in all_video_paths:
+        path_files = select(
+                        (video.video_name, video.id) for video in Video 
+                        if video.video_path == path
+                    )[:]
+        result.update(
+            {
+                path: path_files
+            }
+        )
+
+    return result

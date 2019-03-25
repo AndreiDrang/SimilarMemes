@@ -1,6 +1,6 @@
 import time
 
-from indexing import index_folder_files, reindex_image_files
+from indexing import index_folder_files, reindex_image_files, reindex_video_files
 from image_processing import image_processing, feature_description
 from video_processing import video_processing
 from database import save_new_files, Image, save_images_duplicates, get_image_duplicates
@@ -14,6 +14,9 @@ path = '/home/andrei/Pictures/'
 
 # reindex DB image files
 reindex_image_files()
+
+# reindex DB video files
+reindex_video_files()
 
 
 start_time = time.time()
@@ -41,6 +44,8 @@ print(result_image_dict)
 
 # save all images to DB
 save_new_files(result_image_dict, 'image')
+# save all videos to DB
+save_new_files(result_video_dict, 'video')
 
 
 image_files_query = Image.get_images_paths()
