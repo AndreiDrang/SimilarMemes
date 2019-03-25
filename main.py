@@ -1,6 +1,6 @@
 import time
 
-from indexing import index_folder_files
+from indexing import index_folder_files, reindex_image_files
 from image_processing import image_processing, feature_description
 from video_processing import video_processing
 from database import save_new_files, Image, save_images_duplicates, get_image_duplicates
@@ -9,8 +9,11 @@ from database import save_new_files, Image, save_images_duplicates, get_image_du
 
 
 #path = '/home/andrei/Downloads/Telegram Desktop/DataExport_06_12_2018/chats/chat_001/photos'
-path = '/home/andrey.rachalovsky/Pictures/'
+path = '/home/andrei/Pictures/'
 
+
+# reindex DB image files
+reindex_image_files()
 
 
 start_time = time.time()
@@ -40,7 +43,7 @@ print(result_image_dict)
 save_new_files(result_image_dict, 'image')
 
 
-image_files_query = Image.get_files_paths()
+image_files_query = Image.get_images_paths()
 
 
 result_image_features_list = feature_description(images_list=image_files_query)
@@ -60,5 +63,3 @@ print(len(image_files_query))
 # get certain image all duplicates
 result = get_image_duplicates(image_id=8)
 print(result)
-
-# reindex DB files
