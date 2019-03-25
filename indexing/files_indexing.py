@@ -10,7 +10,7 @@ from indexing import (
 )
 
 sys.path.append('.')
-from database import group_image_files
+from database import group_image_files, Image, delete, db_session, select
 
 
 def is_image(file_name: str) -> bool:
@@ -89,16 +89,31 @@ def index_folder_files(
     return image_files_list, video_files_list
 
 
+@db_session(retry=3)
 def reindex_image_files():
     """
     Function reindex all Image files in DB
+    
+    Function check if path exist, if not - delete all images from this path
+    Function check if image exist in this folder, if not - make not exist images ID's list and delete them from DB
     """
     image_files = group_image_files()
-    print(image_files.keys())
+    # get path and file name
     for path, files in image_files.items():
-        # get path data
-        path_data = os.listdir(path)
-        print(path_data)
-        print(files)
-        print('\n\n\n')
+        # check if path exist
+        if os.path.exists(path):
+            # get path files
+            path_files = os.listdir(path)
+            # filter files
+            # if files not exist in FS but exist in DB - they deleted by user
+            # and we need clean DB
+            deletable_files = (image[1] for image in files if image[0] not in path_files)
+            # looping in cycle and delete already deleted files(in FS) from DB
+            for deleted_file in deletable_files:
+                # delete file selected by ID
+                Image[deleted_file].delete()
+    
+        else:
+            # delete path if not exist
+            delete(image for image in Image if image.image_path == path)
 
