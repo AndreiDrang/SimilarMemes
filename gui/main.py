@@ -11,7 +11,7 @@ from PyQt5.QtMultimedia import *
 from PyQt5.QtMultimediaWidgets import *
 
 from gui import json_settings
-from indexing import index_folder_files
+from indexing import index_folder_files, reindex_image_files, reindex_video_files
 
 
 # The global to store image/video paths:
@@ -32,6 +32,10 @@ class ProcessingThread(QThread):
     # The process to fill the image/video tables with image/video names and ITEM_PATH_DICT with their paths:
     def run(self):
         rowImages, rowVideos = 0, 0
+
+        ## Reindex already exist folders and files; Image and Video files
+        reindex_image_files()
+        reindex_video_files()
 
         ## Processes all multimedia in the main folder and its sub-folders as well (depending on depth from settings):
         if self.folderTreeCheckbox.isChecked():
