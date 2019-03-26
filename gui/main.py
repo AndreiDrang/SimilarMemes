@@ -128,10 +128,10 @@ class Window(QWidget):
         self.folderButton.clicked.connect(self.set_folder)
 
         self.processButton.clicked.connect(self.process_files)
-        self.processButton.setFixedWidth(100)
+        self.processButton.setFixedWidth(150)
 
         self.duplicateButton.clicked.connect(self.find_duplicates)
-        self.duplicateButton.setFixedWidth(100)
+        self.duplicateButton.setFixedWidth(150)
 
         self.progressBar.setAlignment(Qt.AlignCenter)
 
