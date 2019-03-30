@@ -35,7 +35,7 @@ def feature_description(images_list: collections.deque) -> collections.deque:
     images_pairs = itertools.combinations(images_list, 2)
     # prepare
     feature_pairs = collections.deque()
-
+    
     for pair in images_pairs:
         # get hash values for images in pair
         first_image = cv2.imread(pair[0][1] + os.sep + pair[0][0], 0)
@@ -43,17 +43,18 @@ def feature_description(images_list: collections.deque) -> collections.deque:
 
         _, descriptor_first = orb.detectAndCompute(first_image, None)
         _, descriptor_second = orb.detectAndCompute(second_image, None)
+        # if detector not find any element on image - pass this pair
+        if descriptor_first is not None and descriptor_second is not None:
+            # count matches between two images
+            match = bf_match.match(descriptor_first, descriptor_second)
+            # sort images matches by distance, and get lowest 10 values(lower is better)
+            match_sorted = sorted(match, key=lambda element: element.distance)[:10]
 
-        # count matches between two images
-        match = bf_match.match(descriptor_first, descriptor_second)
-        # sort images matches by distance, and get lowest 10 values(lower is better)
-        match_sorted = sorted(match, key=lambda element: element.distance)[:10]
+            # print(match_sorted[0].distance)
+            average_match_value = sum(matching.distance for matching in match_sorted) // 10
 
-        # print(match_sorted[0].distance)
-        average_match_value = sum(matching.distance for matching in match_sorted) // 10
-
-        if average_match_value < FEATURE_PARAM:
-            # save hash different
-            feature_pairs.append((pair[0][2], pair[1][2], average_match_value))
-
+            if average_match_value < FEATURE_PARAM:
+                # save hash different
+                feature_pairs.append((pair[0][2], pair[1][2], average_match_value))
+        
     return feature_pairs
