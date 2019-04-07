@@ -53,7 +53,7 @@ def get_depth(start_path: str, end_path: str):
 
 
 def index_folder_files(
-    path: collections.deque, max_depth: int = 3, indexing_type: str = "all"
+    path: str, max_depth: int = 3, indexing_type: str = "all"
 ) -> (collections.deque, collections.deque):
     """
     Function indexing image/video files in folder

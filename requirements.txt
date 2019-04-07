@@ -3,3 +3,4 @@ opencv-python
 pillow-simd
 pony==0.7.*
 pyqt5
+imageio==2.4.1
