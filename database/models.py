@@ -1,7 +1,7 @@
 import collections
 from datetime import datetime
 
-from pony.orm import *
+from pony.orm import Required, Set, Database, db_session, select, delete, composite_key
 
 db = Database()
 
