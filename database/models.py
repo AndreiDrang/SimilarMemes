@@ -123,6 +123,28 @@ class VideoDuplicates(db.Entity):
     video_duplicates = Set(Video)
 
 def connection(provider: str = 'sqlite', settings: dict = {'filename': 'memes.sqlite', 'create_db': True}):
+    """
+    Function get user custom DB connect params
+
+    :param provider: DB type, available variants - `sqlite / postgres / mysql`
+    :param settings: Dict with connection params; 
+                        For `sqlite` - {
+                                        filename: <DB file name>, 
+                                        create_db: <True - create new DB file; False - connect to exist DB file>
+                                       }
+                        For `postgres` - {
+                                            user: <User name>, 
+                                            password: <User password>,
+                                            host: <Host addres>
+                                            database: <DB name>
+                                        }
+                        For `mysql` - {
+                                        user: <User name>, 
+                                        passwd: <User password>,
+                                        host: <Host addres>
+                                        db: <DB name>
+                                      }
+    """
     # bind to DB with provider and settings
     db.bind(
         provider=provider,
@@ -131,5 +153,3 @@ def connection(provider: str = 'sqlite', settings: dict = {'filename': 'memes.sq
     db.generate_mapping(create_tables=True)
 
     print("Все таблицы в БД успешно созданы")
-
-    return db
