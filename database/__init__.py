@@ -7,6 +7,7 @@ from .models import (
     db,
     select,
     delete,
+    connection
 )
 from .db_methods import (
     save_new_files,

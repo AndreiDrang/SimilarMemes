@@ -17,6 +17,8 @@ Script for searching similar image/video files in folder.
 
 ## Backend description
 
+**Before using any DB model/method u must connect to DB - from `models` import `connection` and start it.**
+
 ### Models
 
 ### DB-methods

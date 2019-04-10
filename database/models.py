@@ -5,16 +5,6 @@ from pony.orm import Required, Set, Database, db_session, select, delete, compos
 
 db = Database()
 
-db.bind(
-    provider="postgres",
-    user="similar_memes",
-    password="veryhardpass",
-    host="85.255.8.26",
-    # host='localhost',
-    database="similar_memes_db",
-)
-
-
 class Image(db.Entity):
     """
     Image model
@@ -132,7 +122,14 @@ class VideoDuplicates(db.Entity):
     # video duplicates
     video_duplicates = Set(Video)
 
+def connection(provider: str = 'sqlite', settings: dict = {'filename': 'memes.sqlite', 'create_db': True}):
+    # bind to DB with provider and settings
+    db.bind(
+        provider=provider,
+        **settings
+    )
+    db.generate_mapping(create_tables=True)
 
-db.generate_mapping(create_tables=True)
+    print("Все таблицы в БД успешно созданы")
 
-print("Все таблицы в БД успешно созданы")
+    return db

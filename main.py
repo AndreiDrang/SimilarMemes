@@ -3,10 +3,21 @@ import time
 from indexing import index_folder_files, reindex_image_files, reindex_video_files
 from image_processing import image_processing, feature_description
 from video_processing import video_processing
-from database import save_new_files, Image, save_images_duplicates, get_image_duplicates
+from database import save_new_files, Image, save_images_duplicates, get_image_duplicates, connection
 
 
-
+# if connect ot postgres/mysql
+'''
+connection(provider='postgres',
+           settings={
+                'user': "similar_memes",
+                'password': "veryhardpass",
+                'host': "85.255.8.26",
+                'database': "similar_memes_db",
+           })
+'''
+# if connect to sqlite
+connection(provider='sqlite', settings={'filename': 'db.sqlite', 'create_db': True})
 
 #path = '/home/andrei/Downloads/Telegram Desktop/DataExport_06_12_2018/chats/chat_001/photos'
 path = '/home/andrei/Pictures/'
