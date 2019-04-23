@@ -10,6 +10,7 @@ orb = cv2.ORB_create()
 bf = cv2.BFMatcher()
 
 MATCH_PARAM = 0.78
+SIMILARITY_PARAM = 110
 
 main_path = 'memes_dataset'
 
@@ -82,4 +83,13 @@ for i in range(1, 9000):
                     if SIMILAR_FLAG:
                         logs.write(f'{"="*155}\n{"PAIR END":^160}\n{"="*155}\n')
                 
-
+                if average_match_value <= SIMILARITY_PARAM and not SIMILAR_FLAG:
+                    print(first_file)
+                    print(second_file)
+                    print('Bad NOT similar param - ', average_match_value)
+                    print('\n')
+                elif average_match_value >= SIMILARITY_PARAM and SIMILAR_FLAG:
+                    print(first_file)
+                    print(second_file)
+                    print('Bad SIMILAR param - ', average_match_value)
+                    print('\n')
