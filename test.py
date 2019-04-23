@@ -9,6 +9,8 @@ import cv2
 orb = cv2.ORB_create()
 bf = cv2.BFMatcher()
 
+MATCH_PARAM = 0.78
+
 main_path = 'memes_dataset'
 
 # create folders tree
@@ -24,16 +26,20 @@ for main_data in main_tree:
 available_keys = [key for key in main_dict.keys()][1:]
 
 with open('resultfile.txt', 'w') as logs:
-    logs.write(f'{"First image":^60} | {"Second image":^60} | {"Similarity":^20} | {"Match param":^20}\n')
+    logs.write(f'{"First image":^60}|{"Second image":^60}|{"Similarity":^20}|{"Match param":^20}\n')
+    logs.write(f'{"_"*160}\n')
 
 for i in range(1, 9000):
+        SIMILAR_FLAG = False
+
         first_key = random.choice(available_keys)
         second_key = random.choice(available_keys)
 
         if first_key == second_key:
-            print(second_key)
-            print('BINGO')
-
+            with open('resultfile.txt', 'a') as logs:
+                logs.write(f'{"="*155}\n{"PAIR START":^160}\n{"="*155}\n')
+            SIMILAR_FLAG = True
+            
         first_file = random.choice(main_dict[first_key])
         second_file = random.choice(main_dict[second_key])
 
@@ -55,22 +61,25 @@ for i in range(1, 9000):
                 print(err)
                 continue
         
-            for param in range(77, 80):
-                good=[]
-                for m,n in matches12:
-                    if m.distance < param/100*n.distance:
-                        good.append(m)
+            good=[]
+            for m,n in matches12:
+                if m.distance < MATCH_PARAM*n.distance:
+                    good.append(m)
 
-                # sort images matches by distance, and get lowest 10 values(lower is better)
-                match_sorted = sorted(good, key=lambda element: element.distance)
+            # sort images matches by distance, and get lowest 10 values(lower is better)
+            match_sorted = sorted(good, key=lambda element: element.distance)
 
-                LEN = 10 if len(match_sorted)>10 else len(match_sorted)
+            LEN = 10 if len(match_sorted)>10 else len(match_sorted)
+                
+            match_sorted = match_sorted[:LEN]
 
-                match_sorted = match_sorted[:LEN]
+            if match_sorted:
 
-                if match_sorted:
+                # count summ of sorted matches and get distance average value
+                average_match_value = sum(matching.distance for matching in match_sorted)//LEN
+                with open('resultfile.txt', 'a') as logs:
+                    logs.write(f'{first_file[:55]:^60}|{second_file[:55]:^60}|{average_match_value:^20}|{MATCH_PARAM:^20}\n')
+                    if SIMILAR_FLAG:
+                        logs.write(f'{"="*155}\n{"PAIR END":^160}\n{"="*155}\n')
+                
 
-                    # count summ of sorted matches and get distance average value
-                    average_match_value = sum(matching.distance for matching in match_sorted)//LEN
-                    with open('resultfile.txt', 'a') as logs:
-                        logs.write(f'{first_file[:50]:^60} | {second_file[:50]:^60} | {average_match_value:^20} | {param/100:^20}\n')
