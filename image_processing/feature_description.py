@@ -28,14 +28,18 @@ def feature_description(images_list: collections.deque) -> collections.deque:
                 )
     """
     orb = cv2.ORB_create()
-    # BFMatcher with default params
-    bf_match = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-    # read param
-    FEATURE_PARAM = get_settings()["feature_description"]
+    bf = cv2.BFMatcher()
+
+    # similarity param
+    SIMILARITY_PARAM = get_settings()["SIMILARITY_PARAM"]
+    # match param
+    MATCH_PARAM = get_settings()["MATCH_PARAM"]
     # make unique photo files combinations
     images_pairs = itertools.combinations(images_list, 2)
-    # prepare
+    # prepare pairs list
     feature_pairs = collections.deque()
+    # prepare good point list
+    good_points = collections.deque()
     
     for pair in images_pairs:
         # if first image is GIF
@@ -61,15 +65,23 @@ def feature_description(images_list: collections.deque) -> collections.deque:
 
         # if detector not find any element on image - pass this pair
         if descriptor_first is not None and descriptor_second is not None:
-            # count matches between two images
-            match = bf_match.match(descriptor_first, descriptor_second)
-            # sort images matches by distance, and get lowest 10 values(lower is better)
-            match_sorted = sorted(match, key=lambda element: element.distance)[:10]
-            # count summ of sorted matches and get distance average value
-            average_match_value = sum(matching.distance for matching in match_sorted) // 10
+            matches = bf.knnMatch(descriptor_first, descriptor_second, k=2)
+            # find good points
+            for m,n in matches:
+                if m.distance < MATCH_PARAM*n.distance:
+                    good_points.append(m)
 
-            if average_match_value < FEATURE_PARAM:
+            # sort images matches by distance, and get lowest 10 values(lower is better)
+            match_sorted = sorted(good_points, key=lambda element: element.distance)
+
+            LEN = 10 if len(match_sorted)>10 else len(match_sorted)
+            # slice only few points
+            match_sorted = match_sorted[:LEN]
+            if match_sorted:
+                # count summ of sorted matches and get distance average value
+                average_match_value = sum(matching.distance for matching in match_sorted)//LEN
                 # save hash different
                 feature_pairs.append((pair[0][2], pair[1][2], average_match_value))
-        
+
+        good_points.clear()
     return feature_pairs

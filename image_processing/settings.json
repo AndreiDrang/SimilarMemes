@@ -1,3 +1,5 @@
 {
-    "feature_description": 38
+    "feature_description": 38,
+    "MATCH_PARAM": 0.78,
+    "SIMILARITY_PARAM": 110,
 }
