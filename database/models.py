@@ -1,6 +1,7 @@
 import collections
 from datetime import datetime
 
+import numpy as np
 from pony.orm import Required, Set, Database, db_session, select, delete, composite_key
 
 db = Database()
@@ -31,13 +32,20 @@ class Image(db.Entity):
 
     @staticmethod
     @db_session(retry=3)
-    def get_images_paths() -> collections.deque:
+    def get_images_descriptors() -> [(np.ndarray, int)]:
         """
-        Return all images names, paths and ID's
+        Return all images descriptors and ID's
         """
-        return collections.deque(
-            select((image.image_name, image.image_path, image.id) for image in Image)[:]
+        result =  collections.deque(
+            select((image.image_orb_descriptor, image.id) for image in Image)[:]
         )
+        # restore descriptor from bytes
+        frombuffer_result = [(np.frombuffer(descriptor, dtype=np.uint8), id_) for descriptor, id_ in result]
+        # reshape descriptor in src shape - (x, 32)
+        reshaped_result = [(descriptor.reshape((descriptor.shape[0]//32, 32)), id_) for descriptor, id_ in frombuffer_result]
+
+        return reshaped_result
+
 
     @staticmethod
     @db_session(retry=3)
