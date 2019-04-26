@@ -1,5 +1,4 @@
 {
-    "feature_description": 38,
-    "MATCH_PARAM": 0.78,
-    "SIMILARITY_PARAM": 110,
+    "lowe_ratio": 0.78,
+    "similarity_threshold": 110,
 }
