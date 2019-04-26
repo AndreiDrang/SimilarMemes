@@ -39,6 +39,9 @@ def image_processing(image_list: collections.deque) -> collections.defaultdict:
         
         # check if orb_descriptor is counted
         if type(orb_descriptor)==np.ndarray:
+            # if orb_descriptor find too few points - pass this image
+            if orb_descriptor.shape[0]<2:
+                continue
             # write result to dict
             result_image_dict.update(
                 {
