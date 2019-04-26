@@ -20,6 +20,7 @@ def save_new_files(indexed_files: collections.defaultdict, file_type: str):
                 Image(
                     image_name=image_data["namepath"][0],
                     image_path=image_data["namepath"][1],
+                    image_orb_descriptor=image_data["orb_descriptor"],
                     image_md5_hash=image_data["md5_hash"],
                 )
 

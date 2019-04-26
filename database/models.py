@@ -18,6 +18,8 @@ class Image(db.Entity):
     image_name = Required(str)
     # image md5 hash
     image_md5_hash = Required(str, unique=True)
+    # image ORB descriptor
+    image_orb_descriptor = Required(bytes)
     # image creation datetime(in DB)
     image_creation = Required(datetime, default=datetime.now)
     # image tags
