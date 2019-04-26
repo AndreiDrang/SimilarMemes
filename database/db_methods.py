@@ -64,24 +64,28 @@ def save_images_duplicates(pairs: collections.deque):
 
 
 @db_session(retry=3)
-def get_image_duplicates(image_id: int) -> [Image]:
+def get_image_duplicates(image_id: int) -> [(Image, float)]:
     """
     Return list of Image-objects - duplicates of certain image
 
     :param image_id: ID of image to search it's duplicates
 
-    :return: List of Images-objects
+    :return: List of Images-objects and similarity param
     """
-    # find image duplicates
+    # find image duplicates pairs which contains `image_id`
     duplicates = select(
-        duplicate.image_src_id
-        if duplicate.image_src_id != image_id
-        else duplicate.image_dup.id
+        duplicate
         for duplicate in ImageDuplicates
         if duplicate.image_src_id == image_id or duplicate.image_dup.id == image_id
-    )[:]
+    ).sort_by(ImageDuplicates.images_similarity)[:]
 
-    return [Image[img_id] for img_id in duplicates]
+    # filter duplicates pairs and get only new(image!=src_image) images from pair
+    duplicates_images = [(duplicate.image_src_id if duplicate.image_src_id != image_id else duplicate.image_dup.id, duplicate.images_similarity) 
+                          for duplicate in duplicates]
+
+    print(duplicates_images)
+
+    return [(Image[img_id], similarity) for img_id, similarity in duplicates_images]
 
 
 @db_session(retry=3)
