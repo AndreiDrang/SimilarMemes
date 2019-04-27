@@ -75,6 +75,37 @@ File - **database/db_methods.py**
     **IMPORTANT :**<br>
     Function return only unique images ID's, which not equal to `image_id` from sended params;
 
+1. Function ***group_image_files***
+
+    Params:
+
+    *None*
+
+    Work:
+
+    Function get all images paths and then select for each path - files;
+    <br>
+    Finally is created `dict`, with **keys** - path names, **values** - image filename + image id from the path;
+
+    Return:
+
+    `Dict` which contain image paths and image files(**from this path**);
+    <br>
+    For example : 
+    ```python
+    {
+        <path name>: 
+            [
+                (<filename>, <image ID>),
+                (<filename>, <image ID>),
+            ],
+        <path name>: 
+            [
+                (<filename>, <image ID>),
+                (<filename>, <image ID>),
+            ],
+    } 
+    ```
 
 ### Folders indexing
 
