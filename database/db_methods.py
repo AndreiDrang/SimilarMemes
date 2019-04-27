@@ -1,6 +1,6 @@
 import collections
 
-from database import Image, ImageTag, Video, ImageDuplicates, db_session, select
+from database import Image, Video, ImageDuplicates, db_session, select
 
 
 @db_session(retry=3)

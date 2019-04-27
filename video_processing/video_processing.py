@@ -3,7 +3,7 @@ import collections
 import hashlib
 
 
-from .audio_processing import audio_processing
+#from .audio_processing import audio_processing
 from .settings import get_settings
 
 
@@ -47,4 +47,4 @@ def video_processing(video_list: collections.deque) -> collections.defaultdict:
 
         print("Next video\n\n")
 
-    return collections.defaultdict()
+    return result_video_dict

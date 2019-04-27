@@ -2,7 +2,7 @@ import collections
 from datetime import datetime
 
 import numpy as np
-from pony.orm import Required, Set, Database, db_session, select, delete, composite_key
+from pony.orm import Required, Set, Database, db_session, select, composite_key
 
 db = Database()
 

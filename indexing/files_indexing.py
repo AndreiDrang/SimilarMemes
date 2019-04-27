@@ -13,7 +13,6 @@ from database import (
     Video,
     delete,
     db_session,
-    select,
 )
 
 
