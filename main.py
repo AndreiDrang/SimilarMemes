@@ -77,5 +77,5 @@ print(len(image_files_query))
 
 
 # get certain image all duplicates
-result = get_image_duplicates(image_id=8)
+result = get_image_duplicates(image_id=8, similarity_threshold=150)
 print(result)
