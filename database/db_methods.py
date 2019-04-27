@@ -71,7 +71,7 @@ def get_image_duplicates(
     Return list of Image-objects - duplicates of certain image
 
     :param image_id: ID of image to search it's duplicates
-    :param similarity_threshold: Similarity threshold to images sorting
+    :param similarity_threshold: Similarity threshold to images filtering
 
     :return: List of Images-objects and similarity param
     """
