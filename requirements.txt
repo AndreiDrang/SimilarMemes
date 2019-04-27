@@ -1,6 +1,6 @@
-numpy
-opencv-python
-pillow-simd
+numpy==1.16.*
+opencv-python==4.1.*
+pillow-simd==5.3.*
 pony==0.7.*
-pyqt5
-imageio==2.5.0
+pyqt5==5.12.*
+imageio==2.5.*
