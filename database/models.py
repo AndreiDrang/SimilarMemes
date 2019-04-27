@@ -1,9 +1,11 @@
 import collections
 from datetime import datetime
 
-from pony.orm import Required, Set, Database, db_session, select, delete, composite_key
+import numpy as np
+from pony.orm import Required, Set, Database, db_session, select, composite_key
 
 db = Database()
+
 
 class Image(db.Entity):
     """
@@ -18,6 +20,8 @@ class Image(db.Entity):
     image_name = Required(str)
     # image md5 hash
     image_md5_hash = Required(str, unique=True)
+    # image ORB descriptor
+    image_orb_descriptor = Required(bytes)
     # image creation datetime(in DB)
     image_creation = Required(datetime, default=datetime.now)
     # image tags
@@ -29,13 +33,25 @@ class Image(db.Entity):
 
     @staticmethod
     @db_session(retry=3)
-    def get_images_paths() -> collections.deque:
+    def get_images_descriptors() -> [(np.ndarray, int)]:
         """
-        Return all images names, paths and ID's
+        Return all images descriptors and ID's
         """
-        return collections.deque(
-            select((image.image_name, image.image_path, image.id) for image in Image)[:]
+        result = collections.deque(
+            select((image.image_orb_descriptor, image.id) for image in Image)[:]
         )
+        # restore descriptor from bytes
+        frombuffer_result = [
+            (np.frombuffer(descriptor, dtype=np.uint8), id_)
+            for descriptor, id_ in result
+        ]
+        # reshape descriptor in src shape - (x, 32)
+        reshaped_result = [
+            (descriptor.reshape((descriptor.shape[0] // 32, 32)), id_)
+            for descriptor, id_ in frombuffer_result
+        ]
+
+        return reshaped_result
 
     @staticmethod
     @db_session(retry=3)
@@ -122,34 +138,36 @@ class VideoDuplicates(db.Entity):
     # video duplicates
     video_duplicates = Set(Video)
 
-def connection(provider: str = 'sqlite', settings: dict = {'filename': 'memes.sqlite', 'create_db': True}):
+
+def connection(
+    provider: str = "sqlite",
+    settings: dict = {"filename": "memes.sqlite", "create_db": True},
+):
     """
     Function get user custom DB connect params
 
     :param provider: DB type, available variants - `sqlite / postgres / mysql`
-    :param settings: Dict with connection params; 
+    :param settings: Dict with connection params;
                         For `sqlite` - {
-                                        filename: <DB file name>, 
-                                        create_db: <True - create new DB file; False - connect to exist DB file>
+                                        filename: <DB file name>,
+                                        create_db: <True - create new DB file;
+                                        False - connect to exist DB file>
                                        }
                         For `postgres` - {
-                                            user: <User name>, 
+                                            user: <User name>,
                                             password: <User password>,
                                             host: <Host addres>
                                             database: <DB name>
                                         }
                         For `mysql` - {
-                                        user: <User name>, 
+                                        user: <User name>,
                                         passwd: <User password>,
                                         host: <Host addres>
                                         db: <DB name>
                                       }
     """
     # bind to DB with provider and settings
-    db.bind(
-        provider=provider,
-        **settings
-    )
+    db.bind(provider=provider, **settings)
     db.generate_mapping(create_tables=True)
 
     print("Все таблицы в БД успешно созданы")

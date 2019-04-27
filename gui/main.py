@@ -1,4 +1,4 @@
-##TODO:
+# TODO:
 # Thread processing duplicates
 # Menu settings
 
@@ -29,22 +29,24 @@ class ProcessingThread(QThread):
         self.videoListTable = videoListTable
         self.folderTreeCheckbox = folderTreeCheckbox
 
-    # The process to fill the image/video tables with image/video names and ITEM_PATH_DICT with their paths:
+    # The process to fill the image/video tables with image/video names
+    # and ITEM_PATH_DICT with their paths:
     def run(self):
         rowImages, rowVideos = 0, 0
 
-        ## Reindex already exist folders and files; Image and Video files
+        # Reindex already exist folders and files; Image and Video files
         reindex_image_files()
         reindex_video_files()
 
-        ## Processes all multimedia in the main folder and its sub-folders as well (depending on depth from settings):
+        # Processes all multimedia in the main folder and its sub-folders as well
+        # (depending on depth from settings):
         if self.folderTreeCheckbox.isChecked():
             images, videos = index_folder_files(
                 self.folderField.text(),
                 max_depth=json_settings.json_read("folderDepth"),
             )
 
-        ## Processes multimedia in the selected folder only:
+        # Processes multimedia in the selected folder only:
         else:
             images, videos = index_folder_files(self.folderField.text(), max_depth=0)
 
@@ -110,10 +112,10 @@ class Window(QWidget):
     def __init__(self, statusBar):
         super().__init__()
 
-        ## Gets status bar from QMainWindow:
+        # Gets status bar from QMainWindow:
         self.statusBar = statusBar
 
-        ## Initializes all window elements:
+        # Initializes all window elements:
         self.folderField = QLineEdit()
         self.folderButton = QPushButton()
         self.folderTreeCheckbox = QCheckBox("Include sub-folders")
@@ -127,7 +129,7 @@ class Window(QWidget):
         self.videoField = QVideoWidget()
         self.videoPlayer = QMediaPlayer()
 
-        ## Adjusts settings for the window elements:
+        # Adjusts settings for the window elements:
         self.folderField.setEnabled(False)
 
         self.folderButton.setIcon(self.style().standardIcon(QStyle.SP_DialogOpenButton))
@@ -145,7 +147,9 @@ class Window(QWidget):
         self.videosTab = self.tableTabs.insertTab(1, self.videoListTable, "Videos")
 
         self.imageListTable.setColumnCount(3)
-        self.imageListTable.setHorizontalHeaderLabels(["List of images", "Extension", "..."])
+        self.imageListTable.setHorizontalHeaderLabels(
+            ["List of images", "Extension", "..."]
+        )
         self.imageListTable.setColumnWidth(0, 200)
         self.imageListTable.setColumnWidth(2, 27)
         self.imageListTable.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
@@ -153,15 +157,17 @@ class Window(QWidget):
         self.imageListTable.cellClicked.connect(self.show_image)
 
         self.videoListTable.setColumnCount(3)
-        self.videoListTable.setHorizontalHeaderLabels(["List of videos", "Extension", "..."])
+        self.videoListTable.setHorizontalHeaderLabels(
+            ["List of videos", "Extension", "..."]
+        )
         self.videoListTable.setColumnWidth(0, 200)
         self.videoListTable.setColumnWidth(2, 27)
         self.videoListTable.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.videoListTable.setSortingEnabled(True)
         self.videoListTable.cellClicked.connect(self.show_video)
 
-        ## Places the window elements on the window:
-        ### Top-left cell of main grid box:
+        # Places the window elements on the window:
+        # Top-left cell of main grid box:
         subGridBox = QWidget()
         subGrid = QGridLayout()
         subGrid.addWidget(self.folderField, 0, 0)
@@ -172,7 +178,7 @@ class Window(QWidget):
         subGrid.addWidget(self.progressBar, 4, 0, 1, 2)
         subGridBox.setLayout(subGrid)
 
-        ### Main grid box:
+        # Main grid box:
         self.mainGrid = QGridLayout()
         self.mainGrid.addWidget(subGridBox, 0, 0)
         self.mainGrid.addWidget(self.tableTabs, 1, 0)
@@ -185,7 +191,7 @@ class Window(QWidget):
 
         self.setLayout(self.mainGrid)
 
-        ## Creates a QThread instance:
+        # Creates a QThread instance:
         self.thread = ProcessingThread(
             self.folderField,
             self.imageListTable,
@@ -207,7 +213,7 @@ class Window(QWidget):
     def process_files(self):
         self.duplicateButton.setEnabled(False)
 
-        ## Clears both tables upon restarting function:
+        # Clears both tables upon restarting function:
         self.imageListTable.clearContents()
         self.imageListTable.setRowCount(0)
         self.videoListTable.clearContents()
@@ -257,16 +263,16 @@ class Window(QWidget):
     def show_image(self, row, column):
         imageItem = self.imageListTable.item(row, column)
 
-        ## Prevents from KeyError when clicking the second column:
+        # Prevents from KeyError when clicking the second column:
         if imageItem.text() in ITEM_PATH_DICT:
             imageItemPath = ITEM_PATH_DICT[imageItem.text()]
 
-            ## Removes a video from screen if shown:
+            # Removes a video from screen if shown:
             self.videoPlayer.stop()
             self.videoField.hide()
             self.imageField.show()
 
-            ## Shows animated images:
+            # Shows animated images:
             if imageItemPath.lower().endswith("gif"):
                 gif = QMovie(imageItemPath)
                 gifSize = QSize(*self.smooth_gif_resize(imageItemPath, 600, 600))
@@ -274,14 +280,14 @@ class Window(QWidget):
                 self.imageField.setMovie(gif)
                 gif.start()
 
-            ## Shows static images:
+            # Shows static images:
             else:
                 self.imageField.setPixmap(
                     QPixmap(imageItemPath).scaled(
                         600, 600, Qt.KeepAspectRatio, Qt.SmoothTransformation
                     )
                 )
-        
+
         elif imageItem.text() == "D":
             self.duplicateWindow = DuplicateWindow(self.imageListTable.item(row, 0))
             self.duplicateWindow.show()
@@ -291,20 +297,21 @@ class Window(QWidget):
         videoItem = self.videoListTable.item(row, column)
         self.mainGrid.setColumnMinimumWidth(1, 800)
 
-        ## Prevents from KeyError when clicking the second column:
+        # Prevents from KeyError when clicking the second column:
         if videoItem.text() in ITEM_PATH_DICT:
             videoItemPath = ITEM_PATH_DICT[videoItem.text()]
             videoContent = QMediaContent(QUrl.fromLocalFile(videoItemPath))
             self.videoPlayer.setMedia(videoContent)
             self.videoPlayer.setVideoOutput(self.videoField)
 
-            ## Removes an image from screen if shown and starts video:
+            # Removes an image from screen if shown and starts video:
             self.imageField.clear()
             self.imageField.hide()
             self.videoField.show()
             self.videoPlayer.play()
 
-    # An amazing workaround for gif resizing procedure because PyQt's native one doesn't work for some reason:
+    # An amazing workaround for gif resizing procedure
+    # because PyQt's native one doesn't work for some reason:
     def smooth_gif_resize(self, gif, frameWidth, frameHeight):
         gif = Image.open(gif)
         gifWidth0, gifHeight0 = gif.size
@@ -342,44 +349,52 @@ class IndexingSettings(QWidget):
         self.grid.addWidget(self.okButton, 1, 1)
         self.setLayout(self.grid)
 
-    ## Updates the json settings with the new folder depth value:
+    # Updates the json settings with the new folder depth value:
     def ok_event(self):
         json_settings.json_update("folderDepth", self.folderDepthField.text())
         self.close()
 
-        
+
 # A separate window to show duplicates of the source image:
 class DuplicateWindow(QWidget):
     def __init__(self, sourceImage):
         super().__init__()
         self.sourceImage = sourceImage.text()
-        
+
         self.setWindowTitle("Duplicates")
         self.setFixedSize(500, 500)
-        
+
         self.imageField = QLabel()
         self.duplicateTable = QTableWidget()
 
-        self.imageField.setPixmap(QPixmap(ITEM_PATH_DICT[self.sourceImage]).scaled(300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation))
-        
+        self.imageField.setPixmap(
+            QPixmap(ITEM_PATH_DICT[self.sourceImage]).scaled(
+                300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
+            )
+        )
+
         self.duplicateTable.setColumnCount(3)
         self.duplicateTable.setColumnWidth(0, 250)
         self.duplicateTable.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.duplicateTable.setSortingEnabled(True)
-        
+
         self.duplicateTable.setRowCount(1)
         self.duplicateTable.setItem(0, 0, QTableWidgetItem(self.sourceImage))
         self.duplicateTable.setItem(0, 1, QTableWidgetItem("Open folder"))
         self.duplicateTable.setItem(0, 2, QTableWidgetItem("Delete"))
-        
+
         self.duplicateTable.cellClicked.connect(self.show_image)
-        
+
         self.vbox = QVBoxLayout()
         self.vbox.addWidget(self.imageField, Qt.AlignCenter)
         self.vbox.addWidget(self.duplicateTable)
         self.setLayout(self.vbox)
-        
+
     def show_image(self, row, column):
         imageItem = self.duplicateTable.item(row, column)
         if imageItem.text() in ITEM_PATH_DICT:
-            self.imageField.setPixmap(QPixmap(ITEM_PATH_DICT[self.sourceImage]).scaled(300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+            self.imageField.setPixmap(
+                QPixmap(ITEM_PATH_DICT[self.sourceImage]).scaled(
+                    300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
+                )
+            )

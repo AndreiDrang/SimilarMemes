@@ -1,3 +1,4 @@
 {
-    "feature_description": 38
+    "lowe_ratio": 0.78,
+    "similarity_threshold": 110
 }
