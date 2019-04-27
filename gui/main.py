@@ -145,7 +145,9 @@ class Window(QWidget):
         self.videosTab = self.tableTabs.insertTab(1, self.videoListTable, "Videos")
 
         self.imageListTable.setColumnCount(3)
-        self.imageListTable.setHorizontalHeaderLabels(["List of images", "Extension", "..."])
+        self.imageListTable.setHorizontalHeaderLabels(
+            ["List of images", "Extension", "..."]
+        )
         self.imageListTable.setColumnWidth(0, 200)
         self.imageListTable.setColumnWidth(2, 27)
         self.imageListTable.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
@@ -153,7 +155,9 @@ class Window(QWidget):
         self.imageListTable.cellClicked.connect(self.show_image)
 
         self.videoListTable.setColumnCount(3)
-        self.videoListTable.setHorizontalHeaderLabels(["List of videos", "Extension", "..."])
+        self.videoListTable.setHorizontalHeaderLabels(
+            ["List of videos", "Extension", "..."]
+        )
         self.videoListTable.setColumnWidth(0, 200)
         self.videoListTable.setColumnWidth(2, 27)
         self.videoListTable.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
@@ -281,7 +285,7 @@ class Window(QWidget):
                         600, 600, Qt.KeepAspectRatio, Qt.SmoothTransformation
                     )
                 )
-        
+
         elif imageItem.text() == "D":
             self.duplicateWindow = DuplicateWindow(self.imageListTable.item(row, 0))
             self.duplicateWindow.show()
@@ -347,39 +351,47 @@ class IndexingSettings(QWidget):
         json_settings.json_update("folderDepth", self.folderDepthField.text())
         self.close()
 
-        
+
 # A separate window to show duplicates of the source image:
 class DuplicateWindow(QWidget):
     def __init__(self, sourceImage):
         super().__init__()
         self.sourceImage = sourceImage.text()
-        
+
         self.setWindowTitle("Duplicates")
         self.setFixedSize(500, 500)
-        
+
         self.imageField = QLabel()
         self.duplicateTable = QTableWidget()
 
-        self.imageField.setPixmap(QPixmap(ITEM_PATH_DICT[self.sourceImage]).scaled(300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation))
-        
+        self.imageField.setPixmap(
+            QPixmap(ITEM_PATH_DICT[self.sourceImage]).scaled(
+                300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
+            )
+        )
+
         self.duplicateTable.setColumnCount(3)
         self.duplicateTable.setColumnWidth(0, 250)
         self.duplicateTable.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.duplicateTable.setSortingEnabled(True)
-        
+
         self.duplicateTable.setRowCount(1)
         self.duplicateTable.setItem(0, 0, QTableWidgetItem(self.sourceImage))
         self.duplicateTable.setItem(0, 1, QTableWidgetItem("Open folder"))
         self.duplicateTable.setItem(0, 2, QTableWidgetItem("Delete"))
-        
+
         self.duplicateTable.cellClicked.connect(self.show_image)
-        
+
         self.vbox = QVBoxLayout()
         self.vbox.addWidget(self.imageField, Qt.AlignCenter)
         self.vbox.addWidget(self.duplicateTable)
         self.setLayout(self.vbox)
-        
+
     def show_image(self, row, column):
         imageItem = self.duplicateTable.item(row, column)
         if imageItem.text() in ITEM_PATH_DICT:
-            self.imageField.setPixmap(QPixmap(ITEM_PATH_DICT[self.sourceImage]).scaled(300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+            self.imageField.setPixmap(
+                QPixmap(ITEM_PATH_DICT[self.sourceImage]).scaled(
+                    300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
+                )
+            )

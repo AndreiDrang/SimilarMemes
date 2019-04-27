@@ -6,6 +6,7 @@ from pony.orm import Required, Set, Database, db_session, select, delete, compos
 
 db = Database()
 
+
 class Image(db.Entity):
     """
     Image model
@@ -36,16 +37,21 @@ class Image(db.Entity):
         """
         Return all images descriptors and ID's
         """
-        result =  collections.deque(
+        result = collections.deque(
             select((image.image_orb_descriptor, image.id) for image in Image)[:]
         )
         # restore descriptor from bytes
-        frombuffer_result = [(np.frombuffer(descriptor, dtype=np.uint8), id_) for descriptor, id_ in result]
+        frombuffer_result = [
+            (np.frombuffer(descriptor, dtype=np.uint8), id_)
+            for descriptor, id_ in result
+        ]
         # reshape descriptor in src shape - (x, 32)
-        reshaped_result = [(descriptor.reshape((descriptor.shape[0]//32, 32)), id_) for descriptor, id_ in frombuffer_result]
+        reshaped_result = [
+            (descriptor.reshape((descriptor.shape[0] // 32, 32)), id_)
+            for descriptor, id_ in frombuffer_result
+        ]
 
         return reshaped_result
-
 
     @staticmethod
     @db_session(retry=3)
@@ -132,7 +138,11 @@ class VideoDuplicates(db.Entity):
     # video duplicates
     video_duplicates = Set(Video)
 
-def connection(provider: str = 'sqlite', settings: dict = {'filename': 'memes.sqlite', 'create_db': True}):
+
+def connection(
+    provider: str = "sqlite",
+    settings: dict = {"filename": "memes.sqlite", "create_db": True},
+):
     """
     Function get user custom DB connect params
 
@@ -156,10 +166,7 @@ def connection(provider: str = 'sqlite', settings: dict = {'filename': 'memes.sq
                                       }
     """
     # bind to DB with provider and settings
-    db.bind(
-        provider=provider,
-        **settings
-    )
+    db.bind(provider=provider, **settings)
     db.generate_mapping(create_tables=True)
 
     print("Все таблицы в БД успешно созданы")
