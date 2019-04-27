@@ -9,7 +9,7 @@ import numpy as np
 
 def image_processing(image_list: collections.deque) -> collections.defaultdict:
     """
-    Function preprocess image files, count hash, count images descriptor(using ORB) 
+    Function preprocess image files, count hash, count images descriptor(using ORB)
         and return files info in dict format
 
     :param image_list: List of images in folder

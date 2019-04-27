@@ -96,9 +96,9 @@ def index_folder_files(
 def reindex_image_files():
     """
     Function reindex all Image files in DB
-    
     Function check if path exist, if not - delete all images from this path
-    Function check if image exist in this folder, if not - make not exist images ID's list and delete them from DB
+    Function check if image exist in this folder,
+        if not - make not exist images ID's list and delete them from DB
     """
     image_files = group_image_files()
     # get path and file name
@@ -127,9 +127,9 @@ def reindex_image_files():
 def reindex_video_files():
     """
     Function reindex all Video files in DB
-    
     Function check if path exist, if not - delete all videos from this path
-    Function check if video exist in this folder, if not - make not exist videos ID's list and delete them from DB
+    Function check if video exist in this folder,
+        if not - make not exist videos ID's list and delete them from DB
     """
     video_files = group_video_files()
     # get path and file name

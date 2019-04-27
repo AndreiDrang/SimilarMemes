@@ -147,19 +147,20 @@ def connection(
     Function get user custom DB connect params
 
     :param provider: DB type, available variants - `sqlite / postgres / mysql`
-    :param settings: Dict with connection params; 
+    :param settings: Dict with connection params;
                         For `sqlite` - {
-                                        filename: <DB file name>, 
-                                        create_db: <True - create new DB file; False - connect to exist DB file>
+                                        filename: <DB file name>,
+                                        create_db: <True - create new DB file;
+                                        False - connect to exist DB file>
                                        }
                         For `postgres` - {
-                                            user: <User name>, 
+                                            user: <User name>,
                                             password: <User password>,
                                             host: <Host addres>
                                             database: <DB name>
                                         }
                         For `mysql` - {
-                                        user: <User name>, 
+                                        user: <User name>,
                                         passwd: <User password>,
                                         host: <Host addres>
                                         db: <DB name>

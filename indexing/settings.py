@@ -1,3 +1,4 @@
+# flake8: noqa
 # list of available images formats
 IMAGE_FORMATS = (".png", ".jpg", ".jpeg", ".bmp", ".jpe", ".gif")
 # list of available video formats
