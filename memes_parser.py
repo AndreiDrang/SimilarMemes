@@ -49,26 +49,27 @@ def parse_memes_src():
             'cache-control': "no-cache",
         }
 
-        # open each page
-        response = requests.request("GET", url, headers=headers)
+        for page_id in range(1, 40):
+            # open each page
+            response = requests.request("GET", url+f'?page={page_id}', headers=headers)
 
-        if response.status_code==200:
-            # read page content and get memes pages links and page name
-            content = response.content
+            if response.status_code==200:
+                # read page content and get memes pages links and page name
+                content = response.content
 
-            soup = BeautifulSoup(content, features="lxml")
+                soup = BeautifulSoup(content, features="lxml")
 
-            # get all images src
-            for img_src in soup.find_all('img', 'base-img'):
-                clear_img_src = img_src['src'].replace('//', '')
-                # prepare images folder
-                os.makedirs(f'memes_dataset/{clear_name}', exist_ok=True)
-                image_response = requests.get('https://'+clear_img_src)
-                with open(f'memes_dataset/{clear_name}/{clear_name}_{time.time()}.jpg', 'wb') as image:
-                    image.write(image_response.content)                   
+                # get all images src
+                for img_src in soup.find_all('img', 'base-img'):
+                    clear_img_src = img_src['src'].replace('//', '')
+                    # prepare images folder
+                    os.makedirs(f'memes_dataset/{clear_name}', exist_ok=True)
+                    image_response = requests.get('https://'+clear_img_src)
+                    with open(f'memes_dataset/{clear_name}/{clear_name}_{time.time()}.jpg', 'wb') as image:
+                        image.write(image_response.content)                   
 
-        else:
-            print(response.status_code)
+            else:
+                print(response.status_code)
         
 
 #parse_memes_pages()
