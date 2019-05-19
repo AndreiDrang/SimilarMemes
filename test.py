@@ -44,10 +44,10 @@ for i in range(1, 9000):
         first_file = random.choice(main_dict[first_key])
         second_file = random.choice(main_dict[second_key])
 
-        img1 = cv2.imread(first_key+'/'+first_file, 0)
-        img2 = cv2.imread(second_key+'/'+second_file, 0)
+        img1 = cv2.imread(first_key+'/'+first_file)
+        img2 = cv2.imread(second_key+'/'+second_file)
 
-        if img1.any() and img2.any():
+        if img1 is not None and img2 is not None:
 
             _, des1 = orb.detectAndCompute(img1, None)
             _, des2 = orb.detectAndCompute(img2, None)
