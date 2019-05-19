@@ -1,6 +1,5 @@
-import re
+import uuid
 import os
-import time
 
 import requests
 from bs4 import BeautifulSoup
@@ -65,7 +64,7 @@ def parse_memes_src():
                     # prepare images folder
                     os.makedirs(f'memes_dataset/{clear_name}', exist_ok=True)
                     image_response = requests.get('https://'+clear_img_src)
-                    with open(f'memes_dataset/{clear_name}/{clear_name}_{time.time()}.jpg', 'wb') as image:
+                    with open(f'memes_dataset/{clear_name}/{clear_name}_{uuid.uuid4()}.jpg', 'wb') as image:
                         image.write(image_response.content)                   
 
             else:
