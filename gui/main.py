@@ -59,7 +59,9 @@ class ProcessingThread(QThread):
             )
 
             duplicateIcon = QTableWidgetItem()
-            duplicateIcon.setIcon(QWidget().style().standardIcon(QStyle.SP_FileDialogContentsView))
+            duplicateIcon.setIcon(
+                QWidget().style().standardIcon(QStyle.SP_FileDialogContentsView)
+            )
 
             self.imageListTable.setItem(rowImages, 2, duplicateIcon)
             rowImages += 1
@@ -72,7 +74,9 @@ class ProcessingThread(QThread):
             self.videoListTable.setRowCount(rowVideos + 1)
 
             duplicateIcon = QTableWidgetItem()
-            duplicateIcon.setIcon(QWidget().style().standardIcon(QStyle.SP_FileDialogContentsView))
+            duplicateIcon.setIcon(
+                QWidget().style().standardIcon(QStyle.SP_FileDialogContentsView)
+            )
 
             self.videoListTable.setItem(rowVideos, 0, QTableWidgetItem(video[0]))
             self.videoListTable.setItem(
@@ -425,8 +429,12 @@ class DuplicateWindow(QWidget):
             self.delete_duplicate(item, row)
 
     def delete_duplicate(self, item, row):
-        message = QMessageBox().question(self, "Confirm deletion", "Delete duplicate media file?",
-                                         QMessageBox.Yes | QMessageBox.No)
+        message = QMessageBox().question(
+            self,
+            "Confirm deletion",
+            "Delete duplicate media file?",
+            QMessageBox.Yes | QMessageBox.No,
+        )
 
         if message == QMessageBox.Yes:
             os.remove(ITEM_PATH_DICT[item.text()])
