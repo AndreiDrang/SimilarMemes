@@ -1,6 +1,8 @@
 # SimilarMemes
 
-Script for searching similar image/video files in folder.
+[![Build Status](https://semaphoreci.com/api/v1/andreidrang/similarmemes/branches/master/shields_badge.svg)](https://semaphoreci.com/andreidrang/similarmemes)
+
+Application for searching similar image/video files in OS and manage them.
 
 
 ## ATTENTION!
