@@ -59,7 +59,7 @@ save_new_files(result_image_dict, 'image')
 save_new_files(result_video_dict, 'video')
 
 
-image_files_query = Image.get_images_paths()
+image_files_query = Image.group_images_paths()
 
 
 result_image_features_list = feature_description(images_list=image_files_query)
