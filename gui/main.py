@@ -135,8 +135,14 @@ class Window(QWidget):
         self.duplicateButton = QPushButton("Find duplicates")
         self.progressBar = QProgressBar()
         self.tableTabs = QTabWidget()
+        # init main images list table
         self.imageListTable = QTableWidget()
+        # set main images list table fields unchanged
+        self.imageListTable.setEditTriggers(QTableWidget.NoEditTriggers)
+        # init main videos list table
         self.videoListTable = QTableWidget()
+        # set main videos list table fields unchanged
+        self.videoListTable.setEditTriggers(QTableWidget.NoEditTriggers)
         self.imageField = QLabel()
         self.videoField = QVideoWidget()
         self.videoPlayer = QMediaPlayer()
@@ -377,7 +383,10 @@ class DuplicateWindow(QWidget):
         self.setFixedSize(500, 500)
 
         self.imageField = QLabel()
+        # init duplictes list table
         self.duplicateTable = QTableWidget()
+        # set duplicates list table fields unchanged
+        self.duplicateTable.setEditTriggers(QTableWidget.NoEditTriggers)
 
         self.imageField.setPixmap(
             QPixmap(ITEM_PATH_DICT[self.sourceImage]).scaled(
@@ -440,5 +449,5 @@ class DuplicateWindow(QWidget):
             os.remove(ITEM_PATH_DICT[item.text()])
             self.duplicateTable.removeRow(row)
 
-        if message == QMessageBox.No:
+        elif message == QMessageBox.No:
             pass
