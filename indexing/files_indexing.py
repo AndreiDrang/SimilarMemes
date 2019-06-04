@@ -72,7 +72,7 @@ def index_folder_files(
     image_files_list = collections.deque()
     video_files_list = collections.deque()
 
-    # looping throught tree
+    # looping through tree
     for data in tree:
         # if max depth not reached
         if get_depth(path, data[0]) <= max_depth:

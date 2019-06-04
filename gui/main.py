@@ -14,8 +14,9 @@ from gui import json_settings
 from indexing import index_folder_files, reindex_image_files, reindex_video_files
 
 
-# The global to store image/video paths:
-ITEM_PATH_DICT = {}
+# Dict containment -> ID:[FILE_NAME, EXTENSION, FILE_FULL_PATH]
+IMAGE_PATH_DICT = {}
+VIDEO_PATH_DICT = {}
 
 
 class ProcessingThread(QThread):
@@ -52,41 +53,43 @@ class ProcessingThread(QThread):
 
         for image in images:
             self.sleep(1)  # process simulation (TODO: delete)
-            self.imageListTable.setRowCount(rowImages + 1)
-            self.imageListTable.setItem(rowImages, 0, QTableWidgetItem(image[0]))
-            self.imageListTable.setItem(
-                rowImages, 1, QTableWidgetItem((image[0].split(".")[-1]).lower())
-            )
+
+            rowImages += 1
+            imageId = str(rowImages)
+            IMAGE_PATH_DICT[imageId] = [image[0], (image[0].split(".")[-1]).lower(), os.path.join(image[1], image[0])]
+            self.imageListTable.setRowCount(rowImages)
+            self.imageListTable.setItem(rowImages-1, 0, QTableWidgetItem(imageId))
+            self.imageListTable.setItem(rowImages-1, 1, QTableWidgetItem(image[0]))
+            self.imageListTable.setItem(rowImages-1, 2, QTableWidgetItem(IMAGE_PATH_DICT[imageId][1]))
 
             duplicateIcon = QTableWidgetItem()
             duplicateIcon.setIcon(
                 QWidget().style().standardIcon(QStyle.SP_FileDialogContentsView)
             )
+            self.imageListTable.setItem(rowImages-1, 3, duplicateIcon)
 
-            self.imageListTable.setItem(rowImages, 2, duplicateIcon)
-            rowImages += 1
             progress = (rowImages + rowVideos) / len(images + videos) * 100
             self.progressTrigger.emit(progress)
-            ITEM_PATH_DICT[image[0]] = os.path.join(image[1], image[0])
 
         for video in videos:
             self.sleep(1)  # process simulation (TODO: delete)
-            self.videoListTable.setRowCount(rowVideos + 1)
+
+            rowVideos += 1
+            videoId = str(rowVideos)
+            VIDEO_PATH_DICT[videoId] = [video[0], (video[0].split(".")[-1]).lower(), os.path.join(video[1], video[0])]
+            self.videoListTable.setRowCount(rowVideos)
+            self.videoListTable.setItem(rowVideos - 1, 0, QTableWidgetItem(videoId))
+            self.videoListTable.setItem(rowVideos - 1, 1, QTableWidgetItem(video[0]))
+            self.videoListTable.setItem(rowVideos - 1, 2, QTableWidgetItem(VIDEO_PATH_DICT[videoId][1]))
 
             duplicateIcon = QTableWidgetItem()
             duplicateIcon.setIcon(
                 QWidget().style().standardIcon(QStyle.SP_FileDialogContentsView)
             )
+            self.videoListTable.setItem(rowVideos, 3, duplicateIcon)
 
-            self.videoListTable.setItem(rowVideos, 0, QTableWidgetItem(video[0]))
-            self.videoListTable.setItem(
-                rowVideos, 1, QTableWidgetItem((video[0].split(".")[-1]).lower())
-            )
-            self.videoListTable.setItem(rowVideos, 2, duplicateIcon)
-            rowVideos += 1
             progress = (rowImages + rowVideos) / len(images + videos) * 100
             self.progressTrigger.emit(progress)
-            ITEM_PATH_DICT[video[0]] = os.path.join(video[1], video[0])
 
         self.finishedTrigger.emit()
 
@@ -123,6 +126,9 @@ class MainWindow(QMainWindow):
 class Window(QWidget):
     def __init__(self, statusBar):
         super().__init__()
+
+        # Saves multiple duplicate windows references:
+        self.duplicateRefs = {}
 
         # Gets status bar from QMainWindow:
         self.statusBar = statusBar
@@ -164,22 +170,28 @@ class Window(QWidget):
         self.imagesTab = self.tableTabs.insertTab(0, self.imageListTable, "Images")
         self.videosTab = self.tableTabs.insertTab(1, self.videoListTable, "Videos")
 
-        self.imageListTable.setColumnCount(3)
+        self.imageListTable.setColumnCount(4)
         self.imageListTable.setHorizontalHeaderLabels(
-            ["List of images", "Extension", ""]
+            ["ID", "File name", "Extension", ""]
         )
-        self.imageListTable.setColumnWidth(0, 190)
-        self.imageListTable.setColumnWidth(2, 27)
+        self.imageListTable.verticalHeader().setVisible(False)
+
+        self.imageListTable.setColumnWidth(0, 25)
+        self.imageListTable.setColumnWidth(1, 165)
+        self.imageListTable.setColumnWidth(3, 27)
         self.imageListTable.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.imageListTable.setSortingEnabled(True)
         self.imageListTable.cellClicked.connect(self.show_image)
 
-        self.videoListTable.setColumnCount(3)
+        self.videoListTable.setColumnCount(4)
         self.videoListTable.setHorizontalHeaderLabels(
-            ["List of videos", "Extension", ""]
+            ["ID", "File name", "Extension", ""]
         )
-        self.videoListTable.setColumnWidth(0, 190)
-        self.videoListTable.setColumnWidth(2, 27)
+        self.videoListTable.verticalHeader().setVisible(False)
+
+        self.videoListTable.setColumnWidth(0, 25)
+        self.videoListTable.setColumnWidth(1, 165)
+        self.videoListTable.setColumnWidth(3, 27)
         self.videoListTable.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.videoListTable.setSortingEnabled(True)
         self.videoListTable.cellClicked.connect(self.show_video)
@@ -246,6 +258,7 @@ class Window(QWidget):
             return None
 
         if not self.thread.isRunning():
+            self.duplicateRefs.clear()
             self.thread.start()
             self.processButton.setText("Stop")
 
@@ -267,7 +280,7 @@ class Window(QWidget):
 
     # Start the second thread and remove all unique files from the table
     def find_duplicates(self):
-        if ITEM_PATH_DICT == {}:
+        if IMAGE_PATH_DICT == {}:
             self.statusBar.setStyleSheet("color: red")
             self.statusBar.showMessage("Please process your media files first")
             return None
@@ -280,10 +293,11 @@ class Window(QWidget):
     # Show an image upon clicking its name in the table
     def show_image(self, row, column):
         imageItem = self.imageListTable.item(row, column)
+        imageId = self.imageListTable.item(row, 0).text()
 
         # Prevents from KeyError when clicking the second column:
-        if imageItem.text() in ITEM_PATH_DICT:
-            imageItemPath = ITEM_PATH_DICT[imageItem.text()]
+        if imageItem.text() == IMAGE_PATH_DICT[imageId][0]:
+            imageItemPath = IMAGE_PATH_DICT[imageId][2]
 
             # Removes a video from screen if shown:
             self.videoPlayer.stop()
@@ -306,18 +320,23 @@ class Window(QWidget):
                     )
                 )
 
-        if column == 2:
+        if column == 3:
             self.duplicateWindow = DuplicateWindow(self.imageListTable.item(row, 0))
-            self.duplicateWindow.show()
+            if imageId not in self.duplicateRefs.keys():
+                self.duplicateRefs[imageId] = self.duplicateWindow
+                self.duplicateWindow.show()
+            self.duplicateWindow.deletionTrigger.connect(self.delete_image_row)
+            self.duplicateWindow.closeTrigger.connect(self.delete_reference)
 
     # Show a video upon clicking its name in the table
     def show_video(self, row, column):
         videoItem = self.videoListTable.item(row, column)
+        videoId = self.videoListTable.item(row, 0).text()
         self.mainGrid.setColumnMinimumWidth(1, 800)
 
         # Prevents from KeyError when clicking the second column:
-        if videoItem.text() in ITEM_PATH_DICT:
-            videoItemPath = ITEM_PATH_DICT[videoItem.text()]
+        if videoItem.text() == VIDEO_PATH_DICT[videoId][0]:
+            videoItemPath = VIDEO_PATH_DICT[videoId][2]
             videoContent = QMediaContent(QUrl.fromLocalFile(videoItemPath))
             self.videoPlayer.setMedia(videoContent)
             self.videoPlayer.setVideoOutput(self.videoField)
@@ -327,6 +346,20 @@ class Window(QWidget):
             self.imageField.hide()
             self.videoField.show()
             self.videoPlayer.play()
+
+    # Remove a row of a duplicate image after it was deleted in DuplicateWindow
+    def delete_image_row(self, itemId):
+        self.imageField.setText("")                 # Rewrite imageField to prevent PermissionError if file was opened
+        rows = self.imageListTable.rowCount()
+        for row in range(rows):
+            if self.imageListTable.item(row, 0).text() == itemId:
+                self.imageListTable.removeRow(row)
+                break                               # Stop loop after row deletion to prevent AttributeError
+
+    # Remove a previously added reference from a dict if a DuplicateWindow was closed
+    # so it can be opened again
+    def delete_reference(self, itemId):
+        self.duplicateRefs.pop(itemId)
 
     # An amazing workaround for gif resizing procedure
     # because PyQt's native one doesn't work for some reason:
@@ -375,44 +408,51 @@ class IndexingSettings(QWidget):
 
 # A separate window to show duplicates of the source image:
 class DuplicateWindow(QWidget):
-    def __init__(self, sourceImage):
+    deletionTrigger = pyqtSignal(str)
+    closeTrigger = pyqtSignal(str)
+
+    def __init__(self, sourceImageId):
         super().__init__()
-        self.sourceImage = sourceImage.text()
+        self.sourceImageId = sourceImageId.text()
+        self.sourceImage = IMAGE_PATH_DICT[self.sourceImageId][2]
 
         self.setWindowTitle("Duplicates")
         self.setFixedSize(500, 500)
 
         self.imageField = QLabel()
-        # init duplictes list table
+        # init duplicates list table
         self.duplicateTable = QTableWidget()
         # set duplicates list table fields unchanged
         self.duplicateTable.setEditTriggers(QTableWidget.NoEditTriggers)
 
         self.imageField.setPixmap(
-            QPixmap(ITEM_PATH_DICT[self.sourceImage]).scaled(
+            QPixmap(self.sourceImage).scaled(
                 300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
             )
         )
 
-        self.duplicateTable.setColumnCount(3)
-        self.duplicateTable.setColumnWidth(0, 250)
+        self.duplicateTable.setColumnCount(4)
+        self.duplicateTable.setHorizontalHeaderLabels(["ID", "File name", "", ""])
+        self.duplicateTable.verticalHeader().setVisible(False)
         self.duplicateTable.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.duplicateTable.setSortingEnabled(True)
 
+        self.duplicateTable.setColumnWidth(0, 25)
+        self.duplicateTable.setColumnWidth(1, 345)
+        self.duplicateTable.setColumnWidth(2, 25)
+        self.duplicateTable.setColumnWidth(3, 25)
+
         self.duplicateTable.setRowCount(1)
-        self.duplicateTable.setItem(0, 0, QTableWidgetItem(self.sourceImage))
+        self.duplicateTable.setItem(0, 0, QTableWidgetItem(self.sourceImageId))
+        self.duplicateTable.setItem(0, 1, QTableWidgetItem(IMAGE_PATH_DICT[self.sourceImageId][0]))
 
         openFolderIcon = QTableWidgetItem()
         openFolderIcon.setIcon(self.style().standardIcon(QStyle.SP_DirIcon))
         deleteItemIcon = QTableWidgetItem()
         deleteItemIcon.setIcon(self.style().standardIcon(QStyle.SP_MessageBoxCritical))
 
-        self.duplicateTable.setItem(0, 1, openFolderIcon)
-        self.duplicateTable.setItem(0, 2, deleteItemIcon)
-
-        self.duplicateTable.setColumnWidth(0, 370)
-        self.duplicateTable.setColumnWidth(1, 25)
-        self.duplicateTable.setColumnWidth(2, 25)
+        self.duplicateTable.setItem(0, 2, openFolderIcon)
+        self.duplicateTable.setItem(0, 3, deleteItemIcon)
 
         self.duplicateTable.cellClicked.connect(self.click_event)
 
@@ -423,21 +463,22 @@ class DuplicateWindow(QWidget):
 
     def click_event(self, row, column):
         item = self.duplicateTable.item(row, column)
-        if item.text() in ITEM_PATH_DICT:
+        if item.text() == IMAGE_PATH_DICT[self.sourceImageId][0]:
             self.imageField.setPixmap(
-                QPixmap(ITEM_PATH_DICT[item.text()]).scaled(
+                QPixmap(IMAGE_PATH_DICT[self.sourceImageId][2]).scaled(
                     300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
                 )
             )
-        if column == 1:
-            item = self.duplicateTable.item(row, 0)
-            os.startfile(ITEM_PATH_DICT[item.text()].rsplit(os.sep)[0])
 
         if column == 2:
-            item = self.duplicateTable.item(row, 0)
-            self.delete_duplicate(item, row)
+            itemId = self.duplicateTable.item(row, 0).text()
+            os.startfile(IMAGE_PATH_DICT[itemId][2].rsplit(os.sep, 1)[0])
 
-    def delete_duplicate(self, item, row):
+        if column == 3:
+            itemId = self.duplicateTable.item(row, 0).text()
+            self.delete_duplicate(itemId, row)
+
+    def delete_duplicate(self, itemId, row):
         message = QMessageBox().question(
             self,
             "Confirm deletion",
@@ -446,8 +487,13 @@ class DuplicateWindow(QWidget):
         )
 
         if message == QMessageBox.Yes:
-            os.remove(ITEM_PATH_DICT[item.text()])
             self.duplicateTable.removeRow(row)
+            self.deletionTrigger.emit(itemId)
+            os.remove(IMAGE_PATH_DICT[self.sourceImageId][2])
 
         elif message == QMessageBox.No:
             pass
+
+    def closeEvent(self, event):
+        self.closeTrigger.emit(self.sourceImageId)
+        self.close()
