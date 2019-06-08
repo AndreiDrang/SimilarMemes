@@ -47,8 +47,6 @@ def image_processing(image_list: collections.deque):
 	:param image_list: List of images in folder
 						0 - files name
 						1 - file full path
-
-	:return: Dict of parsed images
 	"""
     pool = Pool()
     # run tasks in separate process
