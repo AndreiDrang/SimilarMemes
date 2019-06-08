@@ -33,6 +33,14 @@ class Image(db.Entity):
 
     @staticmethod
     @db_session(retry=3)
+    def all() -> list:
+        """
+        Return all images data from DB
+        """
+        return select(image for image in Image)[:]
+
+    @staticmethod
+    @db_session(retry=3)
     def get_images_descriptors() -> [(np.ndarray, int)]:
         """
         Return all images descriptors and ID's

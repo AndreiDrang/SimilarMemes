@@ -35,7 +35,7 @@ def save_new_files(indexed_files: list, file_type: str):
 
 
 @db_session(retry=3)
-def save_images_duplicates(pairs: collections.deque):
+def save_images_duplicates(pairs: list):
     """
     Function get image files list and save them to DB
 
