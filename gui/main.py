@@ -318,11 +318,7 @@ class Window(QWidget):
         feature_description(images_list=image_files_query)
 
         QMessageBox.information(
-            self,
-            "Find duplicates",
-            "Success!",
-            QMessageBox.Ok,
-            QMessageBox.Ok,
+            self, "Find duplicates", "Success!", QMessageBox.Ok, QMessageBox.Ok
         )
 
         # TODO: new thread removing all unique media. Only duplicates remain
