@@ -4,17 +4,17 @@ from database import Image, Video, ImageDuplicates, db_session, select
 
 
 @db_session(retry=3)
-def save_new_files(indexed_files: collections.defaultdict, file_type: str):
+def save_new_files(indexed_files: list, file_type: str):
     """
     Function get files dict and files type and save it to DB
 
-    :param indexed_files: Dict with all indexed files
+    :param indexed_files: List with all indexed files
 
     :param file_type: Files type - `image` or `video`
     """
 
     if file_type == "image":
-        for _, image_data in indexed_files.items():
+        for image_data in indexed_files:
             # if current md5_hash not exist
             if not Image.get(image_md5_hash=image_data["md5_hash"]):
                 Image(
@@ -25,7 +25,7 @@ def save_new_files(indexed_files: collections.defaultdict, file_type: str):
                 )
 
     elif file_type == "video":
-        for _, video_data in indexed_files.items():
+        for video_data in indexed_files:
             # if current video+path not exist
             if not Video.get(video_path=video_data["namepath"][1]):
                 Video(
