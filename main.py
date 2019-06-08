@@ -55,7 +55,6 @@ image_files_query = Image.get_images_descriptors()
 feature_description(images_list=image_files_query)
 
 
-
 print(len(image_files_list))
 print(len(image_files_query))
 

@@ -34,9 +34,7 @@ def count_pairs(pair: tuple):
     match_sorted = match_sorted[:LEN]
     if match_sorted:
         # count summ of sorted matches and get distance average value
-        average_match_value = (
-            sum(matching.distance for matching in match_sorted) // LEN
-        )
+        average_match_value = sum(matching.distance for matching in match_sorted) // LEN
         # if average different is less than threashold - add pair
         if average_match_value <= SIMILARITY_THRESHOLD * 1.2:
             # create new pair
