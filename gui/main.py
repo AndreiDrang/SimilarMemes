@@ -10,9 +10,11 @@ from PyQt5.QtCore import *
 from PyQt5.QtMultimedia import *
 from PyQt5.QtMultimediaWidgets import *
 
-from gui import json_settings
 from indexing import index_folder_files, reindex_image_files, reindex_video_files
+from image_processing import image_processing, feature_description
+from database import Image
 
+from gui import json_settings
 
 # Dict containment -> ID:[FILE_NAME, EXTENSION, FILE_FULL_PATH]
 IMAGE_PATH_DICT = {}
@@ -38,49 +40,61 @@ class ProcessingThread(QThread):
         # Reindex already exist folders and files; Image and Video files
         reindex_image_files()
         reindex_video_files()
+        # start indexing folder
+        images, videos = index_folder_files(
+            path=self.folderField.text(),
+            max_depth=json_settings.json_read("folderDepth")
+            if self.folderTreeCheckbox.isChecked()
+            else 0,
+        )
 
-        # Processes all multimedia in the main folder and its sub-folders as well
-        # (depending on depth from settings):
-        if self.folderTreeCheckbox.isChecked():
-            images, videos = index_folder_files(
-                self.folderField.text(),
-                max_depth=json_settings.json_read("folderDepth"),
-            )
+        # processing new files
+        image_processing(images)
 
-        # Processes multimedia in the selected folder only:
-        else:
-            images, videos = index_folder_files(self.folderField.text(), max_depth=0)
+        # get available images from DB
+        images = Image.all()
 
         for image in images:
-            self.sleep(1)  # process simulation (TODO: delete)
+            str_image_id = str(image.id)
 
-            rowImages += 1
-            imageId = str(rowImages)
-            IMAGE_PATH_DICT[imageId] = [image[0], (image[0].split(".")[-1]).lower(), os.path.join(image[1], image[0])]
-            self.imageListTable.setRowCount(rowImages)
-            self.imageListTable.setItem(rowImages-1, 0, QTableWidgetItem(imageId))
-            self.imageListTable.setItem(rowImages-1, 1, QTableWidgetItem(image[0]))
-            self.imageListTable.setItem(rowImages-1, 2, QTableWidgetItem(IMAGE_PATH_DICT[imageId][1]))
+            IMAGE_PATH_DICT[str_image_id] = [
+                image.image_name,
+                (image.image_name.split(".")[-1]).lower(),
+                os.path.join(image.image_path, image.image_name),
+            ]
+            self.imageListTable.setRowCount(image.id)
+            self.imageListTable.setItem(image.id - 1, 0, QTableWidgetItem(str_image_id))
+            self.imageListTable.setItem(
+                image.id - 1, 1, QTableWidgetItem(image.image_name)
+            )
+            self.imageListTable.setItem(
+                image.id - 1, 2, QTableWidgetItem(IMAGE_PATH_DICT[str_image_id][1])
+            )
 
             duplicateIcon = QTableWidgetItem()
             duplicateIcon.setIcon(
                 QWidget().style().standardIcon(QStyle.SP_FileDialogContentsView)
             )
-            self.imageListTable.setItem(rowImages-1, 3, duplicateIcon)
+            self.imageListTable.setItem(image.id - 1, 3, duplicateIcon)
 
-            progress = (rowImages + rowVideos) / len(images + videos) * 100
+            progress = (image.id + rowVideos) / len(images + videos) * 100
             self.progressTrigger.emit(progress)
-
+        # TODO add video to DB and processing logic
+        """
         for video in videos:
-            self.sleep(1)  # process simulation (TODO: delete)
-
             rowVideos += 1
             videoId = str(rowVideos)
-            VIDEO_PATH_DICT[videoId] = [video[0], (video[0].split(".")[-1]).lower(), os.path.join(video[1], video[0])]
+            VIDEO_PATH_DICT[videoId] = [
+                video[0],
+                (video[0].split(".")[-1]).lower(),
+                os.path.join(video[1], video[0]),
+            ]
             self.videoListTable.setRowCount(rowVideos)
             self.videoListTable.setItem(rowVideos - 1, 0, QTableWidgetItem(videoId))
             self.videoListTable.setItem(rowVideos - 1, 1, QTableWidgetItem(video[0]))
-            self.videoListTable.setItem(rowVideos - 1, 2, QTableWidgetItem(VIDEO_PATH_DICT[videoId][1]))
+            self.videoListTable.setItem(
+                rowVideos - 1, 2, QTableWidgetItem(VIDEO_PATH_DICT[videoId][1])
+            )
 
             duplicateIcon = QTableWidgetItem()
             duplicateIcon.setIcon(
@@ -90,6 +104,7 @@ class ProcessingThread(QThread):
 
             progress = (rowImages + rowVideos) / len(images + videos) * 100
             self.progressTrigger.emit(progress)
+        """
 
         self.finishedTrigger.emit()
 
@@ -288,6 +303,28 @@ class Window(QWidget):
         self.processButton.setEnabled(False)
         self.statusBar.setStyleSheet("color: black")
         self.statusBar.showMessage("Finding duplicates...")
+
+        QMessageBox.information(
+            self,
+            "Find duplicates",
+            "Similar images search start. Please wait!",
+            QMessageBox.Ok,
+            QMessageBox.Ok,
+        )
+
+        # get all images descriptors
+        image_files_query = Image.get_images_descriptors()
+        # run function to find duplicates
+        feature_description(images_list=image_files_query)
+
+        QMessageBox.information(
+            self,
+            "Find duplicates",
+            "Success!",
+            QMessageBox.Ok,
+            QMessageBox.Ok,
+        )
+
         # TODO: new thread removing all unique media. Only duplicates remain
 
     # Show an image upon clicking its name in the table
@@ -349,12 +386,14 @@ class Window(QWidget):
 
     # Remove a row of a duplicate image after it was deleted in DuplicateWindow
     def delete_image_row(self, itemId):
-        self.imageField.setText("")                 # Rewrite imageField to prevent PermissionError if file was opened
+        self.imageField.setText(
+            ""
+        )  # Rewrite imageField to prevent PermissionError if file was opened
         rows = self.imageListTable.rowCount()
         for row in range(rows):
             if self.imageListTable.item(row, 0).text() == itemId:
                 self.imageListTable.removeRow(row)
-                break                               # Stop loop after row deletion to prevent AttributeError
+                break  # Stop loop after row deletion to prevent AttributeError
 
     # Remove a previously added reference from a dict if a DuplicateWindow was closed
     # so it can be opened again
@@ -444,7 +483,9 @@ class DuplicateWindow(QWidget):
 
         self.duplicateTable.setRowCount(1)
         self.duplicateTable.setItem(0, 0, QTableWidgetItem(self.sourceImageId))
-        self.duplicateTable.setItem(0, 1, QTableWidgetItem(IMAGE_PATH_DICT[self.sourceImageId][0]))
+        self.duplicateTable.setItem(
+            0, 1, QTableWidgetItem(IMAGE_PATH_DICT[self.sourceImageId][0])
+        )
 
         openFolderIcon = QTableWidgetItem()
         openFolderIcon.setIcon(self.style().standardIcon(QStyle.SP_DirIcon))
