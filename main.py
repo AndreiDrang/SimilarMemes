@@ -49,15 +49,12 @@ print("Files indexed")
 video_processing(video_files_list)
 image_processing(image_files_list)
 
-image_files_query = Image.group_images_paths()
+image_files_query = Image.get_images_descriptors()
 
 
-result_image_features_list = feature_description(images_list=image_files_query)
+feature_description(images_list=image_files_query)
 
-print(result_image_features_list)
-print(time.time() - start_time)
 
-save_images_duplicates(pairs=result_image_features_list)
 
 print(len(image_files_list))
 print(len(image_files_query))
