@@ -1,5 +1,3 @@
-import collections
-
 from database import Image, Video, ImageDuplicates, db_session, select
 
 
