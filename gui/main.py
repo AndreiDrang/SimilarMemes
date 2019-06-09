@@ -3,7 +3,13 @@
 # Menu settings
 
 import os
+import traceback
+
 from PIL import Image
+import psycopg2
+import mysql.connector
+
+
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
@@ -12,7 +18,7 @@ from PyQt5.QtMultimediaWidgets import *
 
 from indexing import index_folder_files, reindex_image_files, reindex_video_files
 from image_processing import image_processing, feature_description
-from database import Image
+from database import Image, connection
 
 from gui import json_settings
 
@@ -22,9 +28,6 @@ VIDEO_PATH_DICT = {}
 
 
 class ProcessingThread(QThread):
-    progressTrigger = pyqtSignal(float)
-    finishedTrigger = pyqtSignal()
-
     def __init__(self, folderField, imageListTable, videoListTable, folderTreeCheckbox):
         QThread.__init__(self)
         self.folderField = folderField
@@ -35,15 +38,13 @@ class ProcessingThread(QThread):
     # The process to fill the image/video tables with image/video names
     # and ITEM_PATH_DICT with their paths:
     def run(self):
-        rowImages, rowVideos = 0, 0
-
         # Reindex already exist folders and files; Image and Video files
         reindex_image_files()
         reindex_video_files()
         # start indexing folder
         images, videos = index_folder_files(
             path=self.folderField.text(),
-            max_depth=json_settings.json_read("folderDepth")
+            max_depth=json_settings.user_json_read("folderDepth")
             if self.folderTreeCheckbox.isChecked()
             else 0,
         )
@@ -77,8 +78,6 @@ class ProcessingThread(QThread):
             )
             self.imageListTable.setItem(image.id - 1, 3, duplicateIcon)
 
-            progress = (image.id + rowVideos) / len(images + videos) * 100
-            self.progressTrigger.emit(progress)
         # TODO add video to DB and processing logic
         """
         for video in videos:
@@ -102,11 +101,7 @@ class ProcessingThread(QThread):
             )
             self.videoListTable.setItem(rowVideos, 3, duplicateIcon)
 
-            progress = (rowImages + rowVideos) / len(images + videos) * 100
-            self.progressTrigger.emit(progress)
         """
-
-        self.finishedTrigger.emit()
 
 
 class MainWindow(QMainWindow):
@@ -124,9 +119,9 @@ class MainWindow(QMainWindow):
         fileMenu.addAction("Exit", self.close)
 
         settingsMenu = menu.addMenu("&Settings")
-        settingsMenu.addAction("DB settings")
+        settingsMenu.addAction("Database settings", self.show_database_settings)
         settingsMenu.addAction("Indexing settings", self.show_indexing_settings)
-        settingsMenu.addAction("Matching settings")
+        settingsMenu.addAction("Matching settings", self.show_matching_settings)
         settingsMenu.addSeparator()
         settingsMenu.addAction("Other")
 
@@ -136,6 +131,14 @@ class MainWindow(QMainWindow):
     def show_indexing_settings(self):
         self.indexingSettings = IndexingSettings()
         self.indexingSettings.show()
+
+    def show_database_settings(self):
+        self.database_settings = DatabaseSettings()
+        self.database_settings.show()
+
+    def show_matching_settings(self):
+        self.database_settings = DatabaseSettings()
+        self.database_settings.show()
 
 
 class Window(QWidget):
@@ -243,8 +246,6 @@ class Window(QWidget):
             self.videoListTable,
             self.folderTreeCheckbox,
         )
-        self.thread.progressTrigger.connect(self.update_progressbar)
-        self.thread.finishedTrigger.connect(self.finish_thread)
 
     # Get a folder full of multimedia files to work with
     def set_folder(self):
@@ -281,10 +282,6 @@ class Window(QWidget):
             self.thread.terminate()
             self.processButton.setText("Start")
             self.update_progressbar(0)
-
-    # Update the progress bar with values via pyqtSignal
-    def update_progressbar(self, progress):
-        self.progressBar.setValue(progress)
 
     # Thread done and ded
     def finish_thread(self):
@@ -426,7 +423,7 @@ class IndexingSettings(QWidget):
         self.folderDepthField = QLineEdit()
         self.okButton = QPushButton("Ok")
 
-        self.folderDepthField.setText(str(json_settings.json_read("folderDepth")))
+        self.folderDepthField.setText(str(json_settings.user_json_read("folderDepth")))
         self.okButton.clicked.connect(self.ok_event)
 
         self.grid = QGridLayout()
@@ -437,8 +434,163 @@ class IndexingSettings(QWidget):
 
     # Updates the json settings with the new folder depth value:
     def ok_event(self):
-        json_settings.json_update("folderDepth", self.folderDepthField.text())
+        json_settings.user_json_update("folderDepth", self.folderDepthField.text())
         self.close()
+
+
+# Allows to set a custom folder depth value in the json file:
+class DatabaseSettings(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Database settings")
+        self.setFixedSize(350, 350)
+
+        self.databaseProviderLabel = QLabel("Database provider:")
+        self.databaseProviderField = QLineEdit()
+        self.databaseFilenameLabel = QLabel("File name:")
+        self.databaseFilenameField = QLineEdit()
+        self.databaseUserLabel = QLabel("User:")
+        self.databaseUserField = QLineEdit()
+        self.databasePasswordLabel = QLabel("Password:")
+        self.databasePasswordField = QLineEdit()
+        self.databaseHostLabel = QLabel("Host:")
+        self.databaseHostField = QLineEdit()
+        self.databasePortLabel = QLabel("Port:")
+        self.databasePortField = QLineEdit()
+        self.databaseNameLabel = QLabel("Database name:")
+        self.databaseNameField = QLineEdit()
+
+        # dropdown menu with available DB providers
+        self.providersBox = QComboBox(self)
+        self.providersBox.addItems(["SQLite", "Postgres", "MySQL"])
+        self.providersBox.currentIndexChanged.connect(self.selection_change)
+
+        # buttons
+        self.testConnectionButton = QPushButton("Test connection")
+        self.testConnectionButton.clicked.connect(self.test_connection_event)
+        self.okButton = QPushButton("Ok")
+        self.okButton.clicked.connect(self.ok_event)
+
+        # fields filling
+        self.databaseProviderField.setText(str(json_settings.db_json_read("provider")))
+        self.databaseFilenameField.setText(str(json_settings.db_json_read("filename")))
+        self.databaseUserField.setDisabled(True)
+        self.databasePasswordField.setDisabled(True)
+        self.databaseHostField.setDisabled(True)
+        self.databasePortField.setDisabled(True)
+        self.databaseNameField.setDisabled(True)
+
+        self.grid = QGridLayout()
+        # labels & fields
+        self.grid.addWidget(self.databaseProviderLabel, 0, 0)
+        self.grid.addWidget(self.providersBox, 0, 1)
+        self.grid.addWidget(self.databaseFilenameLabel, 1, 0)
+        self.grid.addWidget(self.databaseFilenameField, 1, 1)
+        self.grid.addWidget(self.databaseUserLabel, 2, 0)
+        self.grid.addWidget(self.databaseUserField, 2, 1)
+        self.grid.addWidget(self.databasePasswordLabel, 3, 0)
+        self.grid.addWidget(self.databasePasswordField, 3, 1)
+        self.grid.addWidget(self.databaseHostLabel, 4, 0)
+        self.grid.addWidget(self.databaseHostField, 4, 1)
+        self.grid.addWidget(self.databasePortLabel, 5, 0)
+        self.grid.addWidget(self.databasePortField, 5, 1)
+        self.grid.addWidget(self.databaseNameLabel, 6, 0)
+        self.grid.addWidget(self.databaseNameField, 6, 1)
+        # buttons
+        self.grid.addWidget(self.testConnectionButton, 7, 0)
+        self.grid.addWidget(self.okButton, 7, 1)
+
+        self.setLayout(self.grid)
+
+    # Updates the json settings with the new folder depth value:
+    def ok_event(self):
+        json_settings.db_json_update(
+            "provider", self.providersBox.currentText().lower()
+        )
+        if self.providersBox.currentText() == "SQLite":
+            json_settings.db_json_update("filename", self.databaseFilenameField.text())
+        else:
+            json_settings.db_json_update("user", self.databaseUserField.text())
+            json_settings.db_json_update("password", self.databasePasswordField.text())
+            json_settings.db_json_update("host", self.databaseHostField.text())
+            json_settings.db_json_update("port", self.databasePortField.text())
+            json_settings.db_json_update("database", self.databaseNameField.text())
+        self.close()
+
+    # Test connection to DB
+    def test_connection_event(self):
+        try:
+            if self.providersBox.currentText() == "SQLite":
+                db.bind(
+                    provider="sqlite", **{"filename": self.databaseFilenameField.text()}
+                )
+            elif self.providersBox.currentText() == "Postgres":
+                conn = psycopg2.connect(
+                    dbname=self.databaseNameField.text(),
+                    user=self.databaseUserField.text(),
+                    password=self.databasePasswordField.text(),
+                    host=self.databaseHostField.text(),
+                    port=self.databasePortField.text(),
+                )
+
+            elif self.providersBox.currentText() == "MySQL":
+                mydb = mysql.connector.connect(
+                    data=self.databaseNameField.text(),
+                    user=self.databaseUserField.text(),
+                    passwd=self.databasePasswordField.text(),
+                    host=self.databaseHostField.text(),
+                    port=self.databasePortField.text(),
+                )
+
+            QMessageBox.information(
+                self,
+                "Connection test",
+                "Success database connection",
+                QMessageBox.Ok,
+                QMessageBox.Ok,
+            )
+        except Exception:
+            print(traceback.format_exc())
+            QMessageBox.warning(
+                self,
+                "Connection test",
+                f"Error while connection test.\nCheck your fields.\nError:\n{traceback.format_exc()}",
+                QMessageBox.Ok,
+                QMessageBox.Ok,
+            )
+
+    def selection_change(self):
+        """
+        Method make able or disable database settings fields when user change DB provider dropdown menu
+        """
+        # if user check SQLite - make other fields disabled
+        if self.providersBox.currentText() != "SQLite":
+            # make filename disabled
+            self.databaseFilenameField.setDisabled(True)
+            # make other fields able
+            self.databaseUserField.setDisabled(False)
+            self.databasePasswordField.setDisabled(False)
+            self.databaseHostField.setDisabled(False)
+            self.databasePortField.setDisabled(False)
+            self.databaseNameField.setDisabled(False)
+            # fill data from config
+            self.databaseUserField.setText(str(json_settings.db_json_read("user")))
+            self.databasePasswordField.setText(
+                str(json_settings.db_json_read("password"))
+            )
+            self.databaseHostField.setText(str(json_settings.db_json_read("host")))
+            self.databasePortField.setText(str(json_settings.db_json_read("port")))
+            self.databaseNameField.setText(str(json_settings.db_json_read("database")))
+        # if select SQLite
+        else:
+            # make filename able
+            self.databaseFilenameField.setDisabled(False)
+            # if user check SQLite - make all fields disabled
+            self.databaseUserField.setDisabled(True)
+            self.databasePasswordField.setDisabled(True)
+            self.databaseHostField.setDisabled(True)
+            self.databasePortField.setDisabled(True)
+            self.databaseNameField.setDisabled(True)
 
 
 # A separate window to show duplicates of the source image:
