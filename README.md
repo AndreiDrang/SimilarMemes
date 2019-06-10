@@ -17,6 +17,24 @@ Application for searching similar image/video files in OS and manage them.
 ## GUI description
 
 
+Image data structure which stored in GUI:
+```python
+from database import Image
+
+IMAGE_PATH_DICT = {}
+# image model
+image = Image
+# string with image row number from local table
+str_image_idx = ' '
+
+IMAGE_PATH_DICT[str_image_idx] = {
+    'id': image.id, # image ID from database
+    'name': image.image_name, # image name from database
+    'type': (image.image_name.split(".")[-1]).lower(), # image type
+    'full_path': image.full_path(), # image fulle path - image_path + os.sep + image_name
+}
+```
+
 ## Backend description
 
 **Before using any DB model/method u must connect to DB - from `models` import `connection` and start it.**
