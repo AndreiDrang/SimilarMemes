@@ -3,6 +3,8 @@ import os
 import collections
 import re
 
+from pony.orm import db_session
+
 from indexing import IMAGE_FORMATS, VIDEO_FORMATS, FILE_EXTENSION_RE
 
 sys.path.append(".")
@@ -12,7 +14,6 @@ from database import (
     Image,
     Video,
     delete,
-    db_session,
 )
 
 

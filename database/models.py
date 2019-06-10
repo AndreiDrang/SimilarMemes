@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 
 import numpy as np
-from pony.orm import Required, Set, Database, db_session, select, composite_key
+from pony.orm import Required, Set, Database, select, composite_key
 
 db = Database()
 
@@ -33,7 +33,6 @@ class Image(db.Entity):
     composite_key(image_path, image_md5_hash)
 
     @staticmethod
-    @db_session(retry=3)
     def all() -> list:
         """
         Return all images data from DB
@@ -41,7 +40,6 @@ class Image(db.Entity):
         return select(image for image in Image)[:]
 
     @staticmethod
-    @db_session(retry=3)
     def get_images_descriptors() -> [(np.ndarray, int)]:
         """
         Return all images descriptors and ID's
@@ -63,7 +61,6 @@ class Image(db.Entity):
         return reshaped_result
 
     @staticmethod
-    @db_session(retry=3)
     def group_images_paths() -> collections.deque:
         """
         Return unique paths from Images
@@ -88,7 +85,6 @@ class Video(db.Entity):
     video_duplicates = Set("VideoDuplicates", nullable=True)
 
     @staticmethod
-    @db_session(retry=3)
     def group_video_paths() -> collections.deque:
         """
         Return unique paths from Video

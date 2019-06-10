@@ -6,7 +6,6 @@ from .models import (
     ImageTag,
     Video,
     ImageDuplicates,
-    db_session,
     db,
     select,
     connection,

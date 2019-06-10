@@ -1,7 +1,6 @@
-from database import Image, Video, ImageDuplicates, db_session, select
+from database import Image, Video, ImageDuplicates, select
 
 
-@db_session(retry=3)
 def save_new_files(indexed_files: list, file_type: str):
     """
     Function get files dict and files type and save it to DB
@@ -32,7 +31,6 @@ def save_new_files(indexed_files: list, file_type: str):
                 )
 
 
-@db_session(retry=3)
 def save_images_duplicates(pairs: list):
     """
     Function get image files list and save them to DB
@@ -61,7 +59,6 @@ def save_images_duplicates(pairs: list):
             )
 
 
-@db_session(retry=3)
 def get_image_duplicates(
     image_id: int, similarity_threshold: float
 ) -> [(Image, float)]:
@@ -95,7 +92,6 @@ def get_image_duplicates(
     return [(Image[img_id], similarity) for img_id, similarity in duplicates_images]
 
 
-@db_session(retry=3)
 def group_image_files() -> dict:
     """
     Function group image files to dict with key - path, value - images in this path
@@ -123,7 +119,6 @@ def group_image_files() -> dict:
     return result
 
 
-@db_session(retry=3)
 def group_video_files() -> dict:
     """
     Function group video files to dict with key - path, value - video in this path
