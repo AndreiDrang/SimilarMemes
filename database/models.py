@@ -102,6 +102,16 @@ class Video(db.Entity):
     # video duplicates
     video_duplicates = Set("VideoDuplicates", nullable=True)
 
+    def custom_delete(self):
+        """
+        Custom video delete. Delete file from OS and video from database
+        """
+        try:
+            os.remove(self.image_path+os.sep+self.image_name)
+        except FileNotFoundError:
+            pass
+        self.delete()
+
     @staticmethod
     def group_video_paths() -> collections.deque:
         """
