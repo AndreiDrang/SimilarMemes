@@ -36,21 +36,21 @@ def count_descriptor(image_file):
                         (image_file[1] + os.sep + image_file[0]).encode()
                     ).hexdigest(),
                 }
-    except:
+    except Exception:
         print(traceback.format_exc())
         return None
 
 
 def image_processing(image_list: collections.deque) -> list:
     """
-	Function preprocess image files, count hash, count images descriptor(using ORB)
-		and return files info in dict format
+    Function preprocess image files, count hash, count images descriptor(using ORB)
+    and return files info in dict format
 
-	:param image_list: List of images in folder
-						0 - files name
-						1 - file full path
+    :param image_list: List of images in folder
+                        0 - files name
+                        1 - file full path
     :return: Dict of parsed images and images data
-	"""
+    """
     pool = Pool()
     # run tasks in separate process
     res = pool.map(count_descriptor, image_list)

@@ -5,7 +5,7 @@
 import os
 import traceback
 
-from PIL import Image
+from PIL import Image as Pil_Image
 from pony.orm import db_session
 from pony.orm import flush as db_flush
 
@@ -438,7 +438,7 @@ class Window(QWidget):
     # An amazing workaround for gif resizing procedure
     # because PyQt's native one doesn't work for some reason:
     def smooth_gif_resize(self, gif, frameWidth, frameHeight):
-        gif = Image.open(gif)
+        gif = Pil_Image.open(gif)
         gifWidth0, gifHeight0 = gif.size
 
         widthRatio = frameWidth / gifWidth0

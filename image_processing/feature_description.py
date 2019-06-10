@@ -3,7 +3,6 @@ import itertools
 from multiprocessing import Pool
 
 import cv2
-import time
 from database import save_images_duplicates
 
 from .settings import get_settings
