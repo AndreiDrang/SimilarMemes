@@ -39,10 +39,6 @@ class ProcessingThread(QThread):
     # The process to fill the image/video tables with image/video names
     # and ITEM_PATH_DICT with their paths:
     def run(self):
-
-        # Reindex already exist folders and files; Image and Video files
-        reindex_image_files()
-        reindex_video_files()
         # start indexing folder
         images, videos = index_folder_files(
             path=self.folderField.text(),
