@@ -8,8 +8,6 @@ import cv2
 import imageio
 import numpy as np
 
-from database import save_new_files
-
 
 def count_descriptor(image_file):
     try:
@@ -43,7 +41,7 @@ def count_descriptor(image_file):
         return None
 
 
-def image_processing(image_list: collections.deque)->list:
+def image_processing(image_list: collections.deque) -> list:
     """
 	Function preprocess image files, count hash, count images descriptor(using ORB)
 		and return files info in dict format
@@ -51,6 +49,7 @@ def image_processing(image_list: collections.deque)->list:
 	:param image_list: List of images in folder
 						0 - files name
 						1 - file full path
+    :return: Dict of parsed images and images data
 	"""
     pool = Pool()
     # run tasks in separate process
