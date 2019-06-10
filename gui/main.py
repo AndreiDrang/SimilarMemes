@@ -6,9 +6,6 @@ import os
 import traceback
 
 from PIL import Image
-import psycopg2
-import mysql.connector
-
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
@@ -18,7 +15,7 @@ from PyQt5.QtMultimediaWidgets import *
 
 from indexing import index_folder_files, reindex_image_files, reindex_video_files
 from image_processing import image_processing, feature_description
-from database import Image, connection
+from database import Image
 
 from gui import json_settings
 
@@ -521,10 +518,13 @@ class DatabaseSettings(QWidget):
     def test_connection_event(self):
         try:
             if self.providersBox.currentText() == "SQLite":
-                db.bind(
-                    provider="sqlite", **{"filename": self.databaseFilenameField.text()}
-                )
+                import sqlite3
+                conn = sqlite3.connect(self.databaseFilenameField.text())
+                conn.close()
+                os.remove(self.databaseFilenameField.text())
+
             elif self.providersBox.currentText() == "Postgres":
+                import psycopg2
                 conn = psycopg2.connect(
                     dbname=self.databaseNameField.text(),
                     user=self.databaseUserField.text(),
@@ -532,25 +532,27 @@ class DatabaseSettings(QWidget):
                     host=self.databaseHostField.text(),
                     port=self.databasePortField.text(),
                 )
+                conn.close()
 
             elif self.providersBox.currentText() == "MySQL":
-                mydb = mysql.connector.connect(
+                import mysql.connector
+                conn = mysql.connector.connect(
                     data=self.databaseNameField.text(),
                     user=self.databaseUserField.text(),
                     passwd=self.databasePasswordField.text(),
                     host=self.databaseHostField.text(),
                     port=self.databasePortField.text(),
                 )
+                conn.close()
 
             QMessageBox.information(
                 self,
                 "Connection test",
-                "Success database connection",
+                "Success database connection.\nTo connect to the new database - restart the application.",
                 QMessageBox.Ok,
                 QMessageBox.Ok,
             )
         except Exception:
-            print(traceback.format_exc())
             QMessageBox.warning(
                 self,
                 "Connection test",
