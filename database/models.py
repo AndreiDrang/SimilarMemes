@@ -33,6 +33,12 @@ class Image(db.Entity):
 
     composite_key(image_path, image_md5_hash)
 
+    def full_path(self) -> str:
+        """
+        Method return full image path
+        :return: String with image full path
+        """
+        return os.path.join(self.image_path, self.image_name)
 
     def custom_delete(self):
         """
