@@ -17,7 +17,7 @@ connection(provider='postgres',
            })
 """
 # if connect to sqlite
-connection(provider="sqlite", settings={"filename": "db.sqlite", "create_db": True})
+connection()
 
 # path = '/home/andrei/Downloads/Telegram Desktop/DataExport_06_12_2018/chats/chat_001/photos'
 path = "/home/andrei/Pictures/"
