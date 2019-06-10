@@ -251,6 +251,46 @@ class Window(QWidget):
             self.folderTreeCheckbox,
         )
 
+        self.thread.finishedTrigger.connect(self.finish_thread)
+
+        # filling table while first run
+        self.reindex_db_data()
+
+    def reindex_db_data(self):
+        # Reindex already exist folders and files; Image and Video files
+        reindex_image_files()
+        reindex_video_files()
+        # run table filling after reindexing
+        self.table_data_init()
+
+    def table_data_init(self):
+        # get available images from DB
+        with db_session():
+            images = Image.all()
+
+        for idx, image in enumerate(images):
+            str_image_idx = str(idx)
+
+            IMAGE_PATH_DICT[str_image_idx] = [
+                image.image_name,
+                (image.image_name.split(".")[-1]).lower(),
+                os.path.join(image.image_path, image.image_name),
+            ]
+            self.imageListTable.setRowCount(idx)
+            self.imageListTable.setItem(idx - 1, 0, QTableWidgetItem(str_image_idx))
+            self.imageListTable.setItem(
+                idx - 1, 1, QTableWidgetItem(image.image_name)
+            )
+            self.imageListTable.setItem(
+                idx - 1, 2, QTableWidgetItem(IMAGE_PATH_DICT[str_image_idx][1])
+            )
+
+            duplicateIcon = QTableWidgetItem()
+            duplicateIcon.setIcon(
+                QWidget().style().standardIcon(QStyle.SP_FileDialogContentsView)
+            )
+            self.imageListTable.setItem(idx - 1, 3, duplicateIcon)
+
     # Get a folder full of multimedia files to work with
     def set_folder(self):
         self.folderPath = QFileDialog.getExistingDirectory(self)
