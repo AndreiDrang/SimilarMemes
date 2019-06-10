@@ -154,7 +154,6 @@ class Window(QWidget):
         self.folderTreeCheckbox = QCheckBox("Include sub-folders")
         self.processButton = QPushButton("Process media files")
         self.duplicateButton = QPushButton("Find duplicates")
-        self.progressBar = QProgressBar()
         self.tableTabs = QTabWidget()
         # init main images list table
         self.imageListTable = QTableWidget()
@@ -179,8 +178,6 @@ class Window(QWidget):
 
         self.duplicateButton.clicked.connect(self.find_duplicates)
         self.duplicateButton.setFixedWidth(150)
-
-        self.progressBar.setAlignment(Qt.AlignCenter)
 
         self.imagesTab = self.tableTabs.insertTab(0, self.imageListTable, "Images")
         self.videosTab = self.tableTabs.insertTab(1, self.videoListTable, "Videos")
@@ -220,7 +217,6 @@ class Window(QWidget):
         subGrid.addWidget(self.folderTreeCheckbox, 1, 0)
         subGrid.addWidget(self.processButton, 2, 0, 1, 2, Qt.AlignCenter)
         subGrid.addWidget(self.duplicateButton, 3, 0, 1, 2, Qt.AlignCenter)
-        subGrid.addWidget(self.progressBar, 4, 0, 1, 2)
         subGridBox.setLayout(subGrid)
 
         # Main grid box:
@@ -278,7 +274,6 @@ class Window(QWidget):
         elif self.thread.isRunning():
             self.thread.terminate()
             self.processButton.setText("Start")
-            self.update_progressbar(0)
 
     # Thread done and ded
     def finish_thread(self):
