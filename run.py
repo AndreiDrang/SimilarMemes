@@ -1,10 +1,12 @@
 import sys
 
 from gui.main import QApplication, MainWindow
-from database import connection
+import database
 
-connection(provider="sqlite", settings={"filename": "db.sqlite", "create_db": True})
+# connect to DB
+database.connection()
 
+# start GUI
 app = QApplication(sys.argv)
 screen = MainWindow()
 screen.show()

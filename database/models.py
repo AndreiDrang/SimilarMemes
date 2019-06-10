@@ -1,4 +1,5 @@
 import collections
+import json
 from datetime import datetime
 
 import numpy as np
@@ -147,35 +148,36 @@ class VideoDuplicates(db.Entity):
     video_duplicates = Set(Video)
 
 
-def connection(
-    provider: str = "sqlite",
-    settings: dict = {"filename": "memes.sqlite", "create_db": True},
-):
+def connection():
     """
     Function get user custom DB connect params
-
-    :param provider: DB type, available variants - `sqlite / postgres / mysql`
-    :param settings: Dict with connection params;
-                        For `sqlite` - {
-                                        filename: <DB file name>,
-                                        create_db: <True - create new DB file;
-                                        False - connect to exist DB file>
-                                       }
-                        For `postgres` - {
-                                            user: <User name>,
-                                            password: <User password>,
-                                            host: <Host addres>
-                                            database: <DB name>
-                                        }
-                        For `mysql` - {
-                                        user: <User name>,
-                                        passwd: <User password>,
-                                        host: <Host addres>
-                                        db: <DB name>
-                                      }
     """
-    # bind to DB with provider and settings
-    db.bind(provider=provider, **settings)
+    with open('database/db_config.json', 'rt') as configs:
+        configs_data = json.loads(configs.read())
+
+    if configs_data['provider'] == 'sqlite':
+        db.bind(provider='sqlite',
+                filename=configs_data['filename'],
+                create_db=True)
+    elif configs_data['provider'] == 'postgres':
+        # bind to DB with provider and settings
+        db.bind(provider="postgres",
+                user=configs_data['user'],
+                password=configs_data['password'],
+                host=configs_data['host'],
+                port=configs_data['port'],
+                database=configs_data['database'],
+                create_db=True)
+    elif configs_data['provider'] == 'mysql':
+        # bind to DB with provider and settings
+        db.bind(provider="mysql",
+                user=configs_data['user'],
+                passwd=configs_data['password'],
+                host=configs_data['host'],
+                port=configs_data['port'],
+                db=configs_data['database'],
+                create_db=True)
+
     db.generate_mapping(create_tables=True)
 
     print("Все таблицы в БД успешно созданы")
