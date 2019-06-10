@@ -187,7 +187,7 @@ class Window(QWidget):
 
         self.imageListTable.setColumnCount(4)
         self.imageListTable.setHorizontalHeaderLabels(
-            ["ID", "File name", "Extension", ""]
+            ["ID", "File name", "Format", "Actions"]
         )
         self.imageListTable.verticalHeader().setVisible(False)
 
@@ -200,7 +200,7 @@ class Window(QWidget):
 
         self.videoListTable.setColumnCount(4)
         self.videoListTable.setHorizontalHeaderLabels(
-            ["ID", "File name", "Extension", ""]
+            ["ID", "File name", "Format", "Actions"]
         )
         self.videoListTable.verticalHeader().setVisible(False)
 
