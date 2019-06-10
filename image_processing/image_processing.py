@@ -1,6 +1,7 @@
 import os
 import hashlib
 import collections
+import traceback
 from multiprocessing import Pool
 
 import cv2
@@ -42,7 +43,7 @@ def count_descriptor(image_file):
         return None
 
 
-def image_processing(image_list: collections.deque):
+def image_processing(image_list: collections.deque)->list:
     """
 	Function preprocess image files, count hash, count images descriptor(using ORB)
 		and return files info in dict format
@@ -56,6 +57,6 @@ def image_processing(image_list: collections.deque):
     res = pool.map(count_descriptor, image_list)
 
     # filter only indexed files
-    indexed_files = [file for file in res if file is not None]
+    processed_files = [file for file in res if file is not None]
 
-    save_new_files(indexed_files=indexed_files, file_type="image")
+    return processed_files
