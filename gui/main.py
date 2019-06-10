@@ -718,9 +718,9 @@ class DuplicateWindow(QWidget):
 
         if column == 3:
             itemId = self.duplicateTable.item(row, 0).text()
-            self.delete_duplicate(itemId, row)
+            self.delete_duplicate(itemId, row, IMAGE_PATH_DICT[itemId]['id'])
 
-    def delete_duplicate(self, itemId, row):
+    def delete_duplicate(self, itemId: str, row: str, image_id: int):
         message = QMessageBox().question(
             self,
             "Confirm deletion",
@@ -731,8 +731,17 @@ class DuplicateWindow(QWidget):
         if message == QMessageBox.Yes:
             self.duplicateTable.removeRow(row)
             self.deletionTrigger.emit(itemId)
-            os.remove(IMAGE_PATH_DICT[self.sourceImageId][2])
+            # run custom delete
+            with db_session():
+                Image[image_id].custom_delete()
 
+            QMessageBox().information(
+                self,
+                "File deletion",
+                "File success deleted",
+                QMessageBox.Ok,
+                QMessageBox.Ok,
+            )
         elif message == QMessageBox.No:
             pass
 

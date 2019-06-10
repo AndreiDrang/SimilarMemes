@@ -1,5 +1,6 @@
-import collections
+import os
 import json
+import collections
 from datetime import datetime
 
 import numpy as np
@@ -31,6 +32,17 @@ class Image(db.Entity):
     duplicates = Set("ImageDuplicates", nullable=True)
 
     composite_key(image_path, image_md5_hash)
+
+
+    def custom_delete(self):
+        """
+        Custom image delete. Delete file from OS and image from database
+        """
+        try:
+            os.remove(self.image_path+os.sep+self.image_name)
+        except FileNotFoundError:
+            pass
+        self.delete()
 
     @staticmethod
     def all() -> list:
