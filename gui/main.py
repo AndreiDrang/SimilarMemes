@@ -6,6 +6,8 @@ import os
 import traceback
 
 from PIL import Image
+from pony.orm import db_session
+from pony.orm import flush as db_flush
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
@@ -15,7 +17,7 @@ from PyQt5.QtMultimediaWidgets import *
 
 from indexing import index_folder_files, reindex_image_files, reindex_video_files
 from image_processing import image_processing, feature_description
-from database import Image
+from database import Image, save_new_files
 
 from gui import json_settings
 
@@ -25,6 +27,8 @@ VIDEO_PATH_DICT = {}
 
 
 class ProcessingThread(QThread):
+    finishedTrigger = pyqtSignal()
+
     def __init__(self, folderField, imageListTable, videoListTable, folderTreeCheckbox):
         QThread.__init__(self)
         self.folderField = folderField
@@ -35,6 +39,7 @@ class ProcessingThread(QThread):
     # The process to fill the image/video tables with image/video names
     # and ITEM_PATH_DICT with their paths:
     def run(self):
+
         # Reindex already exist folders and files; Image and Video files
         reindex_image_files()
         reindex_video_files()
@@ -47,33 +52,37 @@ class ProcessingThread(QThread):
         )
 
         # processing new files
-        image_processing(images)
+        processed_files = image_processing(images)
 
-        # get available images from DB
-        images = Image.all()
+        # save new files
+        with db_session():
+            save_new_files(indexed_files=processed_files, file_type="image")
+            db_flush()
+            # get available images from DB
+            images = Image.all()
 
-        for image in images:
-            str_image_id = str(image.id)
+        for idx, image in enumerate(images):
+            str_image_idx = str(idx)
 
-            IMAGE_PATH_DICT[str_image_id] = [
+            IMAGE_PATH_DICT[str_image_idx] = [
                 image.image_name,
                 (image.image_name.split(".")[-1]).lower(),
                 os.path.join(image.image_path, image.image_name),
             ]
-            self.imageListTable.setRowCount(image.id)
-            self.imageListTable.setItem(image.id - 1, 0, QTableWidgetItem(str_image_id))
+            self.imageListTable.setRowCount(idx)
+            self.imageListTable.setItem(idx - 1, 0, QTableWidgetItem(str_image_idx))
             self.imageListTable.setItem(
-                image.id - 1, 1, QTableWidgetItem(image.image_name)
+                idx - 1, 1, QTableWidgetItem(image.image_name)
             )
             self.imageListTable.setItem(
-                image.id - 1, 2, QTableWidgetItem(IMAGE_PATH_DICT[str_image_id][1])
+                idx - 1, 2, QTableWidgetItem(IMAGE_PATH_DICT[str_image_idx][1])
             )
 
             duplicateIcon = QTableWidgetItem()
             duplicateIcon.setIcon(
                 QWidget().style().standardIcon(QStyle.SP_FileDialogContentsView)
             )
-            self.imageListTable.setItem(image.id - 1, 3, duplicateIcon)
+            self.imageListTable.setItem(idx - 1, 3, duplicateIcon)
 
         # TODO add video to DB and processing logic
         """
@@ -99,6 +108,8 @@ class ProcessingThread(QThread):
             self.videoListTable.setItem(rowVideos, 3, duplicateIcon)
 
         """
+
+        self.finishedTrigger.emit()
 
 
 class MainWindow(QMainWindow):
