@@ -65,18 +65,16 @@ class ProcessingThread(QThread):
             str_image_idx = str(idx)
 
             IMAGE_PATH_DICT[str_image_idx] = {
-                'id': image.id,
-                'name': image.image_name,
-                'type': (image.image_name.split(".")[-1]).lower(),
-                'full_path': image.full_path(),
+                "id": image.id,
+                "name": image.image_name,
+                "type": (image.image_name.split(".")[-1]).lower(),
+                "full_path": image.full_path(),
             }
             self.imageListTable.setRowCount(idx)
             self.imageListTable.setItem(idx - 1, 0, QTableWidgetItem(str_image_idx))
+            self.imageListTable.setItem(idx - 1, 1, QTableWidgetItem(image.image_name))
             self.imageListTable.setItem(
-                idx - 1, 1, QTableWidgetItem(image.image_name)
-            )
-            self.imageListTable.setItem(
-                idx - 1, 2, QTableWidgetItem(IMAGE_PATH_DICT[str_image_idx]['type'])
+                idx - 1, 2, QTableWidgetItem(IMAGE_PATH_DICT[str_image_idx]["type"])
             )
 
             duplicateIcon = QTableWidgetItem()
@@ -278,18 +276,16 @@ class Window(QWidget):
             str_image_idx = str(idx)
 
             IMAGE_PATH_DICT[str_image_idx] = {
-                'id': image.id,
-                'name': image.image_name,
-                'type': (image.image_name.split(".")[-1]).lower(),
-                'full_path': image.full_path(),
+                "id": image.id,
+                "name": image.image_name,
+                "type": (image.image_name.split(".")[-1]).lower(),
+                "full_path": image.full_path(),
             }
             self.imageListTable.setRowCount(idx)
             self.imageListTable.setItem(idx - 1, 0, QTableWidgetItem(str_image_idx))
+            self.imageListTable.setItem(idx - 1, 1, QTableWidgetItem(image.image_name))
             self.imageListTable.setItem(
-                idx - 1, 1, QTableWidgetItem(image.image_name)
-            )
-            self.imageListTable.setItem(
-                idx - 1, 2, QTableWidgetItem(IMAGE_PATH_DICT[str_image_idx]['type'])
+                idx - 1, 2, QTableWidgetItem(IMAGE_PATH_DICT[str_image_idx]["type"])
             )
 
             duplicateIcon = QTableWidgetItem()
@@ -376,8 +372,8 @@ class Window(QWidget):
         imageId = self.imageListTable.item(row, 0).text()
 
         # Prevents from KeyError when clicking the second column:
-        if imageItem.text() == IMAGE_PATH_DICT[imageId]['name']:
-            imageItemPath = IMAGE_PATH_DICT[imageId]['full_path']
+        if imageItem.text() == IMAGE_PATH_DICT[imageId]["name"]:
+            imageItemPath = IMAGE_PATH_DICT[imageId]["full_path"]
 
             # Removes a video from screen if shown:
             self.videoPlayer.stop()
@@ -572,12 +568,14 @@ class DatabaseSettings(QWidget):
         try:
             if self.providersBox.currentText() == "SQLite":
                 import sqlite3
+
                 conn = sqlite3.connect(self.databaseFilenameField.text())
                 conn.close()
                 os.remove(self.databaseFilenameField.text())
 
             elif self.providersBox.currentText() == "Postgres":
                 import psycopg2
+
                 conn = psycopg2.connect(
                     dbname=self.databaseNameField.text(),
                     user=self.databaseUserField.text(),
@@ -589,6 +587,7 @@ class DatabaseSettings(QWidget):
 
             elif self.providersBox.currentText() == "MySQL":
                 import mysql.connector
+
                 conn = mysql.connector.connect(
                     data=self.databaseNameField.text(),
                     user=self.databaseUserField.text(),
@@ -656,7 +655,7 @@ class DuplicateWindow(QWidget):
     def __init__(self, sourceImageId):
         super().__init__()
         self.sourceImageId = sourceImageId.text()
-        self.sourceImage = IMAGE_PATH_DICT[self.sourceImageId]['full_path']
+        self.sourceImage = IMAGE_PATH_DICT[self.sourceImageId]["full_path"]
 
         self.setWindowTitle("Duplicates")
         self.setFixedSize(500, 500)
@@ -687,7 +686,7 @@ class DuplicateWindow(QWidget):
         self.duplicateTable.setRowCount(1)
         self.duplicateTable.setItem(0, 0, QTableWidgetItem(self.sourceImageId))
         self.duplicateTable.setItem(
-            0, 1, QTableWidgetItem(IMAGE_PATH_DICT[self.sourceImageId]['name'])
+            0, 1, QTableWidgetItem(IMAGE_PATH_DICT[self.sourceImageId]["name"])
         )
 
         openFolderIcon = QTableWidgetItem()
@@ -707,20 +706,20 @@ class DuplicateWindow(QWidget):
 
     def click_event(self, row, column):
         item = self.duplicateTable.item(row, column)
-        if item.text() == IMAGE_PATH_DICT[self.sourceImageId]['name']:
+        if item.text() == IMAGE_PATH_DICT[self.sourceImageId]["name"]:
             self.imageField.setPixmap(
-                QPixmap(IMAGE_PATH_DICT[self.sourceImageId]['full_path']).scaled(
+                QPixmap(IMAGE_PATH_DICT[self.sourceImageId]["full_path"]).scaled(
                     300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
                 )
             )
 
         if column == 2:
             itemId = self.duplicateTable.item(row, 0).text()
-            os.startfile(IMAGE_PATH_DICT[itemId]['full_path'].rsplit(os.sep, 1)[0])
+            os.startfile(IMAGE_PATH_DICT[itemId]["full_path"].rsplit(os.sep, 1)[0])
 
         if column == 3:
             itemId = self.duplicateTable.item(row, 0).text()
-            self.delete_duplicate(itemId, row, IMAGE_PATH_DICT[itemId]['id'])
+            self.delete_duplicate(itemId, row, IMAGE_PATH_DICT[itemId]["id"])
 
     def delete_duplicate(self, itemId: str, row: str, image_id: int):
         message = QMessageBox().question(

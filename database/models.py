@@ -45,7 +45,7 @@ class Image(db.Entity):
         Custom image delete. Delete file from OS and image from database
         """
         try:
-            os.remove(self.image_path+os.sep+self.image_name)
+            os.remove(self.image_path + os.sep + self.image_name)
         except FileNotFoundError:
             pass
         self.delete()
@@ -107,7 +107,7 @@ class Video(db.Entity):
         Custom video delete. Delete file from OS and video from database
         """
         try:
-            os.remove(self.image_path+os.sep+self.image_name)
+            os.remove(self.image_path + os.sep + self.image_name)
         except FileNotFoundError:
             pass
         self.delete()
@@ -176,31 +176,33 @@ def connection():
     """
     Function get user custom DB connect params
     """
-    with open('database/db_config.json', 'rt') as configs:
+    with open("database/db_config.json", "rt") as configs:
         configs_data = json.loads(configs.read())
 
-    if configs_data['provider'] == 'sqlite':
-        db.bind(provider='sqlite',
-                filename=configs_data['filename'],
-                create_db=True)
-    elif configs_data['provider'] == 'postgres':
+    if configs_data["provider"] == "sqlite":
+        db.bind(provider="sqlite", filename=configs_data["filename"], create_db=True)
+    elif configs_data["provider"] == "postgres":
         # bind to DB with provider and settings
-        db.bind(provider="postgres",
-                user=configs_data['user'],
-                password=configs_data['password'],
-                host=configs_data['host'],
-                port=configs_data['port'],
-                database=configs_data['database'],
-                create_db=True)
-    elif configs_data['provider'] == 'mysql':
+        db.bind(
+            provider="postgres",
+            user=configs_data["user"],
+            password=configs_data["password"],
+            host=configs_data["host"],
+            port=configs_data["port"],
+            database=configs_data["database"],
+            create_db=True,
+        )
+    elif configs_data["provider"] == "mysql":
         # bind to DB with provider and settings
-        db.bind(provider="mysql",
-                user=configs_data['user'],
-                passwd=configs_data['password'],
-                host=configs_data['host'],
-                port=configs_data['port'],
-                db=configs_data['database'],
-                create_db=True)
+        db.bind(
+            provider="mysql",
+            user=configs_data["user"],
+            passwd=configs_data["password"],
+            host=configs_data["host"],
+            port=configs_data["port"],
+            db=configs_data["database"],
+            create_db=True,
+        )
 
     db.generate_mapping(create_tables=True)
 
