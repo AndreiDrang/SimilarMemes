@@ -397,7 +397,7 @@ class Window(QWidget):
                 )
 
         if column == 3:
-            self.duplicateWindow = DuplicateWindow(self.imageListTable.item(row, 0))
+            self.duplicateWindow = DuplicateWindow(image_data=IMAGE_PATH_DICT[imageId], raw_id = imageId)
             if imageId not in self.duplicateRefs.keys():
                 self.duplicateRefs[imageId] = self.duplicateWindow
                 self.duplicateWindow.show()
@@ -652,10 +652,10 @@ class DuplicateWindow(QWidget):
     deletionTrigger = pyqtSignal(str)
     closeTrigger = pyqtSignal(str)
 
-    def __init__(self, sourceImageId):
+    def __init__(self, image_data: dict, raw_id: str):
         super().__init__()
-        self.sourceImageId = sourceImageId.text()
-        self.sourceImage = IMAGE_PATH_DICT[self.sourceImageId]["full_path"]
+        self.sourceImage = image_data
+        self.sourceImageRawId = raw_id
 
         self.setWindowTitle("Duplicates")
         self.setFixedSize(500, 500)
@@ -667,7 +667,7 @@ class DuplicateWindow(QWidget):
         self.duplicateTable.setEditTriggers(QTableWidget.NoEditTriggers)
 
         self.imageField.setPixmap(
-            QPixmap(self.sourceImage).scaled(
+            QPixmap(self.sourceImage['full_path']).scaled(
                 300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
             )
         )
@@ -684,9 +684,9 @@ class DuplicateWindow(QWidget):
         self.duplicateTable.setColumnWidth(3, 25)
 
         self.duplicateTable.setRowCount(1)
-        self.duplicateTable.setItem(0, 0, QTableWidgetItem(self.sourceImageId))
+        self.duplicateTable.setItem(0, 0, QTableWidgetItem(self.sourceImageRawId))
         self.duplicateTable.setItem(
-            0, 1, QTableWidgetItem(IMAGE_PATH_DICT[self.sourceImageId]["name"])
+            0, 1, QTableWidgetItem(self.sourceImage["name"])
         )
 
         openFolderIcon = QTableWidgetItem()
@@ -704,23 +704,29 @@ class DuplicateWindow(QWidget):
         self.vbox.addWidget(self.duplicateTable)
         self.setLayout(self.vbox)
 
+        # run duplicates find at first run
+        self.table_data_init()
+
+    def table_data_init(self):
+        with db_session():
+            result = get_image_duplicates(image_id=self.sourceImage['id'], similarity_threshold=150)
+
     def click_event(self, row, column):
         item = self.duplicateTable.item(row, column)
-        if item.text() == IMAGE_PATH_DICT[self.sourceImageId]["name"]:
+        if item.text() == self.sourceImage["name"]:
             self.imageField.setPixmap(
-                QPixmap(IMAGE_PATH_DICT[self.sourceImageId]["full_path"]).scaled(
+                QPixmap(self.sourceImage["full_path"]).scaled(
                     300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
                 )
             )
-
+        elif column == 3:
+            itemId = self.duplicateTable.item(row, 0).text()
+            self.delete_duplicate(itemId, row, self.sourceImage["id"])
+        '''
         if column == 2:
             itemId = self.duplicateTable.item(row, 0).text()
-            os.startfile(IMAGE_PATH_DICT[itemId]["full_path"].rsplit(os.sep, 1)[0])
-
-        if column == 3:
-            itemId = self.duplicateTable.item(row, 0).text()
-            self.delete_duplicate(itemId, row, IMAGE_PATH_DICT[itemId]["id"])
-
+            os.startfile(self.sourceImage["full_path"].rsplit(os.sep, 1)[0])
+        '''
     def delete_duplicate(self, itemId: str, row: str, image_id: int):
         message = QMessageBox().question(
             self,
@@ -747,5 +753,5 @@ class DuplicateWindow(QWidget):
             pass
 
     def closeEvent(self, event):
-        self.closeTrigger.emit(self.sourceImageId)
+        self.closeTrigger.emit(self.sourceImageRawId)
         self.close()
