@@ -175,16 +175,17 @@ class Window(QWidget):
         self.videoPlayer = QMediaPlayer()
 
         # Adjusts settings for the window elements:
-        self.folderField.setEnabled(False)
+        self.folderField.setDisabled(True)
 
         self.folderButton.setIcon(self.style().standardIcon(QStyle.SP_DialogOpenButton))
         self.folderButton.clicked.connect(self.set_folder)
 
         self.processButton.clicked.connect(self.process_files)
-        self.processButton.setFixedWidth(150)
+        self.processButton.setFixedWidth(160)
+        self.processButton.setDisabled(True)
 
         self.duplicateButton.clicked.connect(self.find_duplicates)
-        self.duplicateButton.setFixedWidth(150)
+        self.duplicateButton.setFixedWidth(160)
 
         self.reindexButton.clicked.connect(self.reindex_db_data)
         self.reindexButton.setFixedWidth(160)
@@ -296,11 +297,13 @@ class Window(QWidget):
         if self.folderPath == "":
             self.folderPath = self.folderField.text()
         self.folderField.setText(self.folderPath)
+        self.processButton.setEnabled(True)
         self.statusBar.clearMessage()
 
     # Start the thread and fill the table with those files
     def process_files(self):
-        self.duplicateButton.setEnabled(False)
+        self.duplicateButton.setDisabled(True)
+        self.reindexButton.setDisabled(True)
 
         # Clears both tables upon restarting function:
         self.imageListTable.clearContents()
@@ -323,7 +326,7 @@ class Window(QWidget):
 
         elif self.thread.isRunning():
             self.thread.terminate()
-            self.processButton.setText("Start")
+            self.processButton.setText("Process media files")
 
     # Thread done and ded
     def finish_thread(self):
@@ -331,6 +334,7 @@ class Window(QWidget):
         self.statusBar.showMessage("Finished!")
         self.processButton.setText("Start")
         self.duplicateButton.setEnabled(True)
+        self.reindexButton.setEnabled(True)
 
     # Start the second thread and remove all unique files from the table
     def find_duplicates(self):
