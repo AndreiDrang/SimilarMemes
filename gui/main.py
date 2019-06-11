@@ -17,7 +17,7 @@ from PyQt5.QtMultimediaWidgets import *
 
 from indexing import index_folder_files, reindex_image_files, reindex_video_files
 from image_processing import image_processing, feature_description
-from database import Image, save_new_files
+from database import Image, save_new_files, get_image_duplicates
 
 from gui import json_settings
 
@@ -302,6 +302,7 @@ class Window(QWidget):
 
     # Start the thread and fill the table with those files
     def process_files(self):
+        # set other buttons disabled
         self.duplicateButton.setDisabled(True)
         self.reindexButton.setDisabled(True)
 
@@ -333,6 +334,7 @@ class Window(QWidget):
         self.statusBar.setStyleSheet("color: black")
         self.statusBar.showMessage("Finished!")
         self.processButton.setText("Start")
+        # set all buttons able
         self.duplicateButton.setEnabled(True)
         self.reindexButton.setEnabled(True)
 
@@ -354,11 +356,11 @@ class Window(QWidget):
             QMessageBox.Ok,
             QMessageBox.Ok,
         )
-
-        # get all images descriptors
-        image_files_query = Image.get_images_descriptors()
-        # run function to find duplicates
-        feature_description(images_list=image_files_query)
+        with db_session():
+            # get all images descriptors
+            image_files_query = Image.get_images_descriptors()
+            # run function to find duplicates
+            feature_description(images_list=image_files_query)
 
         QMessageBox.information(
             self, "Find duplicates", "Success!", QMessageBox.Ok, QMessageBox.Ok
