@@ -419,7 +419,6 @@ class Window(QWidget):
             if imageId not in self.duplicateRefs.keys():
                 self.duplicateRefs[imageId] = self.duplicateWindow
                 self.duplicateWindow.show()
-            self.duplicateWindow.deletionTrigger.connect(self.delete_image_row)
             self.duplicateWindow.closeTrigger.connect(self.delete_reference)
 
     # Show a video upon clicking its name in the table
@@ -667,7 +666,6 @@ class DatabaseSettings(QWidget):
 
 # A separate window to show duplicates of the source image:
 class DuplicateWindow(QWidget):
-    deletionTrigger = pyqtSignal(str)
     closeTrigger = pyqtSignal(str)
 
     def __init__(self, image_data: dict, raw_id: str):
@@ -680,62 +678,73 @@ class DuplicateWindow(QWidget):
         self.local_IMAGE_PATH_DICT = {}
 
         self.setWindowTitle("Duplicates")
-        self.setFixedSize(500, 500)
+        self.setFixedSize(700, 500)
 
-        self.imageField = QLabel()
+        self.mainImageField = QLabel()
+        self.duplicateImageField = QLabel()
+        # set images grid(left - main image, right - duplicate)
+        self.imagesGrid = QGridLayout()
+        self.imagesGrid.addWidget(self.mainImageField, 0, 0)
+        self.imagesGrid.addWidget(self.duplicateImageField, 0, 1)
+
+        self.subGridBox = QWidget()
+        self.subGridBox.setLayout(self.imagesGrid)
+
         # init duplicates list table
         self.duplicateTable = QTableWidget()
         # set duplicates list table fields unchanged
         self.duplicateTable.setEditTriggers(QTableWidget.NoEditTriggers)
-
-        self.imageField.setPixmap(
-            QPixmap(self.sourceImage['full_path']).scaled(
-                300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
-            )
-        )
-
-        self.duplicateTable.setColumnCount(4)
-        self.duplicateTable.setHorizontalHeaderLabels(["ID", "File name", "", ""])
+        self.duplicateTable.setColumnCount(5)
+        self.duplicateTable.setHorizontalHeaderLabels(["ID", "File name", "Similarity", "", ""])
         self.duplicateTable.verticalHeader().setVisible(False)
         self.duplicateTable.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.duplicateTable.setSortingEnabled(True)
-
-        self.duplicateTable.setColumnWidth(0, 25)
-        self.duplicateTable.setColumnWidth(1, 345)
-        self.duplicateTable.setColumnWidth(2, 25)
+        self.duplicateTable.setColumnWidth(0, 50)
+        self.duplicateTable.setColumnWidth(1, 350)
+        self.duplicateTable.setColumnWidth(2, 70)
         self.duplicateTable.setColumnWidth(3, 25)
+        self.duplicateTable.setColumnWidth(4, 25)
+        self.duplicateTable.cellClicked.connect(self.click_event)
 
+        # set grid system
+        self.mainGrid = QGridLayout()
+        self.mainGrid.addWidget(self.subGridBox, 0, 0)
+        self.mainGrid.addWidget(self.duplicateTable, 1, 0)
+        self.setLayout(self.mainGrid)
+
+        # set main image
+        self.main_image_init()
+        # run duplicates find at first run
+        self.table_data_init()
+
+    def main_image_init(self):
         self.duplicateTable.setRowCount(1)
         self.duplicateTable.setItem(0, 0, QTableWidgetItem(self.sourceImageRawId))
         self.duplicateTable.setItem(
             0, 1, QTableWidgetItem(self.sourceImage["name"])
         )
+        openFolderIcon = QTableWidgetItem()
+        openFolderIcon.setIcon(self.style().standardIcon(QStyle.SP_DirIcon))
+        deleteItemIcon = QTableWidgetItem()
+        deleteItemIcon.setIcon(self.style().standardIcon(QStyle.SP_MessageBoxCritical))
 
-        self.openFolderIcon = QTableWidgetItem()
-        self.openFolderIcon.setIcon(self.style().standardIcon(QStyle.SP_DirIcon))
-        self.deleteItemIcon = QTableWidgetItem()
-        self.deleteItemIcon.setIcon(self.style().standardIcon(QStyle.SP_MessageBoxCritical))
+        self.duplicateTable.setItem(0, 2, QTableWidgetItem(0))
+        self.duplicateTable.setItem(0, 3, openFolderIcon)
+        self.duplicateTable.setItem(0, 4, deleteItemIcon)
 
-        self.duplicateTable.setItem(0, 2, self.openFolderIcon)
-        self.duplicateTable.setItem(0, 3, self.deleteItemIcon)
-
-        self.duplicateTable.cellClicked.connect(self.click_event)
-
-        self.vbox = QVBoxLayout()
-        self.vbox.addWidget(self.imageField, Qt.AlignCenter)
-        self.vbox.addWidget(self.duplicateTable)
-        self.setLayout(self.vbox)
-
-        # run duplicates find at first run
-        self.table_data_init()
+        self.mainImageField.setPixmap(
+            QPixmap(self.sourceImage['full_path']).scaled(
+                300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
+            )
+        )
 
     def table_data_init(self):
         with db_session():
             result = get_image_duplicates(image_id=self.sourceImage['id'], similarity_threshold=150)
 
             if result:
-                for idx, duplicate_data in enumerate(result, 2):
-                    image, similarity_param = duplicate_data[0], duplicate_data[1]
+                for idx, duplicate_data in enumerate(result):
+                    image, similarity_param = duplicate_data[0], str(duplicate_data[1])
                     str_image_idx = str(idx)
 
                     self.local_IMAGE_PATH_DICT[str_image_idx] = {
@@ -747,26 +756,34 @@ class DuplicateWindow(QWidget):
                     self.duplicateTable.setRowCount(idx)
                     self.duplicateTable.setItem(idx - 1, 0, QTableWidgetItem(str_image_idx))
                     self.duplicateTable.setItem(idx - 1, 1, QTableWidgetItem(image.image_name))
+                    self.duplicateTable.setItem(idx - 1, 2, QTableWidgetItem(similarity_param))
 
-                    self.duplicateTable.setItem(idx - 1, 2, self.openFolderIcon)
-                    self.duplicateTable.setItem(idx - 1, 3, self.deleteItemIcon)
+                    openFolderIcon = QTableWidgetItem()
+                    openFolderIcon.setIcon(self.style().standardIcon(QStyle.SP_DirIcon))
+                    deleteItemIcon = QTableWidgetItem()
+                    deleteItemIcon.setIcon(self.style().standardIcon(QStyle.SP_MessageBoxCritical))
+
+                    self.duplicateTable.setItem(idx - 1, 3, openFolderIcon)
+                    self.duplicateTable.setItem(idx - 1, 4, deleteItemIcon)
 
     def click_event(self, row, column):
         item = self.duplicateTable.item(row, column)
-        if item.text() == self.sourceImage["name"]:
-            self.imageField.setPixmap(
-                QPixmap(self.sourceImage["full_path"]).scaled(
+        if column in (0, 1, 2):
+
+            self.duplicateImageField.setPixmap(
+                QPixmap(self.local_IMAGE_PATH_DICT[str(row)]["full_path"]).scaled(
                     300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
                 )
             )
-        elif column == 3:
+        elif column == 4:
             itemId = self.duplicateTable.item(row, 0).text()
             self.delete_duplicate(itemId, row, self.sourceImage["id"])
         '''
-        if column == 2:
+        if column == 3:
             itemId = self.duplicateTable.item(row, 0).text()
             os.startfile(self.sourceImage["full_path"].rsplit(os.sep, 1)[0])
         '''
+
     def delete_duplicate(self, itemId: str, row: str, image_id: int):
         message = QMessageBox().question(
             self,
@@ -777,7 +794,6 @@ class DuplicateWindow(QWidget):
 
         if message == QMessageBox.Yes:
             self.duplicateTable.removeRow(row)
-            self.deletionTrigger.emit(itemId)
             # run custom delete
             with db_session():
                 Image[image_id].custom_delete()
