@@ -691,13 +691,13 @@ class DuplicateWindow(QWidget):
             0, 1, QTableWidgetItem(self.sourceImage["name"])
         )
 
-        openFolderIcon = QTableWidgetItem()
-        openFolderIcon.setIcon(self.style().standardIcon(QStyle.SP_DirIcon))
-        deleteItemIcon = QTableWidgetItem()
-        deleteItemIcon.setIcon(self.style().standardIcon(QStyle.SP_MessageBoxCritical))
+        self.openFolderIcon = QTableWidgetItem()
+        self.openFolderIcon.setIcon(self.style().standardIcon(QStyle.SP_DirIcon))
+        self.deleteItemIcon = QTableWidgetItem()
+        self.deleteItemIcon.setIcon(self.style().standardIcon(QStyle.SP_MessageBoxCritical))
 
-        self.duplicateTable.setItem(0, 2, openFolderIcon)
-        self.duplicateTable.setItem(0, 3, deleteItemIcon)
+        self.duplicateTable.setItem(0, 2, self.openFolderIcon)
+        self.duplicateTable.setItem(0, 3, self.deleteItemIcon)
 
         self.duplicateTable.cellClicked.connect(self.click_event)
 
@@ -712,6 +712,24 @@ class DuplicateWindow(QWidget):
     def table_data_init(self):
         with db_session():
             result = get_image_duplicates(image_id=self.sourceImage['id'], similarity_threshold=150)
+
+            if result:
+                for idx, duplicate_data in enumerate(result, 2):
+                    image, similarity_param = duplicate_data[0], duplicate_data[1]
+                    str_image_idx = str(idx)
+
+                    self.local_IMAGE_PATH_DICT[str_image_idx] = {
+                        "id": image.id,
+                        "name": image.image_name,
+                        "type": (image.image_name.split(".")[-1]).lower(),
+                        "full_path": image.full_path(),
+                    }
+                    self.duplicateTable.setRowCount(idx)
+                    self.duplicateTable.setItem(idx - 1, 0, QTableWidgetItem(str_image_idx))
+                    self.duplicateTable.setItem(idx - 1, 1, QTableWidgetItem(image.image_name))
+
+                    self.duplicateTable.setItem(idx - 1, 2, self.openFolderIcon)
+                    self.duplicateTable.setItem(idx - 1, 3, self.deleteItemIcon)
 
     def click_event(self, row, column):
         item = self.duplicateTable.item(row, column)
