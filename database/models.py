@@ -49,9 +49,11 @@ class Image(db.Entity):
         except FileNotFoundError:
             pass
         # clean images duplicates
-        delete(duplicate for duplicate in ImageDuplicates
-               if duplicate.image_src_id == self.id
-               or duplicate.image_dup.id == self.id)
+        delete(
+            duplicate
+            for duplicate in ImageDuplicates
+            if duplicate.image_src_id == self.id or duplicate.image_dup.id == self.id
+        )
         self.delete()
 
     @staticmethod

@@ -415,7 +415,9 @@ class Window(QWidget):
                 )
 
         if column == 3:
-            self.duplicateWindow = DuplicateWindow(image_data=IMAGE_PATH_DICT[imageId], raw_id = imageId)
+            self.duplicateWindow = DuplicateWindow(
+                image_data=IMAGE_PATH_DICT[imageId], raw_id=imageId
+            )
             if imageId not in self.duplicateRefs.keys():
                 self.duplicateRefs[imageId] = self.duplicateWindow
                 self.duplicateWindow.show()
@@ -695,7 +697,9 @@ class DuplicateWindow(QWidget):
         # set duplicates list table fields unchanged
         self.duplicateTable.setEditTriggers(QTableWidget.NoEditTriggers)
         self.duplicateTable.setColumnCount(5)
-        self.duplicateTable.setHorizontalHeaderLabels(["ID", "File name", "Similarity", "", ""])
+        self.duplicateTable.setHorizontalHeaderLabels(
+            ["ID", "File name", "Similarity", "", ""]
+        )
         self.duplicateTable.verticalHeader().setVisible(False)
         self.duplicateTable.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.duplicateTable.setSortingEnabled(True)
@@ -720,9 +724,7 @@ class DuplicateWindow(QWidget):
     def main_image_init(self):
         self.duplicateTable.setRowCount(1)
         self.duplicateTable.setItem(0, 0, QTableWidgetItem(self.sourceImageRawId))
-        self.duplicateTable.setItem(
-            0, 1, QTableWidgetItem(self.sourceImage["name"])
-        )
+        self.duplicateTable.setItem(0, 1, QTableWidgetItem(self.sourceImage["name"]))
         openFolderIcon = QTableWidgetItem()
         openFolderIcon.setIcon(self.style().standardIcon(QStyle.SP_DirIcon))
         deleteItemIcon = QTableWidgetItem()
@@ -733,14 +735,16 @@ class DuplicateWindow(QWidget):
         self.duplicateTable.setItem(0, 4, deleteItemIcon)
 
         self.mainImageField.setPixmap(
-            QPixmap(self.sourceImage['full_path']).scaled(
+            QPixmap(self.sourceImage["full_path"]).scaled(
                 300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
             )
         )
 
     def table_data_init(self):
         with db_session():
-            result = get_image_duplicates(image_id=self.sourceImage['id'], similarity_threshold=150)
+            result = get_image_duplicates(
+                image_id=self.sourceImage["id"], similarity_threshold=150
+            )
 
             if result:
                 for idx, duplicate_data in enumerate(result):
@@ -754,14 +758,22 @@ class DuplicateWindow(QWidget):
                         "full_path": image.full_path(),
                     }
                     self.duplicateTable.setRowCount(idx)
-                    self.duplicateTable.setItem(idx - 1, 0, QTableWidgetItem(str_image_idx))
-                    self.duplicateTable.setItem(idx - 1, 1, QTableWidgetItem(image.image_name))
-                    self.duplicateTable.setItem(idx - 1, 2, QTableWidgetItem(similarity_param))
+                    self.duplicateTable.setItem(
+                        idx - 1, 0, QTableWidgetItem(str_image_idx)
+                    )
+                    self.duplicateTable.setItem(
+                        idx - 1, 1, QTableWidgetItem(image.image_name)
+                    )
+                    self.duplicateTable.setItem(
+                        idx - 1, 2, QTableWidgetItem(similarity_param)
+                    )
 
                     openFolderIcon = QTableWidgetItem()
                     openFolderIcon.setIcon(self.style().standardIcon(QStyle.SP_DirIcon))
                     deleteItemIcon = QTableWidgetItem()
-                    deleteItemIcon.setIcon(self.style().standardIcon(QStyle.SP_MessageBoxCritical))
+                    deleteItemIcon.setIcon(
+                        self.style().standardIcon(QStyle.SP_MessageBoxCritical)
+                    )
 
                     self.duplicateTable.setItem(idx - 1, 3, openFolderIcon)
                     self.duplicateTable.setItem(idx - 1, 4, deleteItemIcon)
@@ -778,11 +790,11 @@ class DuplicateWindow(QWidget):
         elif column == 4:
             itemId = self.duplicateTable.item(row, 0).text()
             self.delete_duplicate(itemId, row, self.sourceImage["id"])
-        '''
+        """
         if column == 3:
             itemId = self.duplicateTable.item(row, 0).text()
             os.startfile(self.sourceImage["full_path"].rsplit(os.sep, 1)[0])
-        '''
+        """
 
     def delete_duplicate(self, itemId: str, row: str, image_id: int):
         message = QMessageBox().question(
