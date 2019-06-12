@@ -672,8 +672,12 @@ class DuplicateWindow(QWidget):
 
     def __init__(self, image_data: dict, raw_id: str):
         super().__init__()
+        # image model from DB
         self.sourceImage = image_data
+        # image row ID from main window table
         self.sourceImageRawId = raw_id
+        # local images storage
+        self.local_IMAGE_PATH_DICT = {}
 
         self.setWindowTitle("Duplicates")
         self.setFixedSize(500, 500)
