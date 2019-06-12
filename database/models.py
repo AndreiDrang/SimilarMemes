@@ -4,7 +4,7 @@ import collections
 from datetime import datetime
 
 import numpy as np
-from pony.orm import Required, Set, Database, select, composite_key
+from pony.orm import Required, Set, Database, select, composite_key, delete
 
 db = Database()
 
@@ -48,6 +48,10 @@ class Image(db.Entity):
             os.remove(self.image_path + os.sep + self.image_name)
         except FileNotFoundError:
             pass
+        # clean images duplicates
+        delete(duplicate for duplicate in ImageDuplicates
+               if duplicate.image_src_id == self.id
+               or duplicate.image_dup.id == self.id)
         self.delete()
 
     @staticmethod
@@ -204,6 +208,6 @@ def connection():
             create_db=True,
         )
 
-    db.generate_mapping(create_tables=True)
+    db.generate_mapping(create_tables=True, allow_auto_upgrade=True)
 
     print("Все таблицы в БД успешно созданы")
