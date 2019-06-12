@@ -258,11 +258,17 @@ class Window(QWidget):
         self.reindex_db_data()
 
     def reindex_db_data(self):
+        self.duplicateButton.setDisabled(True)
+        self.processButton.setDisabled(True)
+        self.reindexButton.setDisabled(True)
         # Reindex already exist folders and files; Image and Video files
         reindex_image_files()
         reindex_video_files()
         # run table filling after reindexing
         self.table_data_init()
+        self.duplicateButton.setEnabled(True)
+        self.processButton.setEnabled(True)
+        self.reindexButton.setEnabled(True)
 
     def table_data_init(self):
         # get available images from DB
@@ -318,6 +324,8 @@ class Window(QWidget):
         if self.folderField.text() == "":
             self.statusBar.setStyleSheet("color: red")
             self.statusBar.showMessage("Please choose a directory")
+            self.duplicateButton.setEnabled(True)
+            self.reindexButton.setEnabled(True)
             return None
 
         if not self.thread.isRunning():
@@ -328,12 +336,14 @@ class Window(QWidget):
         elif self.thread.isRunning():
             self.thread.terminate()
             self.processButton.setText("Process media files")
+            self.duplicateButton.setEnabled(True)
+            self.reindexButton.setEnabled(True)
 
     # Thread done and ded
     def finish_thread(self):
         self.statusBar.setStyleSheet("color: black")
         self.statusBar.showMessage("Finished!")
-        self.processButton.setText("Start")
+        self.processButton.setText("Process media files")
         # set all buttons able
         self.duplicateButton.setEnabled(True)
         self.reindexButton.setEnabled(True)
@@ -345,7 +355,9 @@ class Window(QWidget):
             self.statusBar.showMessage("Please process your media files first")
             return None
 
-        self.processButton.setEnabled(False)
+        self.duplicateButton.setDisabled(True)
+        self.processButton.setDisabled(True)
+        self.reindexButton.setDisabled(True)
         self.statusBar.setStyleSheet("color: black")
         self.statusBar.showMessage("Finding duplicates...")
 
@@ -365,6 +377,10 @@ class Window(QWidget):
         QMessageBox.information(
             self, "Find duplicates", "Success!", QMessageBox.Ok, QMessageBox.Ok
         )
+        # set all buttons able
+        self.duplicateButton.setEnabled(True)
+        self.reindexButton.setEnabled(True)
+        self.processButton.setEnabled(True)
 
         # TODO: new thread removing all unique media. Only duplicates remain
 
