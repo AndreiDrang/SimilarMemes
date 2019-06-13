@@ -683,11 +683,15 @@ class DuplicateWindow(QWidget):
         self.setFixedSize(700, 500)
 
         self.mainImageField = QLabel()
+        self.mainImageDataField = QLabel()
         self.duplicateImageField = QLabel()
+        self.duplicateImageDataField = QLabel()
         # set images grid(left - main image, right - duplicate)
         self.imagesGrid = QGridLayout()
         self.imagesGrid.addWidget(self.mainImageField, 0, 0)
+        self.imagesGrid.addWidget(self.mainImageDataField, 1, 0)
         self.imagesGrid.addWidget(self.duplicateImageField, 0, 1)
+        self.imagesGrid.addWidget(self.duplicateImageDataField, 1, 1)
 
         self.subGridBox = QWidget()
         self.subGridBox.setLayout(self.imagesGrid)
@@ -698,7 +702,7 @@ class DuplicateWindow(QWidget):
         self.duplicateTable.setEditTriggers(QTableWidget.NoEditTriggers)
         self.duplicateTable.setColumnCount(5)
         self.duplicateTable.setHorizontalHeaderLabels(
-            ["ID", "File name", "Similarity", "", ""]
+            ["ID", "File name", "Similarity", "Open", "Delete"]
         )
         self.duplicateTable.verticalHeader().setVisible(False)
         self.duplicateTable.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
@@ -706,8 +710,8 @@ class DuplicateWindow(QWidget):
         self.duplicateTable.setColumnWidth(0, 50)
         self.duplicateTable.setColumnWidth(1, 350)
         self.duplicateTable.setColumnWidth(2, 70)
-        self.duplicateTable.setColumnWidth(3, 25)
-        self.duplicateTable.setColumnWidth(4, 25)
+        self.duplicateTable.setColumnWidth(3, 50)
+        self.duplicateTable.setColumnWidth(4, 60)
         self.duplicateTable.cellClicked.connect(self.click_event)
 
         # set grid system
@@ -722,18 +726,7 @@ class DuplicateWindow(QWidget):
         self.table_data_init()
 
     def main_image_init(self):
-        self.duplicateTable.setRowCount(1)
-        self.duplicateTable.setItem(0, 0, QTableWidgetItem(self.sourceImageRawId))
-        self.duplicateTable.setItem(0, 1, QTableWidgetItem(self.sourceImage["name"]))
-        openFolderIcon = QTableWidgetItem()
-        openFolderIcon.setIcon(self.style().standardIcon(QStyle.SP_DirIcon))
-        deleteItemIcon = QTableWidgetItem()
-        deleteItemIcon.setIcon(self.style().standardIcon(QStyle.SP_MessageBoxCritical))
-
-        self.duplicateTable.setItem(0, 2, QTableWidgetItem(0))
-        self.duplicateTable.setItem(0, 3, openFolderIcon)
-        self.duplicateTable.setItem(0, 4, deleteItemIcon)
-
+        self.mainImageDataField.setText(self.sourceImage["name"])
         self.mainImageField.setPixmap(
             QPixmap(self.sourceImage["full_path"]).scaled(
                 300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
@@ -747,8 +740,11 @@ class DuplicateWindow(QWidget):
             )
 
             if result:
+                self.duplicateTable.setRowCount(len(result))
                 for idx, duplicate_data in enumerate(result):
+                    # parse duplicate data
                     image, similarity_param = duplicate_data[0], str(duplicate_data[1])
+
                     str_image_idx = str(idx)
 
                     self.local_IMAGE_PATH_DICT[str_image_idx] = {
@@ -757,15 +753,12 @@ class DuplicateWindow(QWidget):
                         "type": (image.image_name.split(".")[-1]).lower(),
                         "full_path": image.full_path(),
                     }
-                    self.duplicateTable.setRowCount(idx)
+                    self.duplicateTable.setItem(idx, 0, QTableWidgetItem(str_image_idx))
                     self.duplicateTable.setItem(
-                        idx - 1, 0, QTableWidgetItem(str_image_idx)
+                        idx, 1, QTableWidgetItem(image.image_name)
                     )
                     self.duplicateTable.setItem(
-                        idx - 1, 1, QTableWidgetItem(image.image_name)
-                    )
-                    self.duplicateTable.setItem(
-                        idx - 1, 2, QTableWidgetItem(similarity_param)
+                        idx, 2, QTableWidgetItem(similarity_param)
                     )
 
                     openFolderIcon = QTableWidgetItem()
@@ -775,12 +768,15 @@ class DuplicateWindow(QWidget):
                         self.style().standardIcon(QStyle.SP_MessageBoxCritical)
                     )
 
-                    self.duplicateTable.setItem(idx - 1, 3, openFolderIcon)
-                    self.duplicateTable.setItem(idx - 1, 4, deleteItemIcon)
+                    self.duplicateTable.setItem(idx, 3, openFolderIcon)
+                    self.duplicateTable.setItem(idx, 4, deleteItemIcon)
 
     def click_event(self, row, column):
-        item = self.duplicateTable.item(row, column)
         if column in (0, 1, 2):
+
+            self.duplicateImageDataField.setText(
+                self.local_IMAGE_PATH_DICT[str(row)]["name"]
+            )
 
             self.duplicateImageField.setPixmap(
                 QPixmap(self.local_IMAGE_PATH_DICT[str(row)]["full_path"]).scaled(
