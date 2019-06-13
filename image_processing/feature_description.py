@@ -1,4 +1,3 @@
-import collections
 import itertools
 from multiprocessing import Pool
 
@@ -16,7 +15,7 @@ def count_pairs(pair: tuple):
     # create matcher
     bf = cv2.BFMatcher()
     # prepare deque for points matching
-    good_points = collections.deque()
+    good_points = []
 
     # count matches between two images descriptors
     matches = bf.knnMatch(pair[0][0], pair[1][0], k=2)
@@ -40,7 +39,7 @@ def count_pairs(pair: tuple):
             return pair[0][1], pair[1][1], average_match_value
 
 
-def feature_description(images_list: collections.deque):
+def feature_description(images_list: tuple):
     """
     Return the Hamming distance between equal-length sequences
 
