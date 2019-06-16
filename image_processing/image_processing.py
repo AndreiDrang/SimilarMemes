@@ -10,8 +10,9 @@ import numpy as np
 
 
 def count_descriptor(image_file):
+    vector_size = 64
     try:
-        orb = cv2.ORB_create()
+        module = cv2.AKAZE_create()
 
         # if image is GIF
         if image_file[0][-3:].lower() == "gif":
@@ -19,23 +20,44 @@ def count_descriptor(image_file):
             gif = imageio.mimread(image_file[1] + os.sep + image_file[0])
             # get middle frame from gif
             image = gif[len(gif) // 2]
+            # get gif params
+            height, width, _ = image.shape
         else:
             image = cv2.imread(image_file[1] + os.sep + image_file[0], 0)
 
-        # count image descriptor
-        _, orb_descriptor = orb.detectAndCompute(image, None)
+            # get image params
+            height, width = image.shape
+        # resize image
+        image = cv2.resize(image, (250, 250))
+        image = image[25:250-25, 25:250-25]
+        # detect key-points
+        kps = module.detect(image)
+        # if we found enough key-points
+        if len(kps) >= vector_size:
+            kps = sorted(kps, key=lambda x: -x.response)[:vector_size]
 
-        # check if orb_descriptor is counted
-        if type(orb_descriptor) == np.ndarray:
-            # if orb_descriptor find many points - save them
-            if orb_descriptor.shape[0] > 2:
-                return {
-                    "namepath": image_file,
-                    "orb_descriptor": orb_descriptor.tobytes(),
-                    "md5_hash": hashlib.md5(
-                        (image_file[1] + os.sep + image_file[0]).encode()
-                    ).hexdigest(),
-                }
+            points_data = np.array([point.pt for point in kps])
+            return {
+                "height": height,
+                "width": width,
+                "namepath": image_file,
+                "image_nn_descriptor": b'',
+                "image_features_keys": points_data.tobytes(),
+                "md5_hash": hashlib.md5(
+                    (image_file[1] + os.sep + image_file[0]).encode()
+                ).hexdigest(),
+            }
+        else:
+            return {
+                "height": height,
+                "width": width,
+                "namepath": image_file,
+                "image_nn_descriptor": b'',
+                "image_features_keys": b'',
+                "md5_hash": hashlib.md5(
+                    (image_file[1] + os.sep + image_file[0]).encode()
+                ).hexdigest(),
+            }
     except Exception:
         print(traceback.format_exc())
         return None

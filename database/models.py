@@ -4,7 +4,7 @@ import collections
 from datetime import datetime
 
 import numpy as np
-from pony.orm import Required, Set, Database, select, composite_key, delete
+from pony.orm import Required, Optional, Set, Database, select, composite_key, delete
 
 db = Database()
 
@@ -20,10 +20,16 @@ class Image(db.Entity):
     image_path = Required(str)
     # image name
     image_name = Required(str)
+    # image height
+    image_height = Required(int)
+    # image width
+    image_width = Required(int)
     # image md5 hash
     image_md5_hash = Required(str, unique=True)
-    # image ORB descriptor
-    image_orb_descriptor = Required(bytes)
+    # image features data
+    image_features_keys = Optional(bytes)
+    # image NN descriptor
+    image_nn_descriptor = Optional(bytes)
     # image creation datetime(in DB)
     image_creation = Required(datetime, default=datetime.now)
     # image tags
@@ -64,25 +70,42 @@ class Image(db.Entity):
         return select(image for image in Image)[:]
 
     @staticmethod
-    def get_images_descriptors() -> [(np.ndarray, int)]:
+    def get_features_keys() -> [(np.ndarray, int)]:
         """
         Return all images descriptors and ID's
         """
         result = collections.deque(
-            select((image.image_orb_descriptor, image.id) for image in Image)[:]
+            select((image.image_features_keys, image.id) for image in Image if image.image_features_keys != b'')[:]
         )
+
         # restore descriptor from bytes
-        frombuffer_result = [
-            (np.frombuffer(descriptor, dtype=np.uint8), id_)
+        result = [
+            (np.frombuffer(descriptor, dtype=np.float64), id_)
             for descriptor, id_ in result
         ]
-        # reshape descriptor in src shape - (x, 32)
-        reshaped_result = [
-            (descriptor.reshape((descriptor.shape[0] // 32, 32)), id_)
-            for descriptor, id_ in frombuffer_result
+
+        result = [
+            (descriptor.reshape((64, 2)), id_)
+            for descriptor, id_ in result
         ]
 
-        return reshaped_result
+        return result
+
+    @staticmethod
+    def get_nn_descriptors() -> [(np.ndarray, int)]:
+        """
+        Return all images descriptors and ID's
+        """
+        result = collections.deque(
+            select((image.image_nn_descriptor, image.id) for image in Image if image.image_nn_descriptor != b'')[:]
+        )
+        # restore descriptor from bytes
+        result = [
+            (np.frombuffer(descriptor, dtype=np.float32), id_)
+            for descriptor, id_ in result
+        ]
+
+        return result
 
     @staticmethod
     def group_images_paths() -> collections.deque:
@@ -210,6 +233,6 @@ def connection():
             create_db=True,
         )
 
-    db.generate_mapping(create_tables=True, allow_auto_upgrade=True)
+    db.generate_mapping(create_tables=True)
 
     print("Все таблицы в БД успешно созданы")
