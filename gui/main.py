@@ -111,6 +111,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("T e b y g")
+        self.move(300, 50)
 
         self.statusBar = QStatusBar()
         self.setStatusBar(self.statusBar)
@@ -140,8 +141,8 @@ class MainWindow(QMainWindow):
         self.database_settings.show()
 
     def show_matching_settings(self):
-        self.database_settings = DatabaseSettings()
-        self.database_settings.show()
+        self.matching_settings = MatchingSettings()
+        self.matching_settings.show()
 
 
 class Window(QWidget):
@@ -490,6 +491,7 @@ class IndexingSettings(QWidget):
 
         self.folderDepthField.setText(str(json_settings.user_json_read("folderDepth")))
         self.okButton.clicked.connect(self.ok_event)
+        self.folderDepthField.returnPressed.connect(self.okButton.click)
 
         self.grid = QGridLayout()
         self.grid.addWidget(self.folderDepthLabel, 0, 0)
@@ -664,6 +666,39 @@ class DatabaseSettings(QWidget):
             self.databaseHostField.setDisabled(True)
             self.databasePortField.setDisabled(True)
             self.databaseNameField.setDisabled(True)
+
+
+# Allows to set matching settings in the json file:
+class MatchingSettings(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Matching settings")
+        self.setFixedSize(250, 100)
+
+        self.matchingIndexLabel = QLabel("Matching index:")
+        self.matchingIndexSpinBox = QSpinBox()
+        self.matchingTypeLabel = QLabel("Matching type:")
+        self.matchingTypeComboBox = QComboBox()
+        self.okButton = QPushButton("Ok")
+
+        self.matchingIndexSpinBox.setRange(1, 150)
+
+        self.matchingIndexSpinBox.setValue(json_settings.user_json_read("matchingIndex"))
+        self.matchingTypeComboBox.addItems(["Feature", "Histogram"])
+        self.okButton.clicked.connect(self.ok_event)
+
+        self.grid = QGridLayout()
+        self.grid.addWidget(self.matchingIndexLabel, 0, 0)
+        self.grid.addWidget(self.matchingIndexSpinBox, 0, 1)
+        self.grid.addWidget(self.matchingTypeLabel, 1, 0)
+        self.grid.addWidget(self.matchingTypeComboBox, 1, 1)
+        self.grid.addWidget(self.okButton, 2, 1)
+        self.setLayout(self.grid)
+
+    # Updates the json settings with the new values:
+    def ok_event(self):
+        json_settings.user_json_update("matchingIndex", self.matchingIndexSpinBox.value())
+        self.close()
 
 
 # A separate window to show duplicates of the source image:
