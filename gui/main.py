@@ -369,10 +369,15 @@ class Window(QWidget):
             # get all images descriptors
             image_files_query = Image.get_descriptors()
 
+        pairs_amount = int(len(image_files_query)*(len(image_files_query)-1)/2)
         QMessageBox.information(
             self,
             "Find duplicates",
-            f"Similar images search start. Please wait!\nYou have {len(image_files_query)} images; Work will get about {round(len(image_files_query)*0.004, 4)} sec.",
+            f"""
+            Similar images search start. Please wait!\n
+            You have ~{pairs_amount} images pairs;
+            Work will get ~{round(pairs_amount*0.00006, 2)} sec.
+            """,
             QMessageBox.Ok,
             QMessageBox.Ok,
         )
