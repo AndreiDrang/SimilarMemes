@@ -69,12 +69,12 @@ def processing_json_read(settingName: str):
 # Updates a needed setting and rewrites the json settings file:
 def processing_json_update(settingName: str, settingNewValue: str):
     try:
-        with open(f"database{os.sep}settings.json", "rt") as jsonFile:
+        with open(f"image_processing{os.sep}settings.json", "rt") as jsonFile:
             jsonData = json.load(jsonFile)
 
         jsonData[settingName] = settingNewValue
 
-        with open(f"database{os.sep}settings.json", "wt") as jsonFile:
+        with open(f"image_processing{os.sep}settings.json", "wt") as jsonFile:
             json.dump(jsonData, jsonFile)
 
     except Exception as ex:
