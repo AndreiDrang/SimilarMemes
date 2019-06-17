@@ -26,10 +26,8 @@ class Image(db.Entity):
     image_width = Required(int)
     # image md5 hash
     image_md5_hash = Required(str, unique=True)
-    # image features data
-    image_features_keys = Optional(bytes)
-    # image NN descriptor
-    image_nn_descriptor = Optional(bytes)
+    # image descriptor
+    image_descriptor = Optional(bytes)
     # image creation datetime(in DB)
     image_creation = Required(datetime, default=datetime.now)
     # image tags
@@ -70,40 +68,24 @@ class Image(db.Entity):
         return select(image for image in Image)[:]
 
     @staticmethod
-    def get_features_keys() -> [(np.ndarray, int)]:
+    def get_descriptors() -> [(np.ndarray, int)]:
         """
         Return all images descriptors and ID's
         """
         result = collections.deque(
-            select((image.image_features_keys, image.id) for image in Image if image.image_features_keys != b'')[:]
-        )
-
-        # restore descriptor from bytes
-        result = [
-            (np.frombuffer(descriptor, dtype=np.float64), id_)
-            for descriptor, id_ in result
-        ]
-
-        result = [
-            (descriptor.reshape((64, 2)), id_)
-            for descriptor, id_ in result
-        ]
-
-        return result
-
-    @staticmethod
-    def get_nn_descriptors() -> [(np.ndarray, int)]:
-        """
-        Return all images descriptors and ID's
-        """
-        result = collections.deque(
-            select((image.image_nn_descriptor, image.id) for image in Image if image.image_nn_descriptor != b'')[:]
+            select(
+                (image.image_descriptor, image.id)
+                for image in Image
+                if image.image_descriptor != b""
+            )[:]
         )
         # restore descriptor from bytes
         result = [
             (np.frombuffer(descriptor, dtype=np.float32), id_)
             for descriptor, id_ in result
         ]
+        # reshape descriptor
+        result = [(descriptor.reshape(5, 288), id_) for descriptor, id_ in result]
 
         return result
 

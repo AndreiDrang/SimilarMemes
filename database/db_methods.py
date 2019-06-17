@@ -19,8 +19,7 @@ def save_new_files(indexed_files: list, file_type: str):
                     image_path=image_data["namepath"][1],
                     image_height=image_data["height"],
                     image_width=image_data["width"],
-                    image_nn_descriptor=image_data["image_nn_descriptor"],
-                    image_features_keys=image_data["image_features_keys"],
+                    image_descriptor=image_data["image_descriptor"],
                     image_md5_hash=image_data["md5_hash"],
                 )
 
