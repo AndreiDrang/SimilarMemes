@@ -17,7 +17,7 @@ from PyQt5.QtMultimediaWidgets import *
 
 from indexing import index_folder_files, reindex_image_files, reindex_video_files
 from image_processing import image_processing, feature_description
-from database import Image, save_new_files, get_image_duplicates
+from database import Image, save_new_files, get_image_duplicates, save_images_duplicates
 
 from gui import json_settings
 
@@ -63,6 +63,7 @@ class ProcessingThread(QThread):
             IMAGE_PATH_DICT[str_image_idx] = {
                 "id": image.id,
                 "name": image.image_name,
+                "additional_attrs": {"height": image.image_height, "width": image.image_width},
                 "type": (image.image_name.split(".")[-1]).lower(),
                 "full_path": image.full_path(),
             }
@@ -361,18 +362,23 @@ class Window(QWidget):
         self.statusBar.setStyleSheet("color: black")
         self.statusBar.showMessage("Finding duplicates...")
 
+        with db_session():
+            # get all images descriptors
+            image_files_query = Image.get_descriptors()
+
         QMessageBox.information(
             self,
             "Find duplicates",
-            "Similar images search start. Please wait!",
+            f"Similar images search start. Please wait!\nYou have {len(image_files_query)} images; Work will get about {round(len(image_files_query)*0.004, 4)} sec.",
             QMessageBox.Ok,
             QMessageBox.Ok,
         )
+
+        # run function to find duplicates
+        result = feature_description(images_list=image_files_query)
         with db_session():
-            # get all images descriptors
-            image_files_query = Image.get_images_descriptors()
-            # run function to find duplicates
-            feature_description(images_list=image_files_query)
+            # save duplicates to DB
+            save_images_duplicates(result)
 
         QMessageBox.information(
             self, "Find duplicates", "Success!", QMessageBox.Ok, QMessageBox.Ok
@@ -740,8 +746,8 @@ class DuplicateWindow(QWidget):
             )
 
             if result:
-                self.duplicateTable.setRowCount(len(result))
                 for idx, duplicate_data in enumerate(result):
+                    self.duplicateTable.setRowCount(idx)
                     # parse duplicate data
                     image, similarity_param = duplicate_data[0], str(duplicate_data[1])
 
@@ -750,15 +756,19 @@ class DuplicateWindow(QWidget):
                     self.local_IMAGE_PATH_DICT[str_image_idx] = {
                         "id": image.id,
                         "name": image.image_name,
+                        "additional_attrs": {
+                            "height": image.image_height,
+                            "width": image.image_width,
+                        },
                         "type": (image.image_name.split(".")[-1]).lower(),
                         "full_path": image.full_path(),
                     }
-                    self.duplicateTable.setItem(idx, 0, QTableWidgetItem(str_image_idx))
+                    self.duplicateTable.setItem(idx-1, 0, QTableWidgetItem(str_image_idx))
                     self.duplicateTable.setItem(
-                        idx, 1, QTableWidgetItem(image.image_name)
+                        idx-1, 1, QTableWidgetItem(image.image_name)
                     )
                     self.duplicateTable.setItem(
-                        idx, 2, QTableWidgetItem(similarity_param)
+                        idx-1, 2, QTableWidgetItem(similarity_param)
                     )
 
                     openFolderIcon = QTableWidgetItem()
@@ -768,31 +778,31 @@ class DuplicateWindow(QWidget):
                         self.style().standardIcon(QStyle.SP_MessageBoxCritical)
                     )
 
-                    self.duplicateTable.setItem(idx, 3, openFolderIcon)
-                    self.duplicateTable.setItem(idx, 4, deleteItemIcon)
+                    self.duplicateTable.setItem(idx-1, 3, openFolderIcon)
+                    self.duplicateTable.setItem(idx-1, 4, deleteItemIcon)
 
     def click_event(self, row, column):
+        image_id = self.duplicateTable.item(row, 0).text()
         if column in (0, 1, 2):
 
             self.duplicateImageDataField.setText(
-                self.local_IMAGE_PATH_DICT[str(row)]["name"]
+                self.local_IMAGE_PATH_DICT[image_id]["name"]
             )
 
             self.duplicateImageField.setPixmap(
-                QPixmap(self.local_IMAGE_PATH_DICT[str(row)]["full_path"]).scaled(
+                QPixmap(self.local_IMAGE_PATH_DICT[image_id]["full_path"]).scaled(
                     300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
                 )
             )
         elif column == 4:
-            itemId = self.duplicateTable.item(row, 0).text()
-            self.delete_duplicate(itemId, row, self.sourceImage["id"])
+            self.delete_duplicate(image_id, row)
         """
         if column == 3:
             itemId = self.duplicateTable.item(row, 0).text()
             os.startfile(self.sourceImage["full_path"].rsplit(os.sep, 1)[0])
         """
 
-    def delete_duplicate(self, itemId: str, row: str, image_id: int):
+    def delete_duplicate(self, image_id: str, row: str):
         message = QMessageBox().question(
             self,
             "Confirm deletion",
@@ -804,7 +814,7 @@ class DuplicateWindow(QWidget):
             self.duplicateTable.removeRow(row)
             # run custom delete
             with db_session():
-                Image[image_id].custom_delete()
+                Image[int(image_id)].custom_delete()
 
             QMessageBox().information(
                 self,
