@@ -63,7 +63,10 @@ class ProcessingThread(QThread):
             IMAGE_PATH_DICT[str_image_idx] = {
                 "id": image.id,
                 "name": image.image_name,
-                "additional_attrs": {"height": image.image_height, "width": image.image_width},
+                "additional_attrs": {
+                    "height": image.image_height,
+                    "width": image.image_width,
+                },
                 "type": (image.image_name.split(".")[-1]).lower(),
                 "full_path": image.full_path(),
             }
@@ -763,12 +766,14 @@ class DuplicateWindow(QWidget):
                         "type": (image.image_name.split(".")[-1]).lower(),
                         "full_path": image.full_path(),
                     }
-                    self.duplicateTable.setItem(idx-1, 0, QTableWidgetItem(str_image_idx))
                     self.duplicateTable.setItem(
-                        idx-1, 1, QTableWidgetItem(image.image_name)
+                        idx - 1, 0, QTableWidgetItem(str_image_idx)
                     )
                     self.duplicateTable.setItem(
-                        idx-1, 2, QTableWidgetItem(similarity_param)
+                        idx - 1, 1, QTableWidgetItem(image.image_name)
+                    )
+                    self.duplicateTable.setItem(
+                        idx - 1, 2, QTableWidgetItem(similarity_param)
                     )
 
                     openFolderIcon = QTableWidgetItem()
@@ -778,8 +783,8 @@ class DuplicateWindow(QWidget):
                         self.style().standardIcon(QStyle.SP_MessageBoxCritical)
                     )
 
-                    self.duplicateTable.setItem(idx-1, 3, openFolderIcon)
-                    self.duplicateTable.setItem(idx-1, 4, deleteItemIcon)
+                    self.duplicateTable.setItem(idx - 1, 3, openFolderIcon)
+                    self.duplicateTable.setItem(idx - 1, 4, deleteItemIcon)
 
     def click_event(self, row, column):
         image_id = self.duplicateTable.item(row, 0).text()
