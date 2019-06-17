@@ -1,5 +1,5 @@
 # flake8: noqa
-from pony.orm import delete
+from pony.orm import delete, desc
 
 from .models import Image, ImageTag, Video, ImageDuplicates, db, select, connection
 from .db_methods import (

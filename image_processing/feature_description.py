@@ -1,45 +1,23 @@
 import itertools
 from multiprocessing import Pool
 
-import cv2
-from database import save_images_duplicates
+import numpy as np
 
 from .settings import get_settings
 
+similarity_threshold = get_settings()["similarity_threshold"]
+
 
 def count_pairs(pair: tuple):
-    # similarity threshold
-    SIMILARITY_THRESHOLD = get_settings()["similarity_threshold"]
-    # ratio param
-    LOWE_RATIO = get_settings()["lowe_ratio"]
-    # create matcher
-    bf = cv2.BFMatcher()
-    # prepare deque for points matching
-    good_points = []
-
-    # count matches between two images descriptors
-    matches = bf.knnMatch(pair[0][0], pair[1][0], k=2)
-    # find best matched images points
-    for m, n in matches:
-        if m.distance < LOWE_RATIO * n.distance:
-            good_points.append(m)
-
-    # sort images matches by distance, and get lowest 10 values(lower is better)
-    match_sorted = sorted(good_points, key=lambda element: element.distance)
-
-    LEN = 10 if len(match_sorted) > 10 else len(match_sorted)
-    # slice only few points
-    match_sorted = match_sorted[:LEN]
-    if match_sorted:
-        # count summ of sorted matches and get distance average value
-        average_match_value = sum(matching.distance for matching in match_sorted) // LEN
-        # if average different is less than threashold - add pair
-        if average_match_value <= SIMILARITY_THRESHOLD * 1.2:
-            # create new pair
-            return pair[0][1], pair[1][1], average_match_value
+    mean = round(
+        np.array([z1 @ z2 for z1, z2 in zip(pair[0][0], pair[1][0])]).mean(), 3
+    )
+    # if pairs amount more than threshold - create duplicate
+    if mean >= similarity_threshold:
+        return pair[0][1], pair[1][1], mean
 
 
-def feature_description(images_list: tuple):
+def feature_description(images_list: tuple) -> list:
     """
     Return the Hamming distance between equal-length sequences
 
@@ -50,15 +28,24 @@ def feature_description(images_list: tuple):
                         (
                             (image_descriptor, image_id),
                         )
+    :return: List of similar images pairs:
+            0 - first similar image ID
+            1 - second similar image ID
+            2 - images similarity
+            Example:
+            [
+                (first_image_id, second_image_id, similarity),
+            ]
     """
-    # make unique photo files combinations
+
     images_pairs = itertools.combinations(images_list, 2)
 
     pool = Pool()
+
     # run tasks in separate process
     pairs = pool.map(count_pairs, images_pairs)
 
     # filter only indexed files
     similar_pairs = [pair for pair in pairs if pair is not None]
 
-    save_images_duplicates(pairs=similar_pairs)
+    return similar_pairs

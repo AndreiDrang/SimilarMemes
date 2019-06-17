@@ -1,4 +1,4 @@
-from database import Image, Video, ImageDuplicates, select
+from database import Image, Video, ImageDuplicates, select, desc
 
 
 def save_new_files(indexed_files: list, file_type: str):
@@ -17,7 +17,9 @@ def save_new_files(indexed_files: list, file_type: str):
                 Image(
                     image_name=image_data["namepath"][0],
                     image_path=image_data["namepath"][1],
-                    image_orb_descriptor=image_data["orb_descriptor"],
+                    image_height=image_data["height"],
+                    image_width=image_data["width"],
+                    image_descriptor=image_data["image_descriptor"],
                     image_md5_hash=image_data["md5_hash"],
                 )
 
@@ -76,7 +78,7 @@ def get_image_duplicates(
         for duplicate in ImageDuplicates
         if (duplicate.image_src_id == image_id or duplicate.image_dup.id == image_id)
         and duplicate.images_similarity < similarity_threshold
-    ).sort_by(ImageDuplicates.images_similarity)[:]
+    ).sort_by(desc(ImageDuplicates.images_similarity))[:]
 
     # filter duplicates pairs and get only new(image!=src_image) images from pair
     duplicates_images = [
