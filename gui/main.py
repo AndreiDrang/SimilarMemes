@@ -369,7 +369,8 @@ class Window(QWidget):
             # get all images descriptors
             image_files_query = Image.get_descriptors()
 
-        pairs_amount = int(len(image_files_query)*(len(image_files_query)-1)/2)
+        pairs_amount = int(len(image_files_query) * (len(image_files_query) - 1) / 2)
+
         QMessageBox.information(
             self,
             "Find duplicates",
