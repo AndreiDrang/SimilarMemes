@@ -1,5 +1,3 @@
 {
-    "lowe_ratio": 0.78,
-    "similarity_threshold": 130,
-    "nn_similarity_threshold": 0.50
+    "similarity_threshold": 0.55
 }
