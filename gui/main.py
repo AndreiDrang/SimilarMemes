@@ -692,18 +692,19 @@ class MatchingSettings(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Matching settings")
-        self.setFixedSize(250, 100)
+        self.setFixedSize(350, 100)
 
-        self.matchingIndexLabel = QLabel("Matching index:")
+        self.matchingIndexLabel = QLabel("Matching threshold, %:")
         self.matchingIndexSpinBox = QSpinBox()
         self.matchingTypeLabel = QLabel("Matching type:")
         self.matchingTypeComboBox = QComboBox()
         self.okButton = QPushButton("Ok")
 
-        self.matchingIndexSpinBox.setRange(1, 150)
+        self.matchingIndexSpinBox.setRange(30, 90)
+        self.matchingIndexSpinBox.setSingleStep(5)
 
-        self.matchingIndexSpinBox.setValue(json_settings.user_json_read("matchingIndex"))
-        self.matchingTypeComboBox.addItems(["Feature", "Histogram"])
+        self.matchingIndexSpinBox.setValue(json_settings.processing_json_read("similarity_threshold")*100)
+        self.matchingTypeComboBox.addItems(["Histogram", ])
         self.okButton.clicked.connect(self.ok_event)
 
         self.grid = QGridLayout()
@@ -716,7 +717,7 @@ class MatchingSettings(QWidget):
 
     # Updates the json settings with the new values:
     def ok_event(self):
-        json_settings.user_json_update("matchingIndex", self.matchingIndexSpinBox.value())
+        json_settings.processing_json_update("similarity_threshold", self.matchingIndexSpinBox.value()/100)
         self.close()
 
 
