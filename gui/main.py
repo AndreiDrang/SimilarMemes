@@ -3,16 +3,23 @@
 # Menu settings
 
 import os
-from PIL import Image
+import traceback
+
+from PIL import Image as Pil_Image
+from pony.orm import db_session
+from pony.orm import flush as db_flush
+
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtMultimedia import *
 from PyQt5.QtMultimediaWidgets import *
 
-from gui import json_settings
 from indexing import index_folder_files, reindex_image_files, reindex_video_files
+from image_processing import image_processing, feature_description
+from database import Image, save_new_files, get_image_duplicates, save_images_duplicates
 
+from gui import json_settings
 
 # Dict containment -> ID:[FILE_NAME, EXTENSION, FILE_FULL_PATH]
 IMAGE_PATH_DICT = {}
@@ -20,7 +27,6 @@ VIDEO_PATH_DICT = {}
 
 
 class ProcessingThread(QThread):
-    progressTrigger = pyqtSignal(float)
     finishedTrigger = pyqtSignal()
 
     def __init__(self, folderField, imageListTable, videoListTable, folderTreeCheckbox):
@@ -33,54 +39,66 @@ class ProcessingThread(QThread):
     # The process to fill the image/video tables with image/video names
     # and ITEM_PATH_DICT with their paths:
     def run(self):
-        rowImages, rowVideos = 0, 0
+        # start indexing folder
+        images, videos = index_folder_files(
+            path=self.folderField.text(),
+            max_depth=json_settings.user_json_read("folderDepth")
+            if self.folderTreeCheckbox.isChecked()
+            else 0,
+        )
 
-        # Reindex already exist folders and files; Image and Video files
-        reindex_image_files()
-        reindex_video_files()
+        # processing new files
+        processed_files = image_processing(images)
 
-        # Processes all multimedia in the main folder and its sub-folders as well
-        # (depending on depth from settings):
-        if self.folderTreeCheckbox.isChecked():
-            images, videos = index_folder_files(
-                self.folderField.text(),
-                max_depth=json_settings.json_read("folderDepth"),
+        # save new files
+        with db_session():
+            save_new_files(indexed_files=processed_files, file_type="image")
+            db_flush()
+            # get available images from DB
+            images = Image.all()
+
+        for idx, image in enumerate(images):
+            str_image_idx = str(idx)
+
+            IMAGE_PATH_DICT[str_image_idx] = {
+                "id": image.id,
+                "name": image.image_name,
+                "additional_attrs": {
+                    "height": image.image_height,
+                    "width": image.image_width,
+                },
+                "type": (image.image_name.split(".")[-1]).lower(),
+                "full_path": image.full_path(),
+            }
+            self.imageListTable.setRowCount(idx)
+            self.imageListTable.setItem(idx - 1, 0, QTableWidgetItem(str_image_idx))
+            self.imageListTable.setItem(idx - 1, 1, QTableWidgetItem(image.image_name))
+            self.imageListTable.setItem(
+                idx - 1, 2, QTableWidgetItem(IMAGE_PATH_DICT[str_image_idx]["type"])
             )
-
-        # Processes multimedia in the selected folder only:
-        else:
-            images, videos = index_folder_files(self.folderField.text(), max_depth=0)
-
-        for image in images:
-            self.sleep(1)  # process simulation (TODO: delete)
-
-            rowImages += 1
-            imageId = str(rowImages)
-            IMAGE_PATH_DICT[imageId] = [image[0], (image[0].split(".")[-1]).lower(), os.path.join(image[1], image[0])]
-            self.imageListTable.setRowCount(rowImages)
-            self.imageListTable.setItem(rowImages-1, 0, QTableWidgetItem(imageId))
-            self.imageListTable.setItem(rowImages-1, 1, QTableWidgetItem(image[0]))
-            self.imageListTable.setItem(rowImages-1, 2, QTableWidgetItem(IMAGE_PATH_DICT[imageId][1]))
 
             duplicateIcon = QTableWidgetItem()
             duplicateIcon.setIcon(
                 QWidget().style().standardIcon(QStyle.SP_FileDialogContentsView)
             )
-            self.imageListTable.setItem(rowImages-1, 3, duplicateIcon)
+            self.imageListTable.setItem(idx - 1, 3, duplicateIcon)
 
-            progress = (rowImages + rowVideos) / len(images + videos) * 100
-            self.progressTrigger.emit(progress)
-
+        # TODO add video to DB and processing logic
+        """
         for video in videos:
-            self.sleep(1)  # process simulation (TODO: delete)
-
             rowVideos += 1
             videoId = str(rowVideos)
-            VIDEO_PATH_DICT[videoId] = [video[0], (video[0].split(".")[-1]).lower(), os.path.join(video[1], video[0])]
+            VIDEO_PATH_DICT[videoId] = [
+                video[0],
+                (video[0].split(".")[-1]).lower(),
+                os.path.join(video[1], video[0]),
+            ]
             self.videoListTable.setRowCount(rowVideos)
             self.videoListTable.setItem(rowVideos - 1, 0, QTableWidgetItem(videoId))
             self.videoListTable.setItem(rowVideos - 1, 1, QTableWidgetItem(video[0]))
-            self.videoListTable.setItem(rowVideos - 1, 2, QTableWidgetItem(VIDEO_PATH_DICT[videoId][1]))
+            self.videoListTable.setItem(
+                rowVideos - 1, 2, QTableWidgetItem(VIDEO_PATH_DICT[videoId][1])
+            )
 
             duplicateIcon = QTableWidgetItem()
             duplicateIcon.setIcon(
@@ -88,8 +106,7 @@ class ProcessingThread(QThread):
             )
             self.videoListTable.setItem(rowVideos, 3, duplicateIcon)
 
-            progress = (rowImages + rowVideos) / len(images + videos) * 100
-            self.progressTrigger.emit(progress)
+        """
 
         self.finishedTrigger.emit()
 
@@ -98,6 +115,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("T e b y g")
+        self.move(300, 50)
 
         self.statusBar = QStatusBar()
         self.setStatusBar(self.statusBar)
@@ -109,9 +127,9 @@ class MainWindow(QMainWindow):
         fileMenu.addAction("Exit", self.close)
 
         settingsMenu = menu.addMenu("&Settings")
-        settingsMenu.addAction("DB settings")
+        settingsMenu.addAction("Database settings", self.show_database_settings)
         settingsMenu.addAction("Indexing settings", self.show_indexing_settings)
-        settingsMenu.addAction("Matching settings")
+        settingsMenu.addAction("Matching settings", self.show_matching_settings)
         settingsMenu.addSeparator()
         settingsMenu.addAction("Other")
 
@@ -121,6 +139,14 @@ class MainWindow(QMainWindow):
     def show_indexing_settings(self):
         self.indexingSettings = IndexingSettings()
         self.indexingSettings.show()
+
+    def show_database_settings(self):
+        self.database_settings = DatabaseSettings()
+        self.database_settings.show()
+
+    def show_matching_settings(self):
+        self.matching_settings = MatchingSettings()
+        self.matching_settings.show()
 
 
 class Window(QWidget):
@@ -139,7 +165,7 @@ class Window(QWidget):
         self.folderTreeCheckbox = QCheckBox("Include sub-folders")
         self.processButton = QPushButton("Process media files")
         self.duplicateButton = QPushButton("Find duplicates")
-        self.progressBar = QProgressBar()
+        self.reindexButton = QPushButton("Reindex database files")
         self.tableTabs = QTabWidget()
         # init main images list table
         self.imageListTable = QTableWidget()
@@ -154,25 +180,27 @@ class Window(QWidget):
         self.videoPlayer = QMediaPlayer()
 
         # Adjusts settings for the window elements:
-        self.folderField.setEnabled(False)
+        self.folderField.setDisabled(True)
 
         self.folderButton.setIcon(self.style().standardIcon(QStyle.SP_DialogOpenButton))
         self.folderButton.clicked.connect(self.set_folder)
 
         self.processButton.clicked.connect(self.process_files)
-        self.processButton.setFixedWidth(150)
+        self.processButton.setFixedWidth(160)
+        self.processButton.setDisabled(True)
 
         self.duplicateButton.clicked.connect(self.find_duplicates)
-        self.duplicateButton.setFixedWidth(150)
+        self.duplicateButton.setFixedWidth(160)
 
-        self.progressBar.setAlignment(Qt.AlignCenter)
+        self.reindexButton.clicked.connect(self.reindex_db_data)
+        self.reindexButton.setFixedWidth(160)
 
         self.imagesTab = self.tableTabs.insertTab(0, self.imageListTable, "Images")
         self.videosTab = self.tableTabs.insertTab(1, self.videoListTable, "Videos")
 
         self.imageListTable.setColumnCount(4)
         self.imageListTable.setHorizontalHeaderLabels(
-            ["ID", "File name", "Extension", ""]
+            ["ID", "File name", "Format", "Actions"]
         )
         self.imageListTable.verticalHeader().setVisible(False)
 
@@ -185,7 +213,7 @@ class Window(QWidget):
 
         self.videoListTable.setColumnCount(4)
         self.videoListTable.setHorizontalHeaderLabels(
-            ["ID", "File name", "Extension", ""]
+            ["ID", "File name", "Format", "Actions"]
         )
         self.videoListTable.verticalHeader().setVisible(False)
 
@@ -205,7 +233,7 @@ class Window(QWidget):
         subGrid.addWidget(self.folderTreeCheckbox, 1, 0)
         subGrid.addWidget(self.processButton, 2, 0, 1, 2, Qt.AlignCenter)
         subGrid.addWidget(self.duplicateButton, 3, 0, 1, 2, Qt.AlignCenter)
-        subGrid.addWidget(self.progressBar, 4, 0, 1, 2)
+        subGrid.addWidget(self.reindexButton, 4, 0, 1, 2, Qt.AlignCenter)
         subGridBox.setLayout(subGrid)
 
         # Main grid box:
@@ -228,8 +256,51 @@ class Window(QWidget):
             self.videoListTable,
             self.folderTreeCheckbox,
         )
-        self.thread.progressTrigger.connect(self.update_progressbar)
+
         self.thread.finishedTrigger.connect(self.finish_thread)
+
+        # filling table while first run
+        self.reindex_db_data()
+
+    def reindex_db_data(self):
+        self.duplicateButton.setDisabled(True)
+        self.processButton.setDisabled(True)
+        self.reindexButton.setDisabled(True)
+        # Reindex already exist folders and files; Image and Video files
+        reindex_image_files()
+        reindex_video_files()
+        # run table filling after reindexing
+        self.table_data_init()
+        self.duplicateButton.setEnabled(True)
+        self.processButton.setEnabled(True)
+        self.reindexButton.setEnabled(True)
+
+    def table_data_init(self):
+        # get available images from DB
+        with db_session():
+            images = Image.all()
+
+        for idx, image in enumerate(images):
+            str_image_idx = str(idx)
+
+            IMAGE_PATH_DICT[str_image_idx] = {
+                "id": image.id,
+                "name": image.image_name,
+                "type": (image.image_name.split(".")[-1]).lower(),
+                "full_path": image.full_path(),
+            }
+            self.imageListTable.setRowCount(idx)
+            self.imageListTable.setItem(idx - 1, 0, QTableWidgetItem(str_image_idx))
+            self.imageListTable.setItem(idx - 1, 1, QTableWidgetItem(image.image_name))
+            self.imageListTable.setItem(
+                idx - 1, 2, QTableWidgetItem(IMAGE_PATH_DICT[str_image_idx]["type"])
+            )
+
+            duplicateIcon = QTableWidgetItem()
+            duplicateIcon.setIcon(
+                QWidget().style().standardIcon(QStyle.SP_FileDialogContentsView)
+            )
+            self.imageListTable.setItem(idx - 1, 3, duplicateIcon)
 
     # Get a folder full of multimedia files to work with
     def set_folder(self):
@@ -237,11 +308,14 @@ class Window(QWidget):
         if self.folderPath == "":
             self.folderPath = self.folderField.text()
         self.folderField.setText(self.folderPath)
+        self.processButton.setEnabled(True)
         self.statusBar.clearMessage()
 
     # Start the thread and fill the table with those files
     def process_files(self):
-        self.duplicateButton.setEnabled(False)
+        # set other buttons disabled
+        self.duplicateButton.setDisabled(True)
+        self.reindexButton.setDisabled(True)
 
         # Clears both tables upon restarting function:
         self.imageListTable.clearContents()
@@ -255,6 +329,8 @@ class Window(QWidget):
         if self.folderField.text() == "":
             self.statusBar.setStyleSheet("color: red")
             self.statusBar.showMessage("Please choose a directory")
+            self.duplicateButton.setEnabled(True)
+            self.reindexButton.setEnabled(True)
             return None
 
         if not self.thread.isRunning():
@@ -264,19 +340,18 @@ class Window(QWidget):
 
         elif self.thread.isRunning():
             self.thread.terminate()
-            self.processButton.setText("Start")
-            self.update_progressbar(0)
-
-    # Update the progress bar with values via pyqtSignal
-    def update_progressbar(self, progress):
-        self.progressBar.setValue(progress)
+            self.processButton.setText("Process media files")
+            self.duplicateButton.setEnabled(True)
+            self.reindexButton.setEnabled(True)
 
     # Thread done and ded
     def finish_thread(self):
         self.statusBar.setStyleSheet("color: black")
         self.statusBar.showMessage("Finished!")
-        self.processButton.setText("Start")
+        self.processButton.setText("Process media files")
+        # set all buttons able
         self.duplicateButton.setEnabled(True)
+        self.reindexButton.setEnabled(True)
 
     # Start the second thread and remove all unique files from the table
     def find_duplicates(self):
@@ -285,9 +360,44 @@ class Window(QWidget):
             self.statusBar.showMessage("Please process your media files first")
             return None
 
-        self.processButton.setEnabled(False)
+        self.duplicateButton.setDisabled(True)
+        self.processButton.setDisabled(True)
+        self.reindexButton.setDisabled(True)
         self.statusBar.setStyleSheet("color: black")
         self.statusBar.showMessage("Finding duplicates...")
+
+        with db_session():
+            # get all images descriptors
+            image_files_query = Image.get_descriptors()
+
+        pairs_amount = int(len(image_files_query) * (len(image_files_query) - 1) / 2)
+
+        QMessageBox.information(
+            self,
+            "Find duplicates",
+            f"""
+            Similar images search start. Please wait!\n
+            You have ~{pairs_amount} images pairs;
+            Work will get ~{round(pairs_amount*0.00006, 2)} sec.
+            """,
+            QMessageBox.Ok,
+            QMessageBox.Ok,
+        )
+
+        # run function to find duplicates
+        result = feature_description(images_list=image_files_query)
+        with db_session():
+            # save duplicates to DB
+            save_images_duplicates(result)
+
+        QMessageBox.information(
+            self, "Find duplicates", "Success!", QMessageBox.Ok, QMessageBox.Ok
+        )
+        # set all buttons able
+        self.duplicateButton.setEnabled(True)
+        self.reindexButton.setEnabled(True)
+        self.processButton.setEnabled(True)
+
         # TODO: new thread removing all unique media. Only duplicates remain
 
     # Show an image upon clicking its name in the table
@@ -296,8 +406,8 @@ class Window(QWidget):
         imageId = self.imageListTable.item(row, 0).text()
 
         # Prevents from KeyError when clicking the second column:
-        if imageItem.text() == IMAGE_PATH_DICT[imageId][0]:
-            imageItemPath = IMAGE_PATH_DICT[imageId][2]
+        if imageItem.text() == IMAGE_PATH_DICT[imageId]["name"]:
+            imageItemPath = IMAGE_PATH_DICT[imageId]["full_path"]
 
             # Removes a video from screen if shown:
             self.videoPlayer.stop()
@@ -321,11 +431,12 @@ class Window(QWidget):
                 )
 
         if column == 3:
-            self.duplicateWindow = DuplicateWindow(self.imageListTable.item(row, 0))
+            self.duplicateWindow = DuplicateWindow(
+                image_data=IMAGE_PATH_DICT[imageId], raw_id=imageId
+            )
             if imageId not in self.duplicateRefs.keys():
                 self.duplicateRefs[imageId] = self.duplicateWindow
                 self.duplicateWindow.show()
-            self.duplicateWindow.deletionTrigger.connect(self.delete_image_row)
             self.duplicateWindow.closeTrigger.connect(self.delete_reference)
 
     # Show a video upon clicking its name in the table
@@ -349,12 +460,14 @@ class Window(QWidget):
 
     # Remove a row of a duplicate image after it was deleted in DuplicateWindow
     def delete_image_row(self, itemId):
-        self.imageField.setText("")                 # Rewrite imageField to prevent PermissionError if file was opened
+        self.imageField.setText(
+            ""
+        )  # Rewrite imageField to prevent PermissionError if file was opened
         rows = self.imageListTable.rowCount()
         for row in range(rows):
             if self.imageListTable.item(row, 0).text() == itemId:
                 self.imageListTable.removeRow(row)
-                break                               # Stop loop after row deletion to prevent AttributeError
+                break  # Stop loop after row deletion to prevent AttributeError
 
     # Remove a previously added reference from a dict if a DuplicateWindow was closed
     # so it can be opened again
@@ -364,7 +477,7 @@ class Window(QWidget):
     # An amazing workaround for gif resizing procedure
     # because PyQt's native one doesn't work for some reason:
     def smooth_gif_resize(self, gif, frameWidth, frameHeight):
-        gif = Image.open(gif)
+        gif = Pil_Image.open(gif)
         gifWidth0, gifHeight0 = gif.size
 
         widthRatio = frameWidth / gifWidth0
@@ -391,8 +504,9 @@ class IndexingSettings(QWidget):
         self.folderDepthField = QLineEdit()
         self.okButton = QPushButton("Ok")
 
-        self.folderDepthField.setText(str(json_settings.json_read("folderDepth")))
+        self.folderDepthField.setText(str(json_settings.user_json_read("folderDepth")))
         self.okButton.clicked.connect(self.ok_event)
+        self.folderDepthField.returnPressed.connect(self.okButton.click)
 
         self.grid = QGridLayout()
         self.grid.addWidget(self.folderDepthLabel, 0, 0)
@@ -402,83 +516,339 @@ class IndexingSettings(QWidget):
 
     # Updates the json settings with the new folder depth value:
     def ok_event(self):
-        json_settings.json_update("folderDepth", self.folderDepthField.text())
+        json_settings.user_json_update("folderDepth", self.folderDepthField.text())
+        self.close()
+
+
+# Allows to set a custom folder depth value in the json file:
+class DatabaseSettings(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Database settings")
+        self.setFixedSize(350, 350)
+
+        self.databaseProviderLabel = QLabel("Database provider:")
+        self.databaseProviderField = QLineEdit()
+        self.databaseFilenameLabel = QLabel("File name:")
+        self.databaseFilenameField = QLineEdit()
+        self.databaseUserLabel = QLabel("User:")
+        self.databaseUserField = QLineEdit()
+        self.databasePasswordLabel = QLabel("Password:")
+        self.databasePasswordField = QLineEdit()
+        self.databaseHostLabel = QLabel("Host:")
+        self.databaseHostField = QLineEdit()
+        self.databasePortLabel = QLabel("Port:")
+        self.databasePortField = QLineEdit()
+        self.databaseNameLabel = QLabel("Database name:")
+        self.databaseNameField = QLineEdit()
+
+        # dropdown menu with available DB providers
+        self.providersBox = QComboBox(self)
+        self.providersBox.addItems(["SQLite", "Postgres", "MySQL"])
+        self.providersBox.currentIndexChanged.connect(self.selection_change)
+
+        # buttons
+        self.testConnectionButton = QPushButton("Test connection")
+        self.testConnectionButton.clicked.connect(self.test_connection_event)
+        self.okButton = QPushButton("Ok")
+        self.okButton.clicked.connect(self.ok_event)
+
+        # fields filling
+        self.databaseProviderField.setText(str(json_settings.db_json_read("provider")))
+        self.databaseFilenameField.setText(str(json_settings.db_json_read("filename")))
+        self.databaseUserField.setDisabled(True)
+        self.databasePasswordField.setDisabled(True)
+        self.databaseHostField.setDisabled(True)
+        self.databasePortField.setDisabled(True)
+        self.databaseNameField.setDisabled(True)
+
+        self.grid = QGridLayout()
+        # labels & fields
+        self.grid.addWidget(self.databaseProviderLabel, 0, 0)
+        self.grid.addWidget(self.providersBox, 0, 1)
+        self.grid.addWidget(self.databaseFilenameLabel, 1, 0)
+        self.grid.addWidget(self.databaseFilenameField, 1, 1)
+        self.grid.addWidget(self.databaseUserLabel, 2, 0)
+        self.grid.addWidget(self.databaseUserField, 2, 1)
+        self.grid.addWidget(self.databasePasswordLabel, 3, 0)
+        self.grid.addWidget(self.databasePasswordField, 3, 1)
+        self.grid.addWidget(self.databaseHostLabel, 4, 0)
+        self.grid.addWidget(self.databaseHostField, 4, 1)
+        self.grid.addWidget(self.databasePortLabel, 5, 0)
+        self.grid.addWidget(self.databasePortField, 5, 1)
+        self.grid.addWidget(self.databaseNameLabel, 6, 0)
+        self.grid.addWidget(self.databaseNameField, 6, 1)
+        # buttons
+        self.grid.addWidget(self.testConnectionButton, 7, 0)
+        self.grid.addWidget(self.okButton, 7, 1)
+
+        self.setLayout(self.grid)
+
+    # Updates the json settings with the new folder depth value:
+    def ok_event(self):
+        json_settings.db_json_update(
+            "provider", self.providersBox.currentText().lower()
+        )
+        if self.providersBox.currentText() == "SQLite":
+            json_settings.db_json_update("filename", self.databaseFilenameField.text())
+        else:
+            json_settings.db_json_update("user", self.databaseUserField.text())
+            json_settings.db_json_update("password", self.databasePasswordField.text())
+            json_settings.db_json_update("host", self.databaseHostField.text())
+            json_settings.db_json_update("port", self.databasePortField.text())
+            json_settings.db_json_update("database", self.databaseNameField.text())
+        self.close()
+
+    # Test connection to DB
+    def test_connection_event(self):
+        try:
+            if self.providersBox.currentText() == "SQLite":
+                import sqlite3
+
+                conn = sqlite3.connect(self.databaseFilenameField.text())
+                conn.close()
+                os.remove(self.databaseFilenameField.text())
+
+            elif self.providersBox.currentText() == "Postgres":
+                import psycopg2
+
+                conn = psycopg2.connect(
+                    dbname=self.databaseNameField.text(),
+                    user=self.databaseUserField.text(),
+                    password=self.databasePasswordField.text(),
+                    host=self.databaseHostField.text(),
+                    port=self.databasePortField.text(),
+                )
+                conn.close()
+
+            elif self.providersBox.currentText() == "MySQL":
+                import mysql.connector
+
+                conn = mysql.connector.connect(
+                    data=self.databaseNameField.text(),
+                    user=self.databaseUserField.text(),
+                    passwd=self.databasePasswordField.text(),
+                    host=self.databaseHostField.text(),
+                    port=self.databasePortField.text(),
+                )
+                conn.close()
+
+            QMessageBox.information(
+                self,
+                "Connection test",
+                "Success database connection.\nTo connect to the new database - restart the application.",
+                QMessageBox.Ok,
+                QMessageBox.Ok,
+            )
+        except Exception:
+            QMessageBox.warning(
+                self,
+                "Connection test",
+                f"Error while connection test.\nCheck your fields.\nError:\n{traceback.format_exc()}",
+                QMessageBox.Ok,
+                QMessageBox.Ok,
+            )
+
+    def selection_change(self):
+        """
+        Method make able or disable database settings fields when user change DB provider dropdown menu
+        """
+        # if user check SQLite - make other fields disabled
+        if self.providersBox.currentText() != "SQLite":
+            # make filename disabled
+            self.databaseFilenameField.setDisabled(True)
+            # make other fields able
+            self.databaseUserField.setDisabled(False)
+            self.databasePasswordField.setDisabled(False)
+            self.databaseHostField.setDisabled(False)
+            self.databasePortField.setDisabled(False)
+            self.databaseNameField.setDisabled(False)
+            # fill data from config
+            self.databaseUserField.setText(str(json_settings.db_json_read("user")))
+            self.databasePasswordField.setText(
+                str(json_settings.db_json_read("password"))
+            )
+            self.databaseHostField.setText(str(json_settings.db_json_read("host")))
+            self.databasePortField.setText(str(json_settings.db_json_read("port")))
+            self.databaseNameField.setText(str(json_settings.db_json_read("database")))
+        # if select SQLite
+        else:
+            # make filename able
+            self.databaseFilenameField.setDisabled(False)
+            # if user check SQLite - make all fields disabled
+            self.databaseUserField.setDisabled(True)
+            self.databasePasswordField.setDisabled(True)
+            self.databaseHostField.setDisabled(True)
+            self.databasePortField.setDisabled(True)
+            self.databaseNameField.setDisabled(True)
+
+
+# Allows to set matching settings in the json file:
+class MatchingSettings(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Matching settings")
+        self.setFixedSize(250, 100)
+
+        self.matchingIndexLabel = QLabel("Matching index:")
+        self.matchingIndexSpinBox = QSpinBox()
+        self.matchingTypeLabel = QLabel("Matching type:")
+        self.matchingTypeComboBox = QComboBox()
+        self.okButton = QPushButton("Ok")
+
+        self.matchingIndexSpinBox.setRange(1, 150)
+
+        self.matchingIndexSpinBox.setValue(json_settings.user_json_read("matchingIndex"))
+        self.matchingTypeComboBox.addItems(["Feature", "Histogram"])
+        self.okButton.clicked.connect(self.ok_event)
+
+        self.grid = QGridLayout()
+        self.grid.addWidget(self.matchingIndexLabel, 0, 0)
+        self.grid.addWidget(self.matchingIndexSpinBox, 0, 1)
+        self.grid.addWidget(self.matchingTypeLabel, 1, 0)
+        self.grid.addWidget(self.matchingTypeComboBox, 1, 1)
+        self.grid.addWidget(self.okButton, 2, 1)
+        self.setLayout(self.grid)
+
+    # Updates the json settings with the new values:
+    def ok_event(self):
+        json_settings.user_json_update("matchingIndex", self.matchingIndexSpinBox.value())
         self.close()
 
 
 # A separate window to show duplicates of the source image:
 class DuplicateWindow(QWidget):
-    deletionTrigger = pyqtSignal(str)
     closeTrigger = pyqtSignal(str)
 
-    def __init__(self, sourceImageId):
+    def __init__(self, image_data: dict, raw_id: str):
         super().__init__()
-        self.sourceImageId = sourceImageId.text()
-        self.sourceImage = IMAGE_PATH_DICT[self.sourceImageId][2]
+        # image model from DB
+        self.sourceImage = image_data
+        # image row ID from main window table
+        self.sourceImageRawId = raw_id
+        # local images storage
+        self.local_IMAGE_PATH_DICT = {}
 
         self.setWindowTitle("Duplicates")
-        self.setFixedSize(500, 500)
+        self.setFixedSize(700, 500)
 
-        self.imageField = QLabel()
+        self.mainImageField = QLabel()
+        self.mainImageDataField = QLabel()
+        self.duplicateImageField = QLabel()
+        self.duplicateImageDataField = QLabel()
+        # set images grid(left - main image, right - duplicate)
+        self.imagesGrid = QGridLayout()
+        self.imagesGrid.addWidget(self.mainImageField, 0, 0)
+        self.imagesGrid.addWidget(self.mainImageDataField, 1, 0)
+        self.imagesGrid.addWidget(self.duplicateImageField, 0, 1)
+        self.imagesGrid.addWidget(self.duplicateImageDataField, 1, 1)
+
+        self.subGridBox = QWidget()
+        self.subGridBox.setLayout(self.imagesGrid)
+
         # init duplicates list table
         self.duplicateTable = QTableWidget()
         # set duplicates list table fields unchanged
         self.duplicateTable.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.duplicateTable.setColumnCount(5)
+        self.duplicateTable.setHorizontalHeaderLabels(
+            ["ID", "File name", "Similarity", "Open", "Delete"]
+        )
+        self.duplicateTable.verticalHeader().setVisible(False)
+        self.duplicateTable.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.duplicateTable.setSortingEnabled(True)
+        self.duplicateTable.setColumnWidth(0, 50)
+        self.duplicateTable.setColumnWidth(1, 350)
+        self.duplicateTable.setColumnWidth(2, 70)
+        self.duplicateTable.setColumnWidth(3, 50)
+        self.duplicateTable.setColumnWidth(4, 60)
+        self.duplicateTable.cellClicked.connect(self.click_event)
 
-        self.imageField.setPixmap(
-            QPixmap(self.sourceImage).scaled(
+        # set grid system
+        self.mainGrid = QGridLayout()
+        self.mainGrid.addWidget(self.subGridBox, 0, 0)
+        self.mainGrid.addWidget(self.duplicateTable, 1, 0)
+        self.setLayout(self.mainGrid)
+
+        # set main image
+        self.main_image_init()
+        # run duplicates find at first run
+        self.table_data_init()
+
+    def main_image_init(self):
+        self.mainImageDataField.setText(self.sourceImage["name"])
+        self.mainImageField.setPixmap(
+            QPixmap(self.sourceImage["full_path"]).scaled(
                 300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
             )
         )
 
-        self.duplicateTable.setColumnCount(4)
-        self.duplicateTable.setHorizontalHeaderLabels(["ID", "File name", "", ""])
-        self.duplicateTable.verticalHeader().setVisible(False)
-        self.duplicateTable.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self.duplicateTable.setSortingEnabled(True)
+    def table_data_init(self):
+        with db_session():
+            result = get_image_duplicates(
+                image_id=self.sourceImage["id"], similarity_threshold=150
+            )
 
-        self.duplicateTable.setColumnWidth(0, 25)
-        self.duplicateTable.setColumnWidth(1, 345)
-        self.duplicateTable.setColumnWidth(2, 25)
-        self.duplicateTable.setColumnWidth(3, 25)
+            if result:
+                for idx, duplicate_data in enumerate(result):
+                    self.duplicateTable.setRowCount(idx)
+                    # parse duplicate data
+                    image, similarity_param = duplicate_data[0], str(duplicate_data[1])
 
-        self.duplicateTable.setRowCount(1)
-        self.duplicateTable.setItem(0, 0, QTableWidgetItem(self.sourceImageId))
-        self.duplicateTable.setItem(0, 1, QTableWidgetItem(IMAGE_PATH_DICT[self.sourceImageId][0]))
+                    str_image_idx = str(idx)
 
-        openFolderIcon = QTableWidgetItem()
-        openFolderIcon.setIcon(self.style().standardIcon(QStyle.SP_DirIcon))
-        deleteItemIcon = QTableWidgetItem()
-        deleteItemIcon.setIcon(self.style().standardIcon(QStyle.SP_MessageBoxCritical))
+                    self.local_IMAGE_PATH_DICT[str_image_idx] = {
+                        "id": image.id,
+                        "name": image.image_name,
+                        "additional_attrs": {
+                            "height": image.image_height,
+                            "width": image.image_width,
+                        },
+                        "type": (image.image_name.split(".")[-1]).lower(),
+                        "full_path": image.full_path(),
+                    }
+                    self.duplicateTable.setItem(
+                        idx - 1, 0, QTableWidgetItem(str_image_idx)
+                    )
+                    self.duplicateTable.setItem(
+                        idx - 1, 1, QTableWidgetItem(image.image_name)
+                    )
+                    self.duplicateTable.setItem(
+                        idx - 1, 2, QTableWidgetItem(similarity_param)
+                    )
 
-        self.duplicateTable.setItem(0, 2, openFolderIcon)
-        self.duplicateTable.setItem(0, 3, deleteItemIcon)
+                    openFolderIcon = QTableWidgetItem()
+                    openFolderIcon.setIcon(self.style().standardIcon(QStyle.SP_DirIcon))
+                    deleteItemIcon = QTableWidgetItem()
+                    deleteItemIcon.setIcon(
+                        self.style().standardIcon(QStyle.SP_MessageBoxCritical)
+                    )
 
-        self.duplicateTable.cellClicked.connect(self.click_event)
-
-        self.vbox = QVBoxLayout()
-        self.vbox.addWidget(self.imageField, Qt.AlignCenter)
-        self.vbox.addWidget(self.duplicateTable)
-        self.setLayout(self.vbox)
+                    self.duplicateTable.setItem(idx - 1, 3, openFolderIcon)
+                    self.duplicateTable.setItem(idx - 1, 4, deleteItemIcon)
 
     def click_event(self, row, column):
-        item = self.duplicateTable.item(row, column)
-        if item.text() == IMAGE_PATH_DICT[self.sourceImageId][0]:
-            self.imageField.setPixmap(
-                QPixmap(IMAGE_PATH_DICT[self.sourceImageId][2]).scaled(
+        image_id = self.duplicateTable.item(row, 0).text()
+        if column in (0, 1, 2):
+
+            self.duplicateImageDataField.setText(
+                self.local_IMAGE_PATH_DICT[image_id]["name"]
+            )
+
+            self.duplicateImageField.setPixmap(
+                QPixmap(self.local_IMAGE_PATH_DICT[image_id]["full_path"]).scaled(
                     300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
                 )
             )
-
-        if column == 2:
-            itemId = self.duplicateTable.item(row, 0).text()
-            os.startfile(IMAGE_PATH_DICT[itemId][2].rsplit(os.sep, 1)[0])
-
+        elif column == 4:
+            self.delete_duplicate(image_id, row)
+        """
         if column == 3:
             itemId = self.duplicateTable.item(row, 0).text()
-            self.delete_duplicate(itemId, row)
+            os.startfile(self.sourceImage["full_path"].rsplit(os.sep, 1)[0])
+        """
 
-    def delete_duplicate(self, itemId, row):
+    def delete_duplicate(self, image_id: str, row: str):
         message = QMessageBox().question(
             self,
             "Confirm deletion",
@@ -488,12 +858,20 @@ class DuplicateWindow(QWidget):
 
         if message == QMessageBox.Yes:
             self.duplicateTable.removeRow(row)
-            self.deletionTrigger.emit(itemId)
-            os.remove(IMAGE_PATH_DICT[self.sourceImageId][2])
+            # run custom delete
+            with db_session():
+                Image[int(image_id)].custom_delete()
 
+            QMessageBox().information(
+                self,
+                "File deletion",
+                "File success deleted",
+                QMessageBox.Ok,
+                QMessageBox.Ok,
+            )
         elif message == QMessageBox.No:
             pass
 
     def closeEvent(self, event):
-        self.closeTrigger.emit(self.sourceImageId)
+        self.closeTrigger.emit(self.sourceImageRawId)
         self.close()

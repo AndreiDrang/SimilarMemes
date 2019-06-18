@@ -1,9 +1,6 @@
-import collections
-
-from database import Image, Video, ImageDuplicates, db_session, select
+from database import Image, Video, ImageDuplicates, select, desc
 
 
-@db_session(retry=3)
 def save_new_files(indexed_files: list, file_type: str):
     """
     Function get files dict and files type and save it to DB
@@ -20,7 +17,9 @@ def save_new_files(indexed_files: list, file_type: str):
                 Image(
                     image_name=image_data["namepath"][0],
                     image_path=image_data["namepath"][1],
-                    image_orb_descriptor=image_data["orb_descriptor"],
+                    image_height=image_data["height"],
+                    image_width=image_data["width"],
+                    image_descriptor=image_data["image_descriptor"],
                     image_md5_hash=image_data["md5_hash"],
                 )
 
@@ -34,7 +33,6 @@ def save_new_files(indexed_files: list, file_type: str):
                 )
 
 
-@db_session(retry=3)
 def save_images_duplicates(pairs: list):
     """
     Function get image files list and save them to DB
@@ -63,7 +61,6 @@ def save_images_duplicates(pairs: list):
             )
 
 
-@db_session(retry=3)
 def get_image_duplicates(
     image_id: int, similarity_threshold: float
 ) -> [(Image, float)]:
@@ -81,7 +78,7 @@ def get_image_duplicates(
         for duplicate in ImageDuplicates
         if (duplicate.image_src_id == image_id or duplicate.image_dup.id == image_id)
         and duplicate.images_similarity < similarity_threshold
-    ).sort_by(ImageDuplicates.images_similarity)[:]
+    ).sort_by(desc(ImageDuplicates.images_similarity))[:]
 
     # filter duplicates pairs and get only new(image!=src_image) images from pair
     duplicates_images = [
@@ -97,7 +94,6 @@ def get_image_duplicates(
     return [(Image[img_id], similarity) for img_id, similarity in duplicates_images]
 
 
-@db_session(retry=3)
 def group_image_files() -> dict:
     """
     Function group image files to dict with key - path, value - images in this path
@@ -125,7 +121,6 @@ def group_image_files() -> dict:
     return result
 
 
-@db_session(retry=3)
 def group_video_files() -> dict:
     """
     Function group video files to dict with key - path, value - video in this path

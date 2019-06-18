@@ -1,16 +1,7 @@
 # flake8: noqa
-from pony.orm import delete
+from pony.orm import delete, desc
 
-from .models import (
-    Image,
-    ImageTag,
-    Video,
-    ImageDuplicates,
-    db_session,
-    db,
-    select,
-    connection,
-)
+from .models import Image, ImageTag, Video, ImageDuplicates, db, select, connection
 from .db_methods import (
     save_new_files,
     save_images_duplicates,

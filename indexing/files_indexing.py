@@ -3,17 +3,12 @@ import os
 import collections
 import re
 
+from pony.orm import db_session
+
 from indexing import IMAGE_FORMATS, VIDEO_FORMATS, FILE_EXTENSION_RE
 
 sys.path.append(".")
-from database import (
-    group_image_files,
-    group_video_files,
-    Image,
-    Video,
-    delete,
-    db_session,
-)
+from database import group_image_files, group_video_files, Image, Video, delete
 
 
 def is_image(file_name: str) -> bool:
