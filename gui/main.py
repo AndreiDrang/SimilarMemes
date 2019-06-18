@@ -505,12 +505,15 @@ class IndexingSettings(QWidget):
         self.setFixedSize(250, 100)
 
         self.folderDepthLabel = QLabel("Folder depth:")
-        self.folderDepthField = QLineEdit()
+        self.folderDepthField = QSpinBox()
         self.okButton = QPushButton("Ok")
 
-        self.folderDepthField.setText(str(json_settings.user_json_read("folderDepth")))
+        # set depth min and max value
+        self.folderDepthField.setRange(1, 10)
+        self.folderDepthField.setSingleStep(1)
+
+        self.folderDepthField.setValue(json_settings.user_json_read("folderDepth"))
         self.okButton.clicked.connect(self.ok_event)
-        self.folderDepthField.returnPressed.connect(self.okButton.click)
 
         self.grid = QGridLayout()
         self.grid.addWidget(self.folderDepthLabel, 0, 0)
@@ -520,7 +523,7 @@ class IndexingSettings(QWidget):
 
     # Updates the json settings with the new folder depth value:
     def ok_event(self):
-        json_settings.user_json_update("folderDepth", self.folderDepthField.text())
+        json_settings.user_json_update("folderDepth", self.folderDepthField.value())
         self.close()
 
 
