@@ -58,7 +58,7 @@ def db_json_update(settingName: str, settingNewValue: str):
 # Reads the json settings file and returns a needed setting value:
 def processing_json_read(settingName: str):
     try:
-        with open(f"database{os.sep}settings.json", "r") as jsonFile:
+        with open(f"image_processing{os.sep}settings.json", "r") as jsonFile:
             jsonData = json.load(jsonFile)
         return jsonData[settingName]
 
@@ -67,7 +67,7 @@ def processing_json_read(settingName: str):
 
 
 # Updates a needed setting and rewrites the json settings file:
-def processing_json_update(settingName: str, settingNewValue: str):
+def processing_json_update(settingName: str, settingNewValue: float):
     try:
         with open(f"image_processing{os.sep}settings.json", "rt") as jsonFile:
             jsonData = json.load(jsonFile)
