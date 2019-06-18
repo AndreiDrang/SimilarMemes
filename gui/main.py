@@ -285,6 +285,10 @@ class Window(QWidget):
             IMAGE_PATH_DICT[str_image_idx] = {
                 "id": image.id,
                 "name": image.image_name,
+                "additional_attrs": {
+                    "height": image.image_height,
+                    "width": image.image_width,
+                },
                 "type": (image.image_name.split(".")[-1]).lower(),
                 "full_path": image.full_path(),
             }
