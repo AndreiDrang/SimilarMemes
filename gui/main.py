@@ -858,17 +858,17 @@ class DuplicateWindow(QWidget):
 
     def click_event(self, row, column):
         image_id = self.duplicateTable.item(row, 0).text()
-        if column in (0, 1, 2):
 
-            self.duplicateImageDataField.setText(
-                self.local_IMAGE_PATH_DICT[image_id]["name"]
+        # show selected image
+        self.duplicateImageDataField.setText(
+            self.local_IMAGE_PATH_DICT[image_id]["name"]
+        )
+        # show selected image in right collumn
+        self.duplicateImageField.setPixmap(
+            QPixmap(self.local_IMAGE_PATH_DICT[image_id]["full_path"]).scaled(
+                300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
             )
-
-            self.duplicateImageField.setPixmap(
-                QPixmap(self.local_IMAGE_PATH_DICT[image_id]["full_path"]).scaled(
-                    300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
-                )
-            )
+        )
         # if try open image source directory
         elif column == 3:
             if sys.platform == "win32":
