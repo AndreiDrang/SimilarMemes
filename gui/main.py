@@ -710,8 +710,10 @@ class MatchingSettings(QWidget):
         self.matchingIndexSpinBox.setRange(30, 90)
         self.matchingIndexSpinBox.setSingleStep(5)
 
-        self.matchingIndexSpinBox.setValue(json_settings.processing_json_read("similarity_threshold")*100)
-        self.matchingTypeComboBox.addItems(["Histogram", ])
+        self.matchingIndexSpinBox.setValue(
+            json_settings.processing_json_read("similarity_threshold") * 100
+        )
+        self.matchingTypeComboBox.addItems(["Histogram"])
         self.okButton.clicked.connect(self.ok_event)
 
         self.grid = QGridLayout()
@@ -724,7 +726,9 @@ class MatchingSettings(QWidget):
 
     # Updates the json settings with the new values:
     def ok_event(self):
-        json_settings.processing_json_update("similarity_threshold", self.matchingIndexSpinBox.value()/100)
+        json_settings.processing_json_update(
+            "similarity_threshold", self.matchingIndexSpinBox.value() / 100
+        )
         self.close()
 
 
@@ -813,7 +817,7 @@ class DuplicateWindow(QWidget):
                 300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
             )
         )
-        self.local_IMAGE_PATH_DICT['1'] = {
+        self.local_IMAGE_PATH_DICT["1"] = {
             "id": self.sourceImage["id"],
             "name": self.sourceImage["name"],
             "additional_attrs": {
@@ -827,15 +831,9 @@ class DuplicateWindow(QWidget):
 
         str_image_idx = str(1)
 
-        self.duplicateTable.setItem(
-            0, 0, QTableWidgetItem(str_image_idx)
-        )
-        self.duplicateTable.setItem(
-            0, 1, QTableWidgetItem(self.sourceImage["name"])
-        )
-        self.duplicateTable.setItem(
-            0, 2, QTableWidgetItem('src')
-        )
+        self.duplicateTable.setItem(0, 0, QTableWidgetItem(str_image_idx))
+        self.duplicateTable.setItem(0, 1, QTableWidgetItem(self.sourceImage["name"]))
+        self.duplicateTable.setItem(0, 2, QTableWidgetItem("src"))
 
         self.duplicateTable.setItem(0, 3, self.open_folder_icon())
         self.duplicateTable.setItem(0, 4, self.open_image_icon())
@@ -899,16 +897,20 @@ class DuplicateWindow(QWidget):
             if sys.platform == "win32":
                 os.startfile(self.local_IMAGE_PATH_DICT[image_id]["folder"])
             else:
-                opener ="open" if sys.platform == "darwin" else "xdg-open"
-                subprocess.call([opener, self.local_IMAGE_PATH_DICT[image_id]["folder"]])
+                opener = "open" if sys.platform == "darwin" else "xdg-open"
+                subprocess.call(
+                    [opener, self.local_IMAGE_PATH_DICT[image_id]["folder"]]
+                )
 
         # if try open image file
         elif column == 4:
             if sys.platform == "win32":
                 os.startfile(self.local_IMAGE_PATH_DICT[image_id]["full_path"])
             else:
-                opener ="open" if sys.platform == "darwin" else "xdg-open"
-                subprocess.call([opener, self.local_IMAGE_PATH_DICT[image_id]["full_path"]])
+                opener = "open" if sys.platform == "darwin" else "xdg-open"
+                subprocess.call(
+                    [opener, self.local_IMAGE_PATH_DICT[image_id]["full_path"]]
+                )
 
     def delete_duplicate(self, image_id: str, row: str):
         message = QMessageBox().question(
