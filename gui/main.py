@@ -3,6 +3,8 @@
 # Menu settings
 
 import os
+import sys
+import subprocess
 import traceback
 
 from PIL import Image as Pil_Image
@@ -848,13 +850,21 @@ class DuplicateWindow(QWidget):
                     300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
                 )
             )
+        # if try open image source directory
+        elif column == 3:
+            if sys.platform == "win32":
+                os.startfile(self.local_IMAGE_PATH_DICT[image_id]["folder"])
+            else:
+                opener ="open" if sys.platform == "darwin" else "xdg-open"
+                subprocess.call([opener, self.local_IMAGE_PATH_DICT[image_id]["folder"]])
+
+        # if try open image file
         elif column == 4:
-            self.delete_duplicate(image_id, row)
-        """
-        if column == 3:
-            itemId = self.duplicateTable.item(row, 0).text()
-            os.startfile(self.sourceImage["full_path"].rsplit(os.sep, 1)[0])
-        """
+            if sys.platform == "win32":
+                os.startfile(self.local_IMAGE_PATH_DICT[image_id]["full_path"])
+            else:
+                opener ="open" if sys.platform == "darwin" else "xdg-open"
+                subprocess.call([opener, self.local_IMAGE_PATH_DICT[image_id]["full_path"]])
 
     def delete_duplicate(self, image_id: str, row: str):
         message = QMessageBox().question(
