@@ -69,6 +69,7 @@ class ProcessingThread(QThread):
                     "height": image.image_height,
                     "width": image.image_width,
                 },
+                "folder": image.image_path,
                 "type": (image.image_name.split(".")[-1]).lower(),
                 "full_path": image.full_path(),
             }
@@ -292,6 +293,7 @@ class Window(QWidget):
                     "height": image.image_height,
                     "width": image.image_width,
                 },
+                "folder": image.image_path,
                 "type": (image.image_name.split(".")[-1]).lower(),
                 "full_path": image.full_path(),
             }
@@ -814,7 +816,7 @@ class DuplicateWindow(QWidget):
                             "height": image.image_height,
                             "width": image.image_width,
                         },
-                        "type": (image.image_name.split(".")[-1]).lower(),
+                        "folder": image.image_path,
                         "full_path": image.full_path(),
                     }
                     self.duplicateTable.setItem(
