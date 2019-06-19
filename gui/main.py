@@ -814,6 +814,10 @@ class DuplicateWindow(QWidget):
             )
         )
 
+
+        self.duplicateTable.setItem(0, 3, self.open_folder_icon())
+        self.duplicateTable.setItem(0, 4, self.open_image_icon())
+
     def table_data_init(self):
         with db_session():
             result = get_image_duplicates(
@@ -848,15 +852,9 @@ class DuplicateWindow(QWidget):
                         idx - 1, 2, QTableWidgetItem(similarity_param)
                     )
 
-                    openFolderIcon = QTableWidgetItem()
-                    openFolderIcon.setIcon(self.style().standardIcon(QStyle.SP_DirIcon))
-                    deleteItemIcon = QTableWidgetItem()
-                    deleteItemIcon.setIcon(
-                        self.style().standardIcon(QStyle.SP_MessageBoxCritical)
-                    )
-
-                    self.duplicateTable.setItem(idx - 1, 3, openFolderIcon)
-                    self.duplicateTable.setItem(idx - 1, 4, deleteItemIcon)
+                    self.duplicateTable.setItem(idx - 1, 3, self.open_folder_icon())
+                    self.duplicateTable.setItem(idx - 1, 4, self.open_image_icon())
+                    self.duplicateTable.setItem(idx - 1, 5, self.delete_image_icon())
 
     def click_event(self, row, column):
         image_id = self.duplicateTable.item(row, 0).text()
