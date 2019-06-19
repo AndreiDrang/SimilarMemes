@@ -278,6 +278,13 @@ class Window(QWidget):
         self.processButton.setEnabled(True)
         self.reindexButton.setEnabled(True)
 
+    def create_center_widget_item(self, text: str) -> QTableWidgetItem:
+        # create the item
+        center_align_item = QTableWidgetItem(text)
+        # change the alignment
+        center_align_item.setTextAlignment(Qt.AlignCenter)
+        return center_align_item
+
     def table_data_init(self):
         # get available images from DB
         with db_session():
@@ -298,10 +305,12 @@ class Window(QWidget):
                 "full_path": image.full_path(),
             }
             self.imageListTable.setRowCount(idx)
-            self.imageListTable.setItem(idx - 1, 0, QTableWidgetItem(str_image_idx))
-            self.imageListTable.setItem(idx - 1, 1, QTableWidgetItem(image.image_name))
+
+
+            self.imageListTable.setItem(idx - 1, 0, self.create_center_widget_item(str_image_idx))
+            self.imageListTable.setItem(idx - 1, 1, self.create_center_widget_item(image.image_name))
             self.imageListTable.setItem(
-                idx - 1, 2, QTableWidgetItem(IMAGE_PATH_DICT[str_image_idx]["type"])
+                idx - 1, 2, self.create_center_widget_item(IMAGE_PATH_DICT[str_image_idx]["type"])
             )
 
             duplicateIcon = QTableWidgetItem()
