@@ -203,26 +203,28 @@ class Window(QWidget):
 
         self.imageListTable.setColumnCount(4)
         self.imageListTable.setHorizontalHeaderLabels(
-            ["ID", "File name", "Format", "Actions"]
+            ["ID", "File name", "Format", "Duplicates"]
         )
         self.imageListTable.verticalHeader().setVisible(False)
 
         self.imageListTable.setColumnWidth(0, 25)
         self.imageListTable.setColumnWidth(1, 165)
-        self.imageListTable.setColumnWidth(3, 27)
+        self.imageListTable.setColumnWidth(2, 50)
+        self.imageListTable.setColumnWidth(3, 70)
         self.imageListTable.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.imageListTable.setSortingEnabled(True)
         self.imageListTable.cellClicked.connect(self.show_image)
 
         self.videoListTable.setColumnCount(4)
         self.videoListTable.setHorizontalHeaderLabels(
-            ["ID", "File name", "Format", "Actions"]
+            ["ID", "File name", "Format", "Duplicates"]
         )
         self.videoListTable.verticalHeader().setVisible(False)
 
         self.videoListTable.setColumnWidth(0, 25)
         self.videoListTable.setColumnWidth(1, 165)
-        self.videoListTable.setColumnWidth(3, 27)
+        self.videoListTable.setColumnWidth(2, 50)
+        self.videoListTable.setColumnWidth(3, 70)
         self.videoListTable.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.videoListTable.setSortingEnabled(True)
         self.videoListTable.cellClicked.connect(self.show_video)
