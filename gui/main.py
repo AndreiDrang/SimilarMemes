@@ -762,9 +762,9 @@ class DuplicateWindow(QWidget):
         self.duplicateTable = QTableWidget()
         # set duplicates list table fields unchanged
         self.duplicateTable.setEditTriggers(QTableWidget.NoEditTriggers)
-        self.duplicateTable.setColumnCount(5)
+        self.duplicateTable.setColumnCount(6)
         self.duplicateTable.setHorizontalHeaderLabels(
-            ["ID", "File name", "Similarity", "Open", "Delete"]
+            ["ID", "File name", "Similarity", "Directory", "View", "Delete"]
         )
         self.duplicateTable.verticalHeader().setVisible(False)
         self.duplicateTable.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
@@ -772,8 +772,9 @@ class DuplicateWindow(QWidget):
         self.duplicateTable.setColumnWidth(0, 50)
         self.duplicateTable.setColumnWidth(1, 350)
         self.duplicateTable.setColumnWidth(2, 70)
-        self.duplicateTable.setColumnWidth(3, 50)
-        self.duplicateTable.setColumnWidth(4, 60)
+        self.duplicateTable.setColumnWidth(3, 75)
+        self.duplicateTable.setColumnWidth(4, 50)
+        self.duplicateTable.setColumnWidth(5, 60)
         self.duplicateTable.cellClicked.connect(self.click_event)
 
         # set grid system
