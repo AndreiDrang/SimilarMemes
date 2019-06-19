@@ -869,6 +869,9 @@ class DuplicateWindow(QWidget):
                 300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
             )
         )
+        # check if user click and try delete not src image
+        if int(image_id) > 1 and column == 5:
+            self.delete_duplicate(image_id, row)
         # if try open image source directory
         elif column == 3:
             if sys.platform == "win32":
