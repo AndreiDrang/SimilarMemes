@@ -77,7 +77,7 @@ def get_image_duplicates(
         duplicate
         for duplicate in ImageDuplicates
         if (duplicate.image_src_id == image_id or duplicate.image_dup.id == image_id)
-        and duplicate.images_similarity < similarity_threshold
+        and duplicate.images_similarity > similarity_threshold
     ).sort_by(desc(ImageDuplicates.images_similarity))[:]
 
     # filter duplicates pairs and get only new(image!=src_image) images from pair

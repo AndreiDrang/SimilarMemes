@@ -821,7 +821,7 @@ class DuplicateWindow(QWidget):
     def table_data_init(self):
         with db_session():
             result = get_image_duplicates(
-                image_id=self.sourceImage["id"], similarity_threshold=150
+                image_id=self.sourceImage["id"], similarity_threshold=0.5
             )
 
             if result:
