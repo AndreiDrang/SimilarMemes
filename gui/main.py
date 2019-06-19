@@ -840,17 +840,17 @@ class DuplicateWindow(QWidget):
         str_image_idx = str(1)
 
         self.duplicateTable.setItem(
-            0, 0, QTableWidgetItem(str_image_idx)
+            0, self.COLUMNS_DICT['ID']['index'], QTableWidgetItem(str_image_idx)
         )
         self.duplicateTable.setItem(
-            0, 1, QTableWidgetItem(self.sourceImage["name"])
+            0, self.COLUMNS_DICT['File name']['index'], QTableWidgetItem(self.sourceImage["name"])
         )
         self.duplicateTable.setItem(
-            0, 2, QTableWidgetItem('src')
+            0, self.COLUMNS_DICT['Similarity']['index'], QTableWidgetItem('src')
         )
 
-        self.duplicateTable.setItem(0, 3, self.open_folder_icon())
-        self.duplicateTable.setItem(0, 4, self.open_image_icon())
+        self.duplicateTable.setItem(0, self.COLUMNS_DICT['Directory']['index'], self.open_folder_icon())
+        self.duplicateTable.setItem(0, self.COLUMNS_DICT['View']['index'], self.open_image_icon())
 
     def table_data_init(self):
         with db_session():
@@ -876,19 +876,20 @@ class DuplicateWindow(QWidget):
                         "folder": image.image_path,
                         "full_path": image.full_path(),
                     }
+
                     self.duplicateTable.setItem(
-                        idx - 1, 0, QTableWidgetItem(str_image_idx)
+                        idx - 1, self.COLUMNS_DICT['ID']['index'], QTableWidgetItem(str_image_idx)
                     )
                     self.duplicateTable.setItem(
-                        idx - 1, 1, QTableWidgetItem(image.image_name)
+                        idx - 1, self.COLUMNS_DICT['File name']['index'], QTableWidgetItem(image.image_name)
                     )
                     self.duplicateTable.setItem(
-                        idx - 1, 2, QTableWidgetItem(similarity_param)
+                        idx - 1, self.COLUMNS_DICT['Similarity']['index'], QTableWidgetItem(similarity_param)
                     )
 
-                    self.duplicateTable.setItem(idx - 1, 3, self.open_folder_icon())
-                    self.duplicateTable.setItem(idx - 1, 4, self.open_image_icon())
-                    self.duplicateTable.setItem(idx - 1, 5, self.delete_image_icon())
+                    self.duplicateTable.setItem(idx - 1, self.COLUMNS_DICT['Directory']['index'], self.open_folder_icon())
+                    self.duplicateTable.setItem(idx - 1, self.COLUMNS_DICT['View']['index'], self.open_image_icon())
+                    self.duplicateTable.setItem(idx - 1, self.COLUMNS_DICT['Delete']['index'], self.delete_image_icon())
 
     def click_event(self, row, column):
         image_id = self.duplicateTable.item(row, 0).text()
