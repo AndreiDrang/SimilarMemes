@@ -813,7 +813,29 @@ class DuplicateWindow(QWidget):
                 300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
             )
         )
+        self.local_IMAGE_PATH_DICT['1'] = {
+            "id": self.sourceImage["id"],
+            "name": self.sourceImage["name"],
+            "additional_attrs": {
+                "height": self.sourceImage["additional_attrs"]["height"],
+                "width": self.sourceImage["additional_attrs"]["width"],
+            },
+            "folder": self.sourceImage["folder"],
+            "full_path": self.sourceImage["full_path"],
+        }
+        self.duplicateTable.setRowCount(1)
 
+        str_image_idx = str(1)
+
+        self.duplicateTable.setItem(
+            0, 0, QTableWidgetItem(str_image_idx)
+        )
+        self.duplicateTable.setItem(
+            0, 1, QTableWidgetItem(self.sourceImage["name"])
+        )
+        self.duplicateTable.setItem(
+            0, 2, QTableWidgetItem('src')
+        )
 
         self.duplicateTable.setItem(0, 3, self.open_folder_icon())
         self.duplicateTable.setItem(0, 4, self.open_image_icon())
@@ -825,7 +847,7 @@ class DuplicateWindow(QWidget):
             )
 
             if result:
-                for idx, duplicate_data in enumerate(result):
+                for idx, duplicate_data in enumerate(result, 2):
                     self.duplicateTable.setRowCount(idx)
                     # parse duplicate data
                     image, similarity_param = duplicate_data[0], str(duplicate_data[1])
