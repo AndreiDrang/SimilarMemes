@@ -4,7 +4,7 @@ psycopg2==2.8.*
 mysql-connector==2.2.*
 pony==0.7.*
 # PyQt5
-pyqt5==5.12.1
+pyqt5==5.12.2
 pyQt5-sip==4.19.*
 pyqt5-stubs==5.12.1.0
 # Image processing
