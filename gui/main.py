@@ -732,6 +732,16 @@ class MatchingSettings(QWidget):
 class DuplicateWindow(QWidget):
     closeTrigger = pyqtSignal(str)
 
+    COLUMNS_DICT = {
+        # "Column label": {'index': column_ID, 'width': column_width}
+        "ID": {"index": 0, "width": 50},
+        "File name": {"index": 1, "width": 350},
+        "Similarity": {"index": 2, "width": 70},
+        "Directory": {"index": 3, "width": 75},
+        "View": {"index": 4, "width": 50},
+        "Delete": {"index": 5, "width": 50},
+    }
+
     def __init__(self, image_data: dict, raw_id: str):
         super().__init__()
         # image model from DB
@@ -762,19 +772,16 @@ class DuplicateWindow(QWidget):
         self.duplicateTable = QTableWidget()
         # set duplicates list table fields unchanged
         self.duplicateTable.setEditTriggers(QTableWidget.NoEditTriggers)
-        self.duplicateTable.setColumnCount(6)
         self.duplicateTable.setHorizontalHeaderLabels(
-            ["ID", "File name", "Similarity", "Directory", "View", "Delete"]
+            [column_label for column_label in self.COLUMNS_DICT.keys()]
         )
+        self.duplicateTable.setColumnCount(len(self.COLUMNS_DICT.keys()))
+
         self.duplicateTable.verticalHeader().setVisible(False)
         self.duplicateTable.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.duplicateTable.setSortingEnabled(True)
-        self.duplicateTable.setColumnWidth(0, 50)
-        self.duplicateTable.setColumnWidth(1, 350)
-        self.duplicateTable.setColumnWidth(2, 70)
-        self.duplicateTable.setColumnWidth(3, 75)
-        self.duplicateTable.setColumnWidth(4, 50)
-        self.duplicateTable.setColumnWidth(5, 60)
+        # set columns width
+        self.set_columns_width()
         self.duplicateTable.cellClicked.connect(self.click_event)
 
         # set grid system
@@ -787,6 +794,11 @@ class DuplicateWindow(QWidget):
         self.main_image_init()
         # run duplicates find at first run
         self.table_data_init()
+
+    def set_columns_width(self):
+        # looping all columns and set with
+        for value in self.COLUMNS_DICT.values():
+            self.duplicateTable.setColumnWidth(value['index'], value['width'])
 
     def open_image_icon(self) -> QTableWidgetItem:
         # create open-image icon
@@ -892,23 +904,28 @@ class DuplicateWindow(QWidget):
             )
         )
         # check if user click and try delete not src image
-        if int(image_id) > 1 and column == 5:
+        if int(image_id) > 1 and column == self.COLUMNS_DICT['Delete']['index']:
             self.delete_duplicate(image_id, row)
+
         # if try open image source directory
-        elif column == 3:
+        elif column == self.COLUMNS_DICT['Directory']['index']:
             if sys.platform == "win32":
                 os.startfile(self.local_IMAGE_PATH_DICT[image_id]["folder"])
             else:
-                opener ="open" if sys.platform == "darwin" else "xdg-open"
-                subprocess.call([opener, self.local_IMAGE_PATH_DICT[image_id]["folder"]])
+                opener = "open" if sys.platform == "darwin" else "xdg-open"
+                subprocess.call(
+                    [opener, self.local_IMAGE_PATH_DICT[image_id]["folder"]]
+                )
 
         # if try open image file
-        elif column == 4:
+        elif column == self.COLUMNS_DICT['View']['index']:
             if sys.platform == "win32":
                 os.startfile(self.local_IMAGE_PATH_DICT[image_id]["full_path"])
             else:
-                opener ="open" if sys.platform == "darwin" else "xdg-open"
-                subprocess.call([opener, self.local_IMAGE_PATH_DICT[image_id]["full_path"]])
+                opener = "open" if sys.platform == "darwin" else "xdg-open"
+                subprocess.call(
+                    [opener, self.local_IMAGE_PATH_DICT[image_id]["full_path"]]
+                )
 
     def delete_duplicate(self, image_id: str, row: str):
         message = QMessageBox().question(
