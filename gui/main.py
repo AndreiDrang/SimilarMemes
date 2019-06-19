@@ -788,6 +788,24 @@ class DuplicateWindow(QWidget):
         # run duplicates find at first run
         self.table_data_init()
 
+    def open_image_icon(self) -> QTableWidgetItem:
+        # create open-image icon
+        openImageIcon = QTableWidgetItem()
+        openImageIcon.setIcon(self.style().standardIcon(QStyle.SP_FileIcon))
+        return openImageIcon
+
+    def open_folder_icon(self) -> QTableWidgetItem:
+        # create open-fodler icon
+        openFolderIcon = QTableWidgetItem()
+        openFolderIcon.setIcon(self.style().standardIcon(QStyle.SP_DirIcon))
+        return openFolderIcon
+
+    def delete_image_icon(self) -> QTableWidgetItem:
+        # create delete-icon in table
+        deleteItemIcon = QTableWidgetItem()
+        deleteItemIcon.setIcon(self.style().standardIcon(QStyle.SP_TrashIcon))
+        return deleteItemIcon
+
     def main_image_init(self):
         self.mainImageDataField.setText(self.sourceImage["name"])
         self.mainImageField.setPixmap(
