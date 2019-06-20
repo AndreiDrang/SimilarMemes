@@ -8,6 +8,8 @@ import cv2
 import imageio
 import numpy as np
 
+from logger import BackInfoLogger, BackErrorsLogger
+
 from .color_descriptor import ColorDescriptor
 
 module = ColorDescriptor((8, 12, 3))
@@ -21,25 +23,30 @@ def count_descriptor(image_file):
             gif = imageio.mimread(image_file[1] + os.sep + image_file[0])
             # get middle frame from gif
             image = gif[len(gif) // 2]
-            # get gif params
-            height, width, _ = image.shape
         else:
             image = cv2.imread(image_file[1] + os.sep + image_file[0])
 
+        # if read image success
+        if image is not None:
             # get image params
             height, width, _ = image.shape
-
-        features = np.array(module.describe(image=image), dtype=np.float32)
-        return {
-            "height": height,
-            "width": width,
-            "namepath": image_file,
-            "image_descriptor": features.tobytes(),
-            "md5_hash": hashlib.md5(
-                (image_file[1] + os.sep + image_file[0]).encode()
-            ).hexdigest(),
-        }
+            features = np.array(module.describe(image=image), dtype=np.float32)
+            return {
+                "height": height,
+                "width": width,
+                "namepath": image_file,
+                "image_descriptor": features.tobytes(),
+                "md5_hash": hashlib.md5(
+                    (image_file[1] + os.sep + image_file[0]).encode()
+                ).hexdigest(),
+            }
+        else:
+            BackInfoLogger.warning(
+                f"Can`t read image while `count_descriptor`, full path - {image_file[1] + os.sep + image_file[0]}"
+            )
+            return None
     except Exception:
+        BackErrorsLogger.error(traceback.format_exc())
         print(traceback.format_exc())
         return None
 
@@ -54,11 +61,15 @@ def image_processing(image_list: collections.deque) -> list:
                         1 - file full path
     :return: Dict of parsed images and images data
     """
-    pool = Pool()
-    # run tasks in separate process
-    res = pool.map(count_descriptor, image_list)
+    processed_files = []
+    try:
+        pool = Pool()
+        # run tasks in separate process
+        res = pool.map(count_descriptor, image_list)
 
-    # filter only indexed files
-    processed_files = [file for file in res if file is not None]
-
-    return processed_files
+        # filter only indexed files
+        processed_files = [file for file in res if file is not None]
+    except Exception:
+        BackErrorsLogger.critical(traceback.format_exc())
+    finally:
+        return processed_files
