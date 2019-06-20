@@ -1,6 +1,10 @@
 import os
 import json
+import traceback
+
 from PyQt5.QtWidgets import *
+
+from logger import BackErrorsLogger
 
 
 # Reads the json settings file and returns a needed setting value:
@@ -12,6 +16,7 @@ def user_json_read(settingName: str):
 
     except Exception as ex:
         warning_message(ex)
+        BackErrorsLogger.critical(traceback.format_exc())
 
 
 # Updates a needed setting and rewrites the json settings file:
@@ -27,6 +32,7 @@ def user_json_update(settingName: str, settingNewValue: int):
 
     except Exception as ex:
         warning_message(ex)
+        BackErrorsLogger.critical(traceback.format_exc())
 
 
 # Reads the json settings file and returns a needed setting value:
@@ -38,6 +44,7 @@ def db_json_read(settingName: str):
 
     except Exception as ex:
         warning_message(ex)
+        BackErrorsLogger.critical(traceback.format_exc())
 
 
 # Updates a needed setting and rewrites the json settings file:
@@ -53,6 +60,7 @@ def db_json_update(settingName: str, settingNewValue: str):
 
     except Exception as ex:
         warning_message(ex)
+        BackErrorsLogger.critical(traceback.format_exc())
 
 
 # Reads the json settings file and returns a needed setting value:
@@ -64,6 +72,7 @@ def processing_json_read(settingName: str):
 
     except Exception as ex:
         warning_message(ex)
+        BackErrorsLogger.critical(traceback.format_exc())
 
 
 # Updates a needed setting and rewrites the json settings file:
@@ -79,6 +88,7 @@ def processing_json_update(settingName: str, settingNewValue: float):
 
     except Exception as ex:
         warning_message(ex)
+        BackErrorsLogger.critical(traceback.format_exc())
 
 
 # Shows a dialog if an error occurs (e.g., if the file is missing):
@@ -86,7 +96,7 @@ def warning_message(ex):
     warning = QMessageBox()
     warning.setIcon(QMessageBox.Warning)
     warning.setWindowTitle("Warning!")
-    warning.setText("An error has occured!")
+    warning.setText("An error has occured!\nMore info in - `logs/errors.log`")
     warning.setInformativeText(str(ex))
     warning.setStandardButtons(QMessageBox.Ok)
     warning.exec()
