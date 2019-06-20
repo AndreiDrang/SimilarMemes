@@ -8,7 +8,7 @@ from pony.orm import db_session
 from indexing import IMAGE_FORMATS, VIDEO_FORMATS, FILE_EXTENSION_RE
 
 from database import group_image_files, group_video_files, Image, Video, delete
-from logger import BackErrorsLogger, BackInfoLogger
+from logger import BackErrorsLogger
 
 
 def is_image(file_name: str) -> bool:

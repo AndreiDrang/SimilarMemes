@@ -1,6 +1,6 @@
 import traceback
 
-from logger import BackInfoLogger, BackErrorsLogger
+from logger import BackErrorsLogger
 from database import Image, Video, ImageDuplicates, select, desc
 
 
@@ -15,38 +15,29 @@ def save_new_files(indexed_files: list, file_type: str):
     try:
         if file_type == "image":
             for image_data in indexed_files:
-                try:
-                    # if current md5_hash not exist
-                    if not Image.get(image_md5_hash=image_data["md5_hash"]):
-                        Image(
-                            image_name=image_data["namepath"][0],
-                            image_path=image_data["namepath"][1],
-                            image_height=image_data["height"],
-                            image_width=image_data["width"],
-                            image_descriptor=image_data["image_descriptor"],
-                            image_md5_hash=image_data["md5_hash"],
-                        )
-                except Exception:
-                    BackErrorsLogger.error(traceback.format_exc())
-                    continue
-
+                # if current md5_hash not exist
+                if not Image.get(image_md5_hash=image_data["md5_hash"]):
+                    Image(
+                        image_name=image_data["namepath"][0],
+                        image_path=image_data["namepath"][1],
+                        image_height=image_data["height"],
+                        image_width=image_data["width"],
+                        image_descriptor=image_data["image_descriptor"],
+                        image_md5_hash=image_data["md5_hash"],
+                    )
         elif file_type == "video":
             for video_data in indexed_files:
-                try:
-                    # if current video+path not exist
-                    if not Video.get(video_path=video_data["namepath"][1]):
-                        Video(
-                            video_name=video_data["namepath"][0],
-                            video_path=video_data["namepath"][1],
-                        )
-                except Exception:
-                    BackErrorsLogger.error(traceback.format_exc())
-                    continue
+                # if current video+path not exist
+                if not Video.get(video_path=video_data["namepath"][1]):
+                    Video(
+                        video_name=video_data["namepath"][0],
+                        video_path=video_data["namepath"][1],
+                    )
         else:
             raise ValueError("Wrong `file_type` param set")
 
     except Exception:
-        BackErrorsLogger.critical(traceback.format_exc())
+        BackErrorsLogger.error(traceback.format_exc())
 
 
 def save_images_duplicates(pairs: list):
