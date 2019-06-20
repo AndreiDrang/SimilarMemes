@@ -1,7 +1,7 @@
 import sys
 import traceback
 
-from gui.main import QApplication, MainWindow
+from gui import QApplication, MainWindow
 from logger import BackInfoLogger, BackErrorsLogger
 
 import database
