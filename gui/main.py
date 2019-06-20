@@ -308,11 +308,16 @@ class Window(QWidget):
             }
             self.imageListTable.setRowCount(idx)
 
-
-            self.imageListTable.setItem(idx - 1, 0, self.create_center_widget_item(str_image_idx))
-            self.imageListTable.setItem(idx - 1, 1, self.create_center_widget_item(image.image_name))
             self.imageListTable.setItem(
-                idx - 1, 2, self.create_center_widget_item(IMAGE_PATH_DICT[str_image_idx]["type"])
+                idx - 1, 0, self.create_center_widget_item(str_image_idx)
+            )
+            self.imageListTable.setItem(
+                idx - 1, 1, self.create_center_widget_item(image.image_name)
+            )
+            self.imageListTable.setItem(
+                idx - 1,
+                2,
+                self.create_center_widget_item(IMAGE_PATH_DICT[str_image_idx]["type"]),
             )
 
             duplicateIcon = QTableWidgetItem()

@@ -1,10 +1,13 @@
 import os
 import json
 import collections
+import traceback
 from datetime import datetime
 
 import numpy as np
 from pony.orm import Required, Optional, Set, Database, select, composite_key, delete
+
+from logger import BackInfoLogger, BackErrorsLogger
 
 db = Database()
 
@@ -185,36 +188,46 @@ class VideoDuplicates(db.Entity):
 
 def connection():
     """
-    Function get user custom DB connect params
+    Function connect to DB using `db_config` params
     """
-    with open("database/db_config.json", "rt") as configs:
-        configs_data = json.loads(configs.read())
+    try:
+        with open("database/db_config.json", "rt") as configs:
+            configs_data = json.loads(configs.read())
 
-    if configs_data["provider"] == "sqlite":
-        db.bind(provider="sqlite", filename=configs_data["filename"], create_db=True)
-    elif configs_data["provider"] == "postgres":
-        # bind to DB with provider and settings
-        db.bind(
-            provider="postgres",
-            user=configs_data["user"],
-            password=configs_data["password"],
-            host=configs_data["host"],
-            port=configs_data["port"],
-            database=configs_data["database"],
-            create_db=True,
-        )
-    elif configs_data["provider"] == "mysql":
-        # bind to DB with provider and settings
-        db.bind(
-            provider="mysql",
-            user=configs_data["user"],
-            passwd=configs_data["password"],
-            host=configs_data["host"],
-            port=configs_data["port"],
-            db=configs_data["database"],
-            create_db=True,
-        )
+        BackInfoLogger.info("DB params success read")
 
-    db.generate_mapping(create_tables=True)
+        if configs_data["provider"] == "sqlite":
+            db.bind(
+                provider="sqlite", filename=configs_data["filename"], create_db=True
+            )
+        elif configs_data["provider"] == "postgres":
+            # bind to DB with provider and settings
+            db.bind(
+                provider="postgres",
+                user=configs_data["user"],
+                password=configs_data["password"],
+                host=configs_data["host"],
+                port=configs_data["port"],
+                database=configs_data["database"],
+                create_db=True,
+            )
+        elif configs_data["provider"] == "mysql":
+            # bind to DB with provider and settings
+            db.bind(
+                provider="mysql",
+                user=configs_data["user"],
+                passwd=configs_data["password"],
+                host=configs_data["host"],
+                port=configs_data["port"],
+                db=configs_data["database"],
+                create_db=True,
+            )
 
-    print("Все таблицы в БД успешно созданы")
+        BackInfoLogger.info("DB success connection")
+
+        db.generate_mapping(create_tables=True)
+
+        BackInfoLogger.info("All DB tables success created")
+
+    except Exception:
+        BackErrorsLogger.critical(traceback.format_exc())
