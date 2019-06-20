@@ -752,6 +752,16 @@ class MatchingSettings(QWidget):
 class DuplicateWindow(QWidget):
     closeTrigger = pyqtSignal(str)
 
+    COLUMNS_DICT = {
+        # "Column label": {'index': column_ID, 'width': column_width}
+        "ID": {"index": 0, "width": 50},
+        "File name": {"index": 1, "width": 350},
+        "Similarity": {"index": 2, "width": 70},
+        "Directory": {"index": 3, "width": 75},
+        "View": {"index": 4, "width": 50},
+        "Delete": {"index": 5, "width": 50},
+    }
+
     def __init__(self, image_data: dict, raw_id: str):
         super().__init__()
         # image model from DB
@@ -782,19 +792,16 @@ class DuplicateWindow(QWidget):
         self.duplicateTable = QTableWidget()
         # set duplicates list table fields unchanged
         self.duplicateTable.setEditTriggers(QTableWidget.NoEditTriggers)
-        self.duplicateTable.setColumnCount(6)
         self.duplicateTable.setHorizontalHeaderLabels(
-            ["ID", "File name", "Similarity", "Directory", "View", "Delete"]
+            [column_label for column_label in self.COLUMNS_DICT.keys()]
         )
+        self.duplicateTable.setColumnCount(len(self.COLUMNS_DICT.keys()))
+
         self.duplicateTable.verticalHeader().setVisible(False)
         self.duplicateTable.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.duplicateTable.setSortingEnabled(True)
-        self.duplicateTable.setColumnWidth(0, 50)
-        self.duplicateTable.setColumnWidth(1, 350)
-        self.duplicateTable.setColumnWidth(2, 70)
-        self.duplicateTable.setColumnWidth(3, 75)
-        self.duplicateTable.setColumnWidth(4, 50)
-        self.duplicateTable.setColumnWidth(5, 60)
+        # set columns width
+        self.set_columns_width()
         self.duplicateTable.cellClicked.connect(self.click_event)
 
         # set grid system
@@ -807,6 +814,11 @@ class DuplicateWindow(QWidget):
         self.main_image_init()
         # run duplicates find at first run
         self.table_data_init()
+
+    def set_columns_width(self):
+        # looping all columns and set with
+        for value in self.COLUMNS_DICT.values():
+            self.duplicateTable.setColumnWidth(value['index'], value['width'])
 
     def open_image_icon(self) -> QTableWidgetItem:
         # create open-image icon
@@ -847,12 +859,13 @@ class DuplicateWindow(QWidget):
 
         str_image_idx = str(1)
 
-        self.duplicateTable.setItem(0, 0, QTableWidgetItem(str_image_idx))
-        self.duplicateTable.setItem(0, 1, QTableWidgetItem(self.sourceImage["name"]))
-        self.duplicateTable.setItem(0, 2, QTableWidgetItem("src"))
+        self.duplicateTable.setItem(0, self.COLUMNS_DICT['ID']['index'], QTableWidgetItem(str_image_idx))
+        self.duplicateTable.setItem(0, self.COLUMNS_DICT['File name']['index'], QTableWidgetItem(self.sourceImage["name"]))
+        self.duplicateTable.setItem(0, self.COLUMNS_DICT['Similarity']['index'], QTableWidgetItem("src"))
 
-        self.duplicateTable.setItem(0, 3, self.open_folder_icon())
-        self.duplicateTable.setItem(0, 4, self.open_image_icon())
+
+        self.duplicateTable.setItem(0, self.COLUMNS_DICT['Directory']['index'], self.open_folder_icon())
+        self.duplicateTable.setItem(0, self.COLUMNS_DICT['View']['index'], self.open_image_icon())
 
     def table_data_init(self):
         with db_session():
@@ -878,19 +891,20 @@ class DuplicateWindow(QWidget):
                         "folder": image.image_path,
                         "full_path": image.full_path(),
                     }
+
                     self.duplicateTable.setItem(
-                        idx - 1, 0, QTableWidgetItem(str_image_idx)
+                        idx - 1, self.COLUMNS_DICT['ID']['index'], QTableWidgetItem(str_image_idx)
                     )
                     self.duplicateTable.setItem(
-                        idx - 1, 1, QTableWidgetItem(image.image_name)
+                        idx - 1, self.COLUMNS_DICT['File name']['index'], QTableWidgetItem(image.image_name)
                     )
                     self.duplicateTable.setItem(
-                        idx - 1, 2, QTableWidgetItem(similarity_param)
+                        idx - 1, self.COLUMNS_DICT['Similarity']['index'], QTableWidgetItem(similarity_param)
                     )
 
-                    self.duplicateTable.setItem(idx - 1, 3, self.open_folder_icon())
-                    self.duplicateTable.setItem(idx - 1, 4, self.open_image_icon())
-                    self.duplicateTable.setItem(idx - 1, 5, self.delete_image_icon())
+                    self.duplicateTable.setItem(idx - 1, self.COLUMNS_DICT['Directory']['index'], self.open_folder_icon())
+                    self.duplicateTable.setItem(idx - 1, self.COLUMNS_DICT['View']['index'], self.open_image_icon())
+                    self.duplicateTable.setItem(idx - 1, self.COLUMNS_DICT['Delete']['index'], self.delete_image_icon())
 
     def click_event(self, row, column):
         image_id = self.duplicateTable.item(row, 0).text()
@@ -906,10 +920,11 @@ class DuplicateWindow(QWidget):
             )
         )
         # check if user click and try delete not src image
-        if int(image_id) > 1 and column == 5:
+        if int(image_id) > 1 and column == self.COLUMNS_DICT['Delete']['index']:
             self.delete_duplicate(image_id, row)
+
         # if try open image source directory
-        elif column == 3:
+        elif column == self.COLUMNS_DICT['Directory']['index']:
             if sys.platform == "win32":
                 os.startfile(self.local_IMAGE_PATH_DICT[image_id]["folder"])
             else:
@@ -919,7 +934,7 @@ class DuplicateWindow(QWidget):
                 )
 
         # if try open image file
-        elif column == 4:
+        elif column == self.COLUMNS_DICT['View']['index']:
             if sys.platform == "win32":
                 os.startfile(self.local_IMAGE_PATH_DICT[image_id]["full_path"])
             else:
