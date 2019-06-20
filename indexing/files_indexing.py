@@ -1,14 +1,14 @@
-import sys
 import os
-import collections
 import re
+import collections
+import traceback
 
 from pony.orm import db_session
 
 from indexing import IMAGE_FORMATS, VIDEO_FORMATS, FILE_EXTENSION_RE
 
-sys.path.append(".")
 from database import group_image_files, group_video_files, Image, Video, delete
+from logger import BackErrorsLogger
 
 
 def is_image(file_name: str) -> bool:
@@ -67,22 +67,25 @@ def index_folder_files(
     image_files_list = collections.deque()
     video_files_list = collections.deque()
 
-    # looping through tree
-    for data in tree:
-        # if max depth not reached
-        if get_depth(path, data[0]) <= max_depth:
-            for file_ in data[2]:
-                # check if file - image
-                if is_image(file_) and indexing_type in ("image", "all"):
-                    # add to image list
-                    image_files_list.append((file_, data[0]))
+    try:
+        # looping through tree
+        for data in tree:
+            # if max depth not reached
+            if get_depth(path, data[0]) <= max_depth:
+                for file_ in data[2]:
+                    # check if file - image
+                    if is_image(file_) and indexing_type in ("image", "all"):
+                        # add to image list
+                        image_files_list.append((file_, data[0]))
 
-                # if file - video
-                elif is_video(file_) and indexing_type in ("video", "all"):
-                    # add to video list
-                    video_files_list.append((file_, data[0]))
-        else:
-            break
+                    # if file - video
+                    elif is_video(file_) and indexing_type in ("video", "all"):
+                        # add to video list
+                        video_files_list.append((file_, data[0]))
+            else:
+                break
+    except Exception:
+        BackErrorsLogger.error(traceback.format_exc())
 
     return image_files_list, video_files_list
 
@@ -98,24 +101,28 @@ def reindex_image_files():
     image_files = group_image_files()
     # get path and file name
     for path, files in image_files.items():
-        # check if path exist
-        if os.path.exists(path):
-            # get path files
-            path_files = os.listdir(path)
-            # filter files
-            # if files not exist in FS but exist in DB - they deleted by user
-            # and we need clean DB
-            deletable_files = (
-                image[1] for image in files if image[0] not in path_files
-            )
-            # looping in cycle and delete already deleted files(in FS) from DB
-            for deleted_file in deletable_files:
-                # delete file selected by ID
-                Image[deleted_file].delete()
+        try:
+            # check if path exist
+            if os.path.exists(path):
+                # get path files
+                path_files = os.listdir(path)
+                # filter files
+                # if files not exist in FS but exist in DB - they deleted by user
+                # and we need clean DB
+                deletable_files = (
+                    image[1] for image in files if image[0] not in path_files
+                )
+                # looping in cycle and delete already deleted files(in FS) from DB
+                for deleted_file in deletable_files:
+                    # delete file selected by ID
+                    Image[deleted_file].delete()
 
-        else:
-            # delete path if not exist
-            delete(image for image in Image if image.image_path == path)
+            else:
+                # delete path if not exist
+                delete(image for image in Image if image.image_path == path)
+        except Exception:
+            BackErrorsLogger.error(traceback.format_exc())
+            continue
 
 
 @db_session(retry=3)
@@ -129,21 +136,25 @@ def reindex_video_files():
     video_files = group_video_files()
     # get path and file name
     for path, files in video_files.items():
-        # check if path exist
-        if os.path.exists(path):
-            # get path files
-            path_files = os.listdir(path)
-            # filter files
-            # if files not exist in FS but exist in DB - they deleted by user
-            # and we need clean DB
-            deletable_files = (
-                video[1] for video in files if video[0] not in path_files
-            )
-            # looping in cycle and delete already deleted files(in FS) from DB
-            for deleted_file in deletable_files:
-                # delete file selected by ID
-                Video[deleted_file].delete()
+        try:
+            # check if path exist
+            if os.path.exists(path):
+                # get path files
+                path_files = os.listdir(path)
+                # filter files
+                # if files not exist in FS but exist in DB - they deleted by user
+                # and we need clean DB
+                deletable_files = (
+                    video[1] for video in files if video[0] not in path_files
+                )
+                # looping in cycle and delete already deleted files(in FS) from DB
+                for deleted_file in deletable_files:
+                    # delete file selected by ID
+                    Video[deleted_file].delete()
 
-        else:
-            # delete path if not exist
-            delete(video for video in Video if video.video_path == path)
+            else:
+                # delete path if not exist
+                delete(video for video in Video if video.video_path == path)
+        except Exception:
+            BackErrorsLogger.error(traceback.format_exc())
+            continue

@@ -203,26 +203,28 @@ class Window(QWidget):
 
         self.imageListTable.setColumnCount(4)
         self.imageListTable.setHorizontalHeaderLabels(
-            ["ID", "File name", "Format", "Actions"]
+            ["ID", "File name", "Format", "Duplicates"]
         )
         self.imageListTable.verticalHeader().setVisible(False)
 
         self.imageListTable.setColumnWidth(0, 25)
         self.imageListTable.setColumnWidth(1, 165)
-        self.imageListTable.setColumnWidth(3, 27)
+        self.imageListTable.setColumnWidth(2, 50)
+        self.imageListTable.setColumnWidth(3, 70)
         self.imageListTable.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.imageListTable.setSortingEnabled(True)
         self.imageListTable.cellClicked.connect(self.show_image)
 
         self.videoListTable.setColumnCount(4)
         self.videoListTable.setHorizontalHeaderLabels(
-            ["ID", "File name", "Format", "Actions"]
+            ["ID", "File name", "Format", "Duplicates"]
         )
         self.videoListTable.verticalHeader().setVisible(False)
 
         self.videoListTable.setColumnWidth(0, 25)
         self.videoListTable.setColumnWidth(1, 165)
-        self.videoListTable.setColumnWidth(3, 27)
+        self.videoListTable.setColumnWidth(2, 50)
+        self.videoListTable.setColumnWidth(3, 70)
         self.videoListTable.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.videoListTable.setSortingEnabled(True)
         self.videoListTable.cellClicked.connect(self.show_video)
@@ -278,6 +280,13 @@ class Window(QWidget):
         self.processButton.setEnabled(True)
         self.reindexButton.setEnabled(True)
 
+    def create_center_widget_item(self, text: str) -> QTableWidgetItem:
+        # create the item
+        center_align_item = QTableWidgetItem(text)
+        # change the alignment
+        center_align_item.setTextAlignment(Qt.AlignCenter)
+        return center_align_item
+
     def table_data_init(self):
         # get available images from DB
         with db_session():
@@ -298,10 +307,17 @@ class Window(QWidget):
                 "full_path": image.full_path(),
             }
             self.imageListTable.setRowCount(idx)
-            self.imageListTable.setItem(idx - 1, 0, QTableWidgetItem(str_image_idx))
-            self.imageListTable.setItem(idx - 1, 1, QTableWidgetItem(image.image_name))
+
             self.imageListTable.setItem(
-                idx - 1, 2, QTableWidgetItem(IMAGE_PATH_DICT[str_image_idx]["type"])
+                idx - 1, 0, self.create_center_widget_item(str_image_idx)
+            )
+            self.imageListTable.setItem(
+                idx - 1, 1, self.create_center_widget_item(image.image_name)
+            )
+            self.imageListTable.setItem(
+                idx - 1,
+                2,
+                self.create_center_widget_item(IMAGE_PATH_DICT[str_image_idx]["type"]),
             )
 
             duplicateIcon = QTableWidgetItem()
@@ -710,8 +726,10 @@ class MatchingSettings(QWidget):
         self.matchingIndexSpinBox.setRange(30, 90)
         self.matchingIndexSpinBox.setSingleStep(5)
 
-        self.matchingIndexSpinBox.setValue(json_settings.processing_json_read("similarity_threshold")*100)
-        self.matchingTypeComboBox.addItems(["Histogram", ])
+        self.matchingIndexSpinBox.setValue(
+            json_settings.processing_json_read("similarity_threshold") * 100
+        )
+        self.matchingTypeComboBox.addItems(["Histogram"])
         self.okButton.clicked.connect(self.ok_event)
 
         self.grid = QGridLayout()
@@ -724,7 +742,9 @@ class MatchingSettings(QWidget):
 
     # Updates the json settings with the new values:
     def ok_event(self):
-        json_settings.processing_json_update("similarity_threshold", self.matchingIndexSpinBox.value()/100)
+        json_settings.processing_json_update(
+            "similarity_threshold", self.matchingIndexSpinBox.value() / 100
+        )
         self.close()
 
 
@@ -825,7 +845,7 @@ class DuplicateWindow(QWidget):
                 300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
             )
         )
-        self.local_IMAGE_PATH_DICT['1'] = {
+        self.local_IMAGE_PATH_DICT["1"] = {
             "id": self.sourceImage["id"],
             "name": self.sourceImage["name"],
             "additional_attrs": {
@@ -839,15 +859,10 @@ class DuplicateWindow(QWidget):
 
         str_image_idx = str(1)
 
-        self.duplicateTable.setItem(
-            0, self.COLUMNS_DICT['ID']['index'], QTableWidgetItem(str_image_idx)
-        )
-        self.duplicateTable.setItem(
-            0, self.COLUMNS_DICT['File name']['index'], QTableWidgetItem(self.sourceImage["name"])
-        )
-        self.duplicateTable.setItem(
-            0, self.COLUMNS_DICT['Similarity']['index'], QTableWidgetItem('src')
-        )
+        self.duplicateTable.setItem(0, self.COLUMNS_DICT['ID']['index'], QTableWidgetItem(str_image_idx))
+        self.duplicateTable.setItem(0, self.COLUMNS_DICT['File name']['index'], QTableWidgetItem(self.sourceImage["name"]))
+        self.duplicateTable.setItem(0, self.COLUMNS_DICT['Similarity']['index'], QTableWidgetItem("src"))
+
 
         self.duplicateTable.setItem(0, self.COLUMNS_DICT['Directory']['index'], self.open_folder_icon())
         self.duplicateTable.setItem(0, self.COLUMNS_DICT['View']['index'], self.open_image_icon())

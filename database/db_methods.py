@@ -1,3 +1,6 @@
+import traceback
+
+from logger import BackErrorsLogger
 from database import Image, Video, ImageDuplicates, select, desc
 
 
@@ -9,28 +12,32 @@ def save_new_files(indexed_files: list, file_type: str):
 
     :param file_type: Files type - `image` or `video`
     """
+    try:
+        if file_type == "image":
+            for image_data in indexed_files:
+                # if current md5_hash not exist
+                if not Image.get(image_md5_hash=image_data["md5_hash"]):
+                    Image(
+                        image_name=image_data["namepath"][0],
+                        image_path=image_data["namepath"][1],
+                        image_height=image_data["height"],
+                        image_width=image_data["width"],
+                        image_descriptor=image_data["image_descriptor"],
+                        image_md5_hash=image_data["md5_hash"],
+                    )
+        elif file_type == "video":
+            for video_data in indexed_files:
+                # if current video+path not exist
+                if not Video.get(video_path=video_data["namepath"][1]):
+                    Video(
+                        video_name=video_data["namepath"][0],
+                        video_path=video_data["namepath"][1],
+                    )
+        else:
+            raise ValueError("Wrong `file_type` param set")
 
-    if file_type == "image":
-        for image_data in indexed_files:
-            # if current md5_hash not exist
-            if not Image.get(image_md5_hash=image_data["md5_hash"]):
-                Image(
-                    image_name=image_data["namepath"][0],
-                    image_path=image_data["namepath"][1],
-                    image_height=image_data["height"],
-                    image_width=image_data["width"],
-                    image_descriptor=image_data["image_descriptor"],
-                    image_md5_hash=image_data["md5_hash"],
-                )
-
-    elif file_type == "video":
-        for video_data in indexed_files:
-            # if current video+path not exist
-            if not Video.get(video_path=video_data["namepath"][1]):
-                Video(
-                    video_name=video_data["namepath"][0],
-                    video_path=video_data["namepath"][1],
-                )
+    except Exception:
+        BackErrorsLogger.error(traceback.format_exc())
 
 
 def save_images_duplicates(pairs: list):
@@ -45,20 +52,24 @@ def save_images_duplicates(pairs: list):
 
     """
     for pair in pairs:
-        # try select pair from already exist data
-        image_duplicates = select(
-            duplicate.id
-            for duplicate in ImageDuplicates
-            if duplicate.image_src_id in (pair[1], pair[0])
-            and duplicate.image_dup.id in (pair[1], pair[0])
-        )[:]
-        # if current pair not exist
-        if not image_duplicates:
-            ImageDuplicates(
-                image_src_id=pair[0],
-                image_dup=Image[pair[1]],
-                images_similarity=pair[2],
-            )
+        try:
+            # try select pair from already exist data
+            image_duplicates = select(
+                duplicate.id
+                for duplicate in ImageDuplicates
+                if duplicate.image_src_id in (pair[1], pair[0])
+                and duplicate.image_dup.id in (pair[1], pair[0])
+            )[:]
+            # if current pair not exist
+            if not image_duplicates:
+                ImageDuplicates(
+                    image_src_id=pair[0],
+                    image_dup=Image[pair[1]],
+                    images_similarity=pair[2],
+                )
+        except Exception:
+            BackErrorsLogger.error(traceback.format_exc())
+            continue
 
 
 def get_image_duplicates(
@@ -111,14 +122,19 @@ def group_image_files() -> dict:
                 }
     """
     result = {}
-    all_images_paths = Image.group_images_paths()
-    for path in all_images_paths:
-        path_files = select(
-            (image.image_name, image.id) for image in Image if image.image_path == path
-        )[:]
-        result.update({path: path_files})
-
-    return result
+    try:
+        all_images_paths = Image.group_images_paths()
+        for path in all_images_paths:
+            path_files = select(
+                (image.image_name, image.id)
+                for image in Image
+                if image.image_path == path
+            )[:]
+            result.update({path: path_files})
+    except Exception:
+        BackErrorsLogger.critical(traceback.format_exc())
+    finally:
+        return result
 
 
 def group_video_files() -> dict:
@@ -138,11 +154,16 @@ def group_video_files() -> dict:
                 }
     """
     result = {}
-    all_video_paths = Video.group_video_paths()
-    for path in all_video_paths:
-        path_files = select(
-            (video.video_name, video.id) for video in Video if video.video_path == path
-        )[:]
-        result.update({path: path_files})
-
-    return result
+    try:
+        all_video_paths = Video.group_video_paths()
+        for path in all_video_paths:
+            path_files = select(
+                (video.video_name, video.id)
+                for video in Video
+                if video.video_path == path
+            )[:]
+            result.update({path: path_files})
+    except Exception:
+        BackErrorsLogger.critical(traceback.format_exc())
+    finally:
+        return result

@@ -1,16 +1,25 @@
 import sys
+import traceback
 
-from gui.main import QApplication, MainWindow
+from gui import QApplication, MainWindow
+from logger import BackInfoLogger, BackErrorsLogger
+
 import database
 
 
-if __name__=='__main__':
+if __name__ == "__main__":
+    try:
+        # connect to DB
+        database.connection()
 
-    # connect to DB
-    database.connection()
+        # start GUI
+        app = QApplication(sys.argv)
+        screen = MainWindow()
+        screen.show()
 
-    # start GUI
-    app = QApplication(sys.argv)
-    screen = MainWindow()
-    screen.show()
-    sys.exit(app.exec_())
+        BackInfoLogger.info("App success starting")
+
+        sys.exit(app.exec_())
+
+    except Exception:
+        BackErrorsLogger.critical(traceback.format_exc())
