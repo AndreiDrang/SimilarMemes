@@ -7,6 +7,7 @@ import sys
 import subprocess
 import traceback
 
+import pyperclip
 from PIL import Image as Pil_Image
 from pony.orm import db_session
 from pony.orm import flush as db_flush
@@ -770,7 +771,8 @@ class DuplicateWindow(QWidget):
         "Similarity": {"index": 2, "width": 70},
         "Directory": {"index": 3, "width": 75},
         "View": {"index": 4, "width": 50},
-        "Delete": {"index": 5, "width": 50},
+        "Copy": {"index": 5, "width": 50},
+        "Delete": {"index": 6, "width": 50},
     }
 
     def __init__(self, image_data: dict, raw_id: str):
@@ -813,7 +815,7 @@ class DuplicateWindow(QWidget):
         self.duplicateTable.setSortingEnabled(True)
         # set columns width
         self.set_columns_width()
-        self.duplicateTable.cellClicked.connect(self.click_event)
+        self.duplicateTable.cellClicked.connect(self.table_click_event)
 
         # set grid system
         self.mainGrid = QGridLayout()
@@ -834,7 +836,7 @@ class DuplicateWindow(QWidget):
     def open_image_icon(self) -> QTableWidgetItem:
         # create open-image icon
         openImageIcon = QTableWidgetItem()
-        openImageIcon.setIcon(self.style().standardIcon(QStyle.SP_FileIcon))
+        openImageIcon.setIcon(self.style().standardIcon(QStyle.SP_FileDialogContentsView))
         return openImageIcon
 
     def open_folder_icon(self) -> QTableWidgetItem:
@@ -842,6 +844,12 @@ class DuplicateWindow(QWidget):
         openFolderIcon = QTableWidgetItem()
         openFolderIcon.setIcon(self.style().standardIcon(QStyle.SP_DirIcon))
         return openFolderIcon
+
+    def copy_path_icon(self) -> QTableWidgetItem:
+        # create open-image icon
+        openImageIcon = QTableWidgetItem()
+        openImageIcon.setIcon(self.style().standardIcon(QStyle.SP_DriveCDIcon))
+        return openImageIcon
 
     def delete_image_icon(self) -> QTableWidgetItem:
         # create delete-icon in table
@@ -873,10 +881,9 @@ class DuplicateWindow(QWidget):
         self.duplicateTable.setItem(0, self.COLUMNS_DICT['ID']['index'], QTableWidgetItem(str_image_idx))
         self.duplicateTable.setItem(0, self.COLUMNS_DICT['File name']['index'], QTableWidgetItem(self.sourceImage["name"]))
         self.duplicateTable.setItem(0, self.COLUMNS_DICT['Similarity']['index'], QTableWidgetItem("src"))
-
-
         self.duplicateTable.setItem(0, self.COLUMNS_DICT['Directory']['index'], self.open_folder_icon())
         self.duplicateTable.setItem(0, self.COLUMNS_DICT['View']['index'], self.open_image_icon())
+        self.duplicateTable.setItem(0, self.COLUMNS_DICT['Copy']['index'], self.copy_path_icon())
 
     def table_data_init(self):
         with db_session():
@@ -915,9 +922,10 @@ class DuplicateWindow(QWidget):
 
                     self.duplicateTable.setItem(idx - 1, self.COLUMNS_DICT['Directory']['index'], self.open_folder_icon())
                     self.duplicateTable.setItem(idx - 1, self.COLUMNS_DICT['View']['index'], self.open_image_icon())
+                    self.duplicateTable.setItem(idx - 1, self.COLUMNS_DICT['Copy']['index'], self.copy_path_icon())
                     self.duplicateTable.setItem(idx - 1, self.COLUMNS_DICT['Delete']['index'], self.delete_image_icon())
 
-    def click_event(self, row, column):
+    def table_click_event(self, row, column):
         image_id = self.duplicateTable.item(row, 0).text()
 
         # show selected image
@@ -953,6 +961,22 @@ class DuplicateWindow(QWidget):
                 subprocess.call(
                     [opener, self.local_IMAGE_PATH_DICT[image_id]["full_path"]]
                 )
+
+        # if try open image file
+        elif column == self.COLUMNS_DICT['Copy']['index']:
+            try:
+                pyperclip.copy(self.local_IMAGE_PATH_DICT[image_id]["full_path"])
+                QMessageBox.information(
+                    self, "Copy path", "Success!\nFile path copied to clipboard!", QMessageBox.Ok, QMessageBox.Ok
+                )
+
+            except Exception:
+                print(traceback.format_exc())
+                if sys.platform != 'win32':
+                    QMessageBox.warning(
+                        self, "Copy path", "Error!\nPlease try install `xclip`", QMessageBox.Ok, QMessageBox.Ok
+                    )
+
 
     def delete_duplicate(self, image_id: str, row: str):
         message = QMessageBox().question(
