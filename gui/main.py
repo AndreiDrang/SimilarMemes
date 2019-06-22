@@ -808,8 +808,8 @@ class DuplicateWindow(QWidget):
         self.duplicateTable = QTableWidget()
         # set duplicates list table fields unchanged
         self.duplicateTable.setEditTriggers(QTableWidget.NoEditTriggers)
-        self.duplicateTable.setHorizontalHeaderLabels(self.COLUMNS_DICT.keys())
         self.duplicateTable.setColumnCount(len(self.COLUMNS_DICT.keys()))
+        self.duplicateTable.setHorizontalHeaderLabels(self.COLUMNS_DICT.keys())
         self.duplicateTable.verticalHeader().setVisible(False)
         self.duplicateTable.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.duplicateTable.setSortingEnabled(True)
