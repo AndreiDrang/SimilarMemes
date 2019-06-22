@@ -154,6 +154,14 @@ class MainWindow(QMainWindow):
 
 
 class Window(QWidget):
+    COLUMNS_DICT = {
+        # "Column label": {'index': column_ID, 'width': column_width}
+        "ID": {"index": 0, "width": 25},
+        "File name": {"index": 1, "width": 165},
+        "Format": {"index": 2, "width": 50},
+        "Dup": {"index": 3, "width": 5},
+    }
+
     def __init__(self, statusBar):
         super().__init__()
 
@@ -199,36 +207,32 @@ class Window(QWidget):
         self.reindexButton.clicked.connect(self.reindex_db_data)
         self.reindexButton.setFixedWidth(160)
 
+        # prepare tables for images and videos
         self.imagesTab = self.tableTabs.insertTab(0, self.imageListTable, "Images")
         self.videosTab = self.tableTabs.insertTab(1, self.videoListTable, "Videos")
 
-        self.imageListTable.setColumnCount(4)
+        # images list table setup
+        self.imageListTable.setColumnCount(len(self.COLUMNS_DICT.keys()))
         self.imageListTable.setHorizontalHeaderLabels(
-            ["ID", "File name", "Format", "Duplicates"]
+            [column_label for column_label in self.COLUMNS_DICT.keys()]
         )
         self.imageListTable.verticalHeader().setVisible(False)
-
-        self.imageListTable.setColumnWidth(0, 25)
-        self.imageListTable.setColumnWidth(1, 165)
-        self.imageListTable.setColumnWidth(2, 50)
-        self.imageListTable.setColumnWidth(3, 70)
         self.imageListTable.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.imageListTable.setSortingEnabled(True)
         self.imageListTable.cellClicked.connect(self.show_image)
 
-        self.videoListTable.setColumnCount(4)
+        # videos list table setup
+        self.videoListTable.setColumnCount(len(self.COLUMNS_DICT.keys()))
         self.videoListTable.setHorizontalHeaderLabels(
-            ["ID", "File name", "Format", "Duplicates"]
+            [column_label for column_label in self.COLUMNS_DICT.keys()]
         )
         self.videoListTable.verticalHeader().setVisible(False)
-
-        self.videoListTable.setColumnWidth(0, 25)
-        self.videoListTable.setColumnWidth(1, 165)
-        self.videoListTable.setColumnWidth(2, 50)
-        self.videoListTable.setColumnWidth(3, 70)
         self.videoListTable.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.videoListTable.setSortingEnabled(True)
         self.videoListTable.cellClicked.connect(self.show_video)
+
+        # set images and videos duplicates columns width
+        self.set_columns_width()
 
         # Places the window elements on the window:
         # Top-left cell of main grid box:
@@ -267,6 +271,12 @@ class Window(QWidget):
 
         # filling table while first run
         self.reindex_db_data()
+
+    def set_columns_width(self):
+        # looping all columns and set with
+        for value in self.COLUMNS_DICT.values():
+            self.imageListTable.setColumnWidth(value['index'], value['width'])
+            self.videoListTable.setColumnWidth(value['index'], value['width'])
 
     def reindex_db_data(self):
         self.duplicateButton.setDisabled(True)
