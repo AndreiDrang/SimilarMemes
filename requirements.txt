@@ -11,4 +11,3 @@ pyqt5-stubs==5.12.1.0
 imageio==2.5.*
 opencv-python==4.1.*
 pillow-simd==5.3.*
-pyperclip==1.7.*

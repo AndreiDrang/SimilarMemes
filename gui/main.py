@@ -7,7 +7,7 @@ import sys
 import subprocess
 import traceback
 
-import pyperclip
+
 from PIL import Image as Pil_Image
 from pony.orm import db_session
 from pony.orm import flush as db_flush
@@ -23,6 +23,7 @@ from image_processing import image_processing, feature_description
 from database import Image, save_new_files, get_image_duplicates, save_images_duplicates
 
 from gui import json_settings
+from gui.scripts import copy_image
 
 # Dict containment -> ID:[FILE_NAME, EXTENSION, FILE_FULL_PATH]
 IMAGE_PATH_DICT = {}
@@ -118,7 +119,7 @@ class ProcessingThread(QThread):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowIcon(QIcon('gui/static/icon_logo.png'))
+        self.setWindowIcon(QIcon("gui/static/icon_logo.png"))
         self.setWindowTitle("T e b y g")
         self.move(300, 50)
 
@@ -214,9 +215,7 @@ class Window(QWidget):
 
         # images list table setup
         self.imageListTable.setColumnCount(len(self.COLUMNS_DICT.keys()))
-        self.imageListTable.setHorizontalHeaderLabels(
-            [column_label for column_label in self.COLUMNS_DICT.keys()]
-        )
+        self.imageListTable.setHorizontalHeaderLabels(self.COLUMNS_DICT.keys())
         self.imageListTable.verticalHeader().setVisible(False)
         self.imageListTable.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.imageListTable.setSortingEnabled(True)
@@ -224,9 +223,7 @@ class Window(QWidget):
 
         # videos list table setup
         self.videoListTable.setColumnCount(len(self.COLUMNS_DICT.keys()))
-        self.videoListTable.setHorizontalHeaderLabels(
-            [column_label for column_label in self.COLUMNS_DICT.keys()]
-        )
+        self.videoListTable.setHorizontalHeaderLabels(self.COLUMNS_DICT.keys())
         self.videoListTable.verticalHeader().setVisible(False)
         self.videoListTable.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.videoListTable.setSortingEnabled(True)
@@ -276,8 +273,8 @@ class Window(QWidget):
     def set_columns_width(self):
         # looping all columns and set with
         for value in self.COLUMNS_DICT.values():
-            self.imageListTable.setColumnWidth(value['index'], value['width'])
-            self.videoListTable.setColumnWidth(value['index'], value['width'])
+            self.imageListTable.setColumnWidth(value["index"], value["width"])
+            self.videoListTable.setColumnWidth(value["index"], value["width"])
 
     def reindex_db_data(self):
         self.duplicateButton.setDisabled(True)
@@ -321,14 +318,18 @@ class Window(QWidget):
             self.imageListTable.setRowCount(idx)
 
             self.imageListTable.setItem(
-                idx - 1, self.COLUMNS_DICT['ID']['index'], self.center_widget_item(str_image_idx)
-            )
-            self.imageListTable.setItem(
-                idx - 1, self.COLUMNS_DICT['File name']['index'], self.center_widget_item(image.image_name)
+                idx - 1,
+                self.COLUMNS_DICT["ID"]["index"],
+                self.center_widget_item(str_image_idx),
             )
             self.imageListTable.setItem(
                 idx - 1,
-                self.COLUMNS_DICT['Format']['index'],
+                self.COLUMNS_DICT["File name"]["index"],
+                self.center_widget_item(image.image_name),
+            )
+            self.imageListTable.setItem(
+                idx - 1,
+                self.COLUMNS_DICT["Format"]["index"],
                 self.center_widget_item(IMAGE_PATH_DICT[str_image_idx]["type"]),
             )
 
@@ -336,7 +337,9 @@ class Window(QWidget):
             duplicateIcon.setIcon(
                 QWidget().style().standardIcon(QStyle.SP_FileDialogContentsView)
             )
-            self.imageListTable.setItem(idx - 1, self.COLUMNS_DICT['Dup']['index'], duplicateIcon)
+            self.imageListTable.setItem(
+                idx - 1, self.COLUMNS_DICT["Dup"]["index"], duplicateIcon
+            )
 
     # Get a folder full of multimedia files to work with
     def set_folder(self):
@@ -805,9 +808,7 @@ class DuplicateWindow(QWidget):
         self.duplicateTable = QTableWidget()
         # set duplicates list table fields unchanged
         self.duplicateTable.setEditTriggers(QTableWidget.NoEditTriggers)
-        self.duplicateTable.setHorizontalHeaderLabels(
-            [column_label for column_label in self.COLUMNS_DICT.keys()]
-        )
+        self.duplicateTable.setHorizontalHeaderLabels(self.COLUMNS_DICT.keys())
         self.duplicateTable.setColumnCount(len(self.COLUMNS_DICT.keys()))
         self.duplicateTable.verticalHeader().setVisible(False)
         self.duplicateTable.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
@@ -830,12 +831,14 @@ class DuplicateWindow(QWidget):
     def set_columns_width(self):
         # looping all columns and set with
         for value in self.COLUMNS_DICT.values():
-            self.duplicateTable.setColumnWidth(value['index'], value['width'])
+            self.duplicateTable.setColumnWidth(value["index"], value["width"])
 
     def open_image_icon(self) -> QTableWidgetItem:
         # create open-image icon
         openImageIcon = QTableWidgetItem()
-        openImageIcon.setIcon(self.style().standardIcon(QStyle.SP_FileDialogContentsView))
+        openImageIcon.setIcon(
+            self.style().standardIcon(QStyle.SP_FileDialogContentsView)
+        )
         return openImageIcon
 
     def open_folder_icon(self) -> QTableWidgetItem:
@@ -877,12 +880,26 @@ class DuplicateWindow(QWidget):
 
         str_image_idx = str(1)
 
-        self.duplicateTable.setItem(0, self.COLUMNS_DICT['ID']['index'], QTableWidgetItem(str_image_idx))
-        self.duplicateTable.setItem(0, self.COLUMNS_DICT['File name']['index'], QTableWidgetItem(self.sourceImage["name"]))
-        self.duplicateTable.setItem(0, self.COLUMNS_DICT['Similarity']['index'], QTableWidgetItem("src"))
-        self.duplicateTable.setItem(0, self.COLUMNS_DICT['Directory']['index'], self.open_folder_icon())
-        self.duplicateTable.setItem(0, self.COLUMNS_DICT['View']['index'], self.open_image_icon())
-        self.duplicateTable.setItem(0, self.COLUMNS_DICT['Copy']['index'], self.copy_path_icon())
+        self.duplicateTable.setItem(
+            0, self.COLUMNS_DICT["ID"]["index"], QTableWidgetItem(str_image_idx)
+        )
+        self.duplicateTable.setItem(
+            0,
+            self.COLUMNS_DICT["File name"]["index"],
+            QTableWidgetItem(self.sourceImage["name"]),
+        )
+        self.duplicateTable.setItem(
+            0, self.COLUMNS_DICT["Similarity"]["index"], QTableWidgetItem("src")
+        )
+        self.duplicateTable.setItem(
+            0, self.COLUMNS_DICT["Directory"]["index"], self.open_folder_icon()
+        )
+        self.duplicateTable.setItem(
+            0, self.COLUMNS_DICT["View"]["index"], self.open_image_icon()
+        )
+        self.duplicateTable.setItem(
+            0, self.COLUMNS_DICT["Copy"]["index"], self.copy_path_icon()
+        )
 
     def table_data_init(self):
         with db_session():
@@ -910,19 +927,41 @@ class DuplicateWindow(QWidget):
                     }
 
                     self.duplicateTable.setItem(
-                        idx - 1, self.COLUMNS_DICT['ID']['index'], QTableWidgetItem(str_image_idx)
+                        idx - 1,
+                        self.COLUMNS_DICT["ID"]["index"],
+                        QTableWidgetItem(str_image_idx),
                     )
                     self.duplicateTable.setItem(
-                        idx - 1, self.COLUMNS_DICT['File name']['index'], QTableWidgetItem(image.image_name)
+                        idx - 1,
+                        self.COLUMNS_DICT["File name"]["index"],
+                        QTableWidgetItem(image.image_name),
                     )
                     self.duplicateTable.setItem(
-                        idx - 1, self.COLUMNS_DICT['Similarity']['index'], QTableWidgetItem(similarity_param)
+                        idx - 1,
+                        self.COLUMNS_DICT["Similarity"]["index"],
+                        QTableWidgetItem(similarity_param),
                     )
 
-                    self.duplicateTable.setItem(idx - 1, self.COLUMNS_DICT['Directory']['index'], self.open_folder_icon())
-                    self.duplicateTable.setItem(idx - 1, self.COLUMNS_DICT['View']['index'], self.open_image_icon())
-                    self.duplicateTable.setItem(idx - 1, self.COLUMNS_DICT['Copy']['index'], self.copy_path_icon())
-                    self.duplicateTable.setItem(idx - 1, self.COLUMNS_DICT['Delete']['index'], self.delete_image_icon())
+                    self.duplicateTable.setItem(
+                        idx - 1,
+                        self.COLUMNS_DICT["Directory"]["index"],
+                        self.open_folder_icon(),
+                    )
+                    self.duplicateTable.setItem(
+                        idx - 1,
+                        self.COLUMNS_DICT["View"]["index"],
+                        self.open_image_icon(),
+                    )
+                    self.duplicateTable.setItem(
+                        idx - 1,
+                        self.COLUMNS_DICT["Copy"]["index"],
+                        self.copy_path_icon(),
+                    )
+                    self.duplicateTable.setItem(
+                        idx - 1,
+                        self.COLUMNS_DICT["Delete"]["index"],
+                        self.delete_image_icon(),
+                    )
 
     def table_click_event(self, row, column):
         image_id = self.duplicateTable.item(row, 0).text()
@@ -938,11 +977,11 @@ class DuplicateWindow(QWidget):
             )
         )
         # check if user click and try delete not src image
-        if int(image_id) > 1 and column == self.COLUMNS_DICT['Delete']['index']:
+        if int(image_id) > 1 and column == self.COLUMNS_DICT["Delete"]["index"]:
             self.delete_duplicate(image_id, row)
 
         # if try open image source directory
-        elif column == self.COLUMNS_DICT['Directory']['index']:
+        elif column == self.COLUMNS_DICT["Directory"]["index"]:
             if sys.platform == "win32":
                 os.startfile(self.local_IMAGE_PATH_DICT[image_id]["folder"])
             else:
@@ -952,7 +991,7 @@ class DuplicateWindow(QWidget):
                 )
 
         # if try open image file
-        elif column == self.COLUMNS_DICT['View']['index']:
+        elif column == self.COLUMNS_DICT["View"]["index"]:
             if sys.platform == "win32":
                 os.startfile(self.local_IMAGE_PATH_DICT[image_id]["full_path"])
             else:
@@ -961,21 +1000,36 @@ class DuplicateWindow(QWidget):
                     [opener, self.local_IMAGE_PATH_DICT[image_id]["full_path"]]
                 )
 
-        # if try open image file
-        elif column == self.COLUMNS_DICT['Copy']['index']:
+        # if try copy image file
+        elif column == self.COLUMNS_DICT["Copy"]["index"]:
             try:
-                pyperclip.copy(self.local_IMAGE_PATH_DICT[image_id]["full_path"])
-                QMessageBox.information(
-                    self, "Copy path", "Success!\nFile path copied to clipboard!", QMessageBox.Ok, QMessageBox.Ok
-                )
+                result = copy_image(self.local_IMAGE_PATH_DICT[image_id]["full_path"])
+                if result:
+                    QMessageBox.information(
+                        self,
+                        "Copy path",
+                        "Success!\nFile path copied to clipboard!",
+                        QMessageBox.Ok,
+                        QMessageBox.Ok,
+                    )
+                else:
+                    QMessageBox.warning(
+                        self,
+                        "Copy path",
+                        "Error!\nSorry, i can`t copy image to clipboard.",
+                        QMessageBox.Ok,
+                        QMessageBox.Ok,
+                    )
 
             except Exception:
                 print(traceback.format_exc())
-                if sys.platform != 'win32':
-                    QMessageBox.warning(
-                        self, "Copy path", "Error!\nPlease try install `xclip`", QMessageBox.Ok, QMessageBox.Ok
-                    )
-
+                QMessageBox.warning(
+                    self,
+                    "Copy path",
+                    f"Error!\n{traceback.format_exc()}",
+                    QMessageBox.Ok,
+                    QMessageBox.Ok,
+                )
 
     def delete_duplicate(self, image_id: str, row: str):
         message = QMessageBox().question(

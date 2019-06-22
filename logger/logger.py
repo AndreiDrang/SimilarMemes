@@ -2,7 +2,7 @@ import os
 import logging
 from logging.config import fileConfig
 
-os.makedirs('logs', exist_ok=True)
+os.makedirs("logs", exist_ok=True)
 
 logging.config.fileConfig("logger/logging.conf")
 
