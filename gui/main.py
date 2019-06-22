@@ -117,6 +117,7 @@ class ProcessingThread(QThread):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.setWindowIcon(QIcon('gui/static/icon_logo.png'))
         self.setWindowTitle("T e b y g")
         self.move(300, 50)
 
