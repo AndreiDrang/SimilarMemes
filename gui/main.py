@@ -292,7 +292,7 @@ class Window(QWidget):
         self.processButton.setEnabled(True)
         self.reindexButton.setEnabled(True)
 
-    def create_center_widget_item(self, text: str) -> QTableWidgetItem:
+    def center_widget_item(self, text: str) -> QTableWidgetItem:
         # create the item
         center_align_item = QTableWidgetItem(text)
         # change the alignment
@@ -321,22 +321,22 @@ class Window(QWidget):
             self.imageListTable.setRowCount(idx)
 
             self.imageListTable.setItem(
-                idx - 1, 0, self.create_center_widget_item(str_image_idx)
+                idx - 1, self.COLUMNS_DICT['ID']['index'], self.center_widget_item(str_image_idx)
             )
             self.imageListTable.setItem(
-                idx - 1, 1, self.create_center_widget_item(image.image_name)
+                idx - 1, self.COLUMNS_DICT['File name']['index'], self.center_widget_item(image.image_name)
             )
             self.imageListTable.setItem(
                 idx - 1,
-                2,
-                self.create_center_widget_item(IMAGE_PATH_DICT[str_image_idx]["type"]),
+                self.COLUMNS_DICT['Format']['index'],
+                self.center_widget_item(IMAGE_PATH_DICT[str_image_idx]["type"]),
             )
 
             duplicateIcon = QTableWidgetItem()
             duplicateIcon.setIcon(
                 QWidget().style().standardIcon(QStyle.SP_FileDialogContentsView)
             )
-            self.imageListTable.setItem(idx - 1, 3, duplicateIcon)
+            self.imageListTable.setItem(idx - 1, self.COLUMNS_DICT['Dup']['index'], duplicateIcon)
 
     # Get a folder full of multimedia files to work with
     def set_folder(self):
@@ -809,7 +809,6 @@ class DuplicateWindow(QWidget):
             [column_label for column_label in self.COLUMNS_DICT.keys()]
         )
         self.duplicateTable.setColumnCount(len(self.COLUMNS_DICT.keys()))
-
         self.duplicateTable.verticalHeader().setVisible(False)
         self.duplicateTable.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.duplicateTable.setSortingEnabled(True)
