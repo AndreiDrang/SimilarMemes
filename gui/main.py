@@ -1009,7 +1009,7 @@ class DuplicateWindow(QWidget):
         )
         # check if user click and try delete not src image
         if int(image_id) > 1 and column == self.COLUMNS_DICT["Delete"]["index"]:
-            self.delete_duplicate(image_id, row)
+            self.delete_duplicate(self.local_IMAGE_PATH_DICT[image_id]["id"], row)
 
         # if try open image source directory
         elif column == self.COLUMNS_DICT["Directory"]["index"]:
