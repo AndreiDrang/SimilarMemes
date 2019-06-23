@@ -83,9 +83,7 @@ class ProcessingThread(QThread):
             )
 
             duplicateIcon = QTableWidgetItem()
-            duplicateIcon.setIcon(
-                QWidget().style().standardIcon(QStyle.SP_FileDialogContentsView)
-            )
+            duplicateIcon.setIcon(QIcon("gui/static/icon_view_duplicates.png"))
             self.imageListTable.setItem(idx - 1, 3, duplicateIcon)
 
         # TODO add video to DB and processing logic
@@ -196,7 +194,7 @@ class Window(QWidget):
         # Adjusts settings for the window elements:
         self.folderField.setDisabled(True)
 
-        self.folderButton.setIcon(self.style().standardIcon(QStyle.SP_DialogOpenButton))
+        self.folderButton.setIcon(QIcon("gui/static/icon_process_folder.png"))
         self.folderButton.clicked.connect(self.set_folder)
 
         self.processButton.clicked.connect(self.process_files)
@@ -334,9 +332,7 @@ class Window(QWidget):
             )
 
             duplicateIcon = QTableWidgetItem()
-            duplicateIcon.setIcon(
-                QWidget().style().standardIcon(QStyle.SP_FileDialogContentsView)
-            )
+            duplicateIcon.setIcon(QIcon("gui/static/icon_view_duplicates.png"))
             self.imageListTable.setItem(
                 idx - 1, self.COLUMNS_DICT["Dup"]["index"], duplicateIcon
             )
@@ -836,27 +832,25 @@ class DuplicateWindow(QWidget):
     def open_image_icon(self) -> QTableWidgetItem:
         # create open-image icon
         openImageIcon = QTableWidgetItem()
-        openImageIcon.setIcon(
-            self.style().standardIcon(QStyle.SP_FileDialogContentsView)
-        )
+        openImageIcon.setIcon(QIcon("gui/static/icon_open_image.svg"))
         return openImageIcon
 
     def open_folder_icon(self) -> QTableWidgetItem:
         # create open-fodler icon
         openFolderIcon = QTableWidgetItem()
-        openFolderIcon.setIcon(self.style().standardIcon(QStyle.SP_DirIcon))
+        openFolderIcon.setIcon(QIcon("gui/static/icon_open_folder.svg"))
         return openFolderIcon
 
     def copy_path_icon(self) -> QTableWidgetItem:
         # create open-image icon
         openImageIcon = QTableWidgetItem()
-        openImageIcon.setIcon(self.style().standardIcon(QStyle.SP_DriveCDIcon))
+        openImageIcon.setIcon(QIcon("gui/static/icon_copy.png"))
         return openImageIcon
 
     def delete_image_icon(self) -> QTableWidgetItem:
         # create delete-icon in table
         deleteItemIcon = QTableWidgetItem()
-        deleteItemIcon.setIcon(self.style().standardIcon(QStyle.SP_TrashIcon))
+        deleteItemIcon.setIcon(QIcon("gui/static/icon_delete_file.png"))
         return deleteItemIcon
 
     def main_image_init(self):
