@@ -804,15 +804,21 @@ class DuplicateWindow(QWidget):
         self.setFixedSize(700, 500)
 
         self.mainImageField = QLabel()
-        self.mainImageDataField = QLabel()
+        self.mainImageNameField = QLabel()
+        self.mainImageParamsField = QLabel()
+
         self.duplicateImageField = QLabel()
-        self.duplicateImageDataField = QLabel()
+        self.duplicateImageNameField = QLabel()
+        self.duplicateImageParamsField = QLabel()
         # set images grid(left - main image, right - duplicate)
         self.imagesGrid = QGridLayout()
         self.imagesGrid.addWidget(self.mainImageField, 0, 0)
-        self.imagesGrid.addWidget(self.mainImageDataField, 1, 0)
+        self.imagesGrid.addWidget(self.mainImageNameField, 1, 0)
+        self.imagesGrid.addWidget(self.mainImageParamsField, 2, 0)
+
         self.imagesGrid.addWidget(self.duplicateImageField, 0, 1)
-        self.imagesGrid.addWidget(self.duplicateImageDataField, 1, 1)
+        self.imagesGrid.addWidget(self.duplicateImageNameField, 1, 1)
+        self.imagesGrid.addWidget(self.duplicateImageParamsField, 2, 1)
 
         self.subGridBox = QWidget()
         self.subGridBox.setLayout(self.imagesGrid)
@@ -871,7 +877,14 @@ class DuplicateWindow(QWidget):
         return deleteItemIcon
 
     def main_image_init(self):
-        self.mainImageDataField.setText(self.sourceImage["name"])
+        # write main image name
+        self.mainImageNameField.setText(self.sourceImage["name"])
+        # write main image params
+        self.mainImageParamsField.setText(
+            f"{self.sourceImage['additional_attrs']['height']}px"
+            + f" x {self.sourceImage['additional_attrs']['width']}px"
+        )
+
         self.mainImageField.setPixmap(
             QPixmap(self.sourceImage["full_path"]).scaled(
                 300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
@@ -977,11 +990,18 @@ class DuplicateWindow(QWidget):
     def table_click_event(self, row, column):
         image_id = self.duplicateTable.item(row, 0).text()
 
-        # show selected image
-        self.duplicateImageDataField.setText(
+        # show selected image info
+        self.duplicateImageNameField.setText(
             self.local_IMAGE_PATH_DICT[image_id]["name"]
         )
-        # show selected image in right collumn
+
+        # show selected image name
+        self.duplicateImageParamsField.setText(
+            f"{self.local_IMAGE_PATH_DICT[image_id]['additional_attrs']['height']}px"
+            + f" x {self.local_IMAGE_PATH_DICT[image_id]['additional_attrs']['width']}px"
+        )
+
+        # show selected image in right column
         self.duplicateImageField.setPixmap(
             QPixmap(self.local_IMAGE_PATH_DICT[image_id]["full_path"]).scaled(
                 300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
