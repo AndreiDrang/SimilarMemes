@@ -339,6 +339,9 @@ class Window(QWidget):
             images = Image.all()
 
         for idx, image in enumerate(images):
+            numRows = self.imageListTable.rowCount()
+            self.imageListTable.insertRow(numRows)
+
             str_image_idx = str(idx)
 
             IMAGE_PATH_DICT[str_image_idx] = {
@@ -352,20 +355,19 @@ class Window(QWidget):
                 "type": (image.image_name.split(".")[-1]).lower(),
                 "full_path": image.full_path(),
             }
-            self.imageListTable.setRowCount(idx)
 
             self.imageListTable.setItem(
-                idx - 1,
+                idx,
                 self.COLUMNS_DICT["ID"]["index"],
                 self.center_widget_item(str_image_idx),
             )
             self.imageListTable.setItem(
-                idx - 1,
+                idx,
                 self.COLUMNS_DICT["File name"]["index"],
                 self.center_widget_item(image.image_name),
             )
             self.imageListTable.setItem(
-                idx - 1,
+                idx,
                 self.COLUMNS_DICT["Format"]["index"],
                 self.center_widget_item(IMAGE_PATH_DICT[str_image_idx]["type"]),
             )
@@ -373,7 +375,8 @@ class Window(QWidget):
             duplicateIcon = QTableWidgetItem()
             duplicateIcon.setIcon(QIcon("gui/static/icon_view_duplicates.png"))
             self.imageListTable.setItem(
-                idx - 1, self.COLUMNS_DICT["Dup"]["index"], duplicateIcon
+                idx, self.COLUMNS_DICT["Dup"]["index"], duplicateIcon
+            )
 
     def open_image_file(self):
         open_path(path=IMAGE_PATH_DICT[self.active_image_id]["full_path"])
