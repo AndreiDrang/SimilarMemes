@@ -187,7 +187,11 @@ class Window(QWidget):
         self.videoListTable = QTableWidget()
         # set main videos list table fields unchanged
         self.videoListTable.setEditTriggers(QTableWidget.NoEditTriggers)
+
+        # set up image fields
         self.imageField = QLabel()
+        self.imageDataField = QLabel()
+
         self.videoField = QVideoWidget()
         self.videoPlayer = QMediaPlayer()
 
@@ -242,11 +246,18 @@ class Window(QWidget):
         subGrid.addWidget(self.reindexButton, 4, 0, 1, 2, Qt.AlignCenter)
         subGridBox.setLayout(subGrid)
 
+        # image data grid box
+        imageGridBox = QWidget()
+        imageGrid = QGridLayout()
+        imageGrid.addWidget(self.imageField, 0, 0, 1, 2, Qt.AlignCenter)
+        imageGrid.addWidget(self.imageDataField, 1, 0, 1, 2)
+        imageGridBox.setLayout(imageGrid)
+
         # Main grid box:
         self.mainGrid = QGridLayout()
         self.mainGrid.addWidget(subGridBox, 0, 0)
         self.mainGrid.addWidget(self.tableTabs, 1, 0)
-        self.mainGrid.addWidget(self.imageField, 0, 1, 2, 1, Qt.AlignCenter)
+        self.mainGrid.addWidget(imageGridBox, 1, 1)
         self.mainGrid.addWidget(self.videoField, 0, 1, 2, 1)
 
         self.mainGrid.setColumnMinimumWidth(0, 350)
@@ -448,6 +459,12 @@ class Window(QWidget):
             self.videoPlayer.stop()
             self.videoField.hide()
             self.imageField.show()
+
+            self.imageDataField.setText(
+                f"""Name: {IMAGE_PATH_DICT[imageId]["name"]}\
+                HxW: {IMAGE_PATH_DICT[imageId]['additional_attrs']['height']}px x {IMAGE_PATH_DICT[imageId]['additional_attrs']['width']}px
+	            """
+            )
 
             # Shows animated images:
             if imageItemPath.lower().endswith("gif"):
