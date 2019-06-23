@@ -24,7 +24,7 @@ from image_processing import image_processing, feature_description
 from database import Image, save_new_files, get_image_duplicates, save_images_duplicates
 
 from gui import json_settings
-from gui.scripts import copy_image
+from gui.scripts import copy_image, open_path
 
 # Dict containment -> ID:[FILE_NAME, EXTENSION, FILE_FULL_PATH]
 IMAGE_PATH_DICT = OrderedDict()
@@ -1014,23 +1014,11 @@ class DuplicateWindow(QWidget):
 
         # if try open image source directory
         elif column == self.COLUMNS_DICT["Directory"]["index"]:
-            if sys.platform == "win32":
-                os.startfile(self.local_IMAGE_PATH_DICT[image_id]["folder"])
-            else:
-                opener = "open" if sys.platform == "darwin" else "xdg-open"
-                subprocess.call(
-                    [opener, self.local_IMAGE_PATH_DICT[image_id]["folder"]]
-                )
+            open_path(path=self.local_IMAGE_PATH_DICT[image_id]["folder"])
 
         # if try open image file
         elif column == self.COLUMNS_DICT["View"]["index"]:
-            if sys.platform == "win32":
-                os.startfile(self.local_IMAGE_PATH_DICT[image_id]["full_path"])
-            else:
-                opener = "open" if sys.platform == "darwin" else "xdg-open"
-                subprocess.call(
-                    [opener, self.local_IMAGE_PATH_DICT[image_id]["full_path"]]
-                )
+            open_path(path=self.local_IMAGE_PATH_DICT[image_id]["full_path"])
 
         # if try copy image file
         elif column == self.COLUMNS_DICT["Copy"]["index"]:
