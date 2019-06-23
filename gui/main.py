@@ -6,6 +6,7 @@ import os
 import sys
 import subprocess
 import traceback
+from collections import OrderedDict
 
 
 from PIL import Image as Pil_Image
@@ -26,8 +27,8 @@ from gui import json_settings
 from gui.scripts import copy_image
 
 # Dict containment -> ID:[FILE_NAME, EXTENSION, FILE_FULL_PATH]
-IMAGE_PATH_DICT = {}
-VIDEO_PATH_DICT = {}
+IMAGE_PATH_DICT = OrderedDict()
+VIDEO_PATH_DICT = OrderedDict()
 
 
 class ProcessingThread(QThread):
