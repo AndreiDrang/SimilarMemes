@@ -192,9 +192,27 @@ class Window(QWidget):
         # set main videos list table fields unchanged
         self.videoListTable.setEditTriggers(QTableWidget.NoEditTriggers)
 
-        # set up image fields
+        # set up image fields and elements
         self.imageField = QLabel()
-        self.imageDataField = QLabel()
+        self.imageNameField = QLabel()
+        self.imageParamsField = QLabel()
+
+        self.imageCopyButton = QPushButton('Copy image')
+        self.imageCopyButton.setIcon(QIcon('gui/static/icon_copy.png'))
+        self.imageCopyButton.clicked.connect(self.copy_image_path)
+        self.imageCopyButton.hide()
+        self.imageViewButton = QPushButton('View image')
+        self.imageViewButton.setIcon(QIcon('gui/static/icon_open_image.svg'))
+        self.imageViewButton.clicked.connect(self.open_image_file)
+        self.imageViewButton.hide()
+        self.imageOpenDirButton = QPushButton('Open dir')
+        self.imageOpenDirButton.setIcon(QIcon('gui/static/icon_open_folder.svg'))
+        self.imageOpenDirButton.clicked.connect(self.open_image_path)
+        self.imageOpenDirButton.hide()
+        self.imageDeleteButton = QPushButton('Delete')
+        self.imageDeleteButton.setIcon(QIcon('gui/static/icon_delete_file.png'))
+        self.imageDeleteButton.clicked.connect(self.delete_image)
+        self.imageDeleteButton.hide()
 
         self.videoField = QVideoWidget()
         self.videoPlayer = QMediaPlayer()
@@ -253,8 +271,15 @@ class Window(QWidget):
         # image data grid box
         imageGridBox = QWidget()
         imageGrid = QGridLayout()
-        imageGrid.addWidget(self.imageField, 0, 0, 1, 2, Qt.AlignCenter)
-        imageGrid.addWidget(self.imageDataField, 1, 0, 1, 2)
+        imageGrid.addWidget(self.imageField, 0, 0, 1, 4, Qt.AlignCenter)
+        # add image buttons
+        imageGrid.addWidget(self.imageCopyButton, 1, 0, 1, 1)
+        imageGrid.addWidget(self.imageViewButton, 1, 1, 1, 1)
+        imageGrid.addWidget(self.imageOpenDirButton, 1, 2, 1, 1)
+        imageGrid.addWidget(self.imageDeleteButton, 1, 3, 1, 1)
+
+        imageGrid.addWidget(self.imageNameField, 2, 0, 1, 1)
+        imageGrid.addWidget(self.imageParamsField, 2, 3, 1, 1)
         imageGridBox.setLayout(imageGrid)
 
         # Main grid box:
@@ -263,9 +288,8 @@ class Window(QWidget):
         self.mainGrid.addWidget(self.tableTabs, 1, 0)
         self.mainGrid.addWidget(imageGridBox, 1, 1)
         self.mainGrid.addWidget(self.videoField, 0, 1, 2, 1)
-
-        self.mainGrid.setColumnMinimumWidth(0, 350)
-        self.mainGrid.setRowMinimumHeight(1, 500)
+        self.mainGrid.setColumnMinimumWidth(0, 400)
+        self.mainGrid.setRowMinimumHeight(1, 600)
         self.mainGrid.setColumnStretch(1, 1)
 
         self.setLayout(self.mainGrid)
@@ -350,6 +374,71 @@ class Window(QWidget):
             duplicateIcon.setIcon(QIcon("gui/static/icon_view_duplicates.png"))
             self.imageListTable.setItem(
                 idx - 1, self.COLUMNS_DICT["Dup"]["index"], duplicateIcon
+
+    def open_image_file(self):
+        open_path(path=IMAGE_PATH_DICT[self.active_image_id]["full_path"])
+
+    def open_image_path(self):
+        open_path(path=IMAGE_PATH_DICT[self.active_image_id]["folder"])
+
+    def delete_image(self):
+        # count image table position
+        image_table_position = list(IMAGE_PATH_DICT.keys()).index(self.active_image_id)
+
+        message = QMessageBox().question(
+            self,
+            "Confirm deletion",
+            "Delete duplicate media file?",
+            QMessageBox.Yes | QMessageBox.No,
+        )
+        if message == QMessageBox.Yes:
+            self.imageListTable.removeRow(image_table_position)
+            image_id = IMAGE_PATH_DICT[self.active_image_id]["id"]
+            # run custom delete
+            with db_session():
+                Image[image_id].custom_delete()
+
+            # delete image key from dict
+            del IMAGE_PATH_DICT[self.active_image_id]
+
+            QMessageBox().information(
+                self,
+                "File deletion",
+                "File success deleted",
+                QMessageBox.Ok,
+                QMessageBox.Ok,
+            )
+        elif message == QMessageBox.No:
+            pass
+
+    def copy_image_path(self):
+        try:
+            result = copy_image(IMAGE_PATH_DICT[self.active_image_id]["full_path"])
+            if result:
+                QMessageBox.information(
+                    self,
+                    "Copy path",
+                    "Success!\nFile path copied to clipboard!",
+                    QMessageBox.Ok,
+                    QMessageBox.Ok,
+                )
+            else:
+                QMessageBox.warning(
+                    self,
+                    "Copy path",
+                    "Error!\nSorry, i can`t copy image to clipboard.",
+                    QMessageBox.Ok,
+                    QMessageBox.Ok,
+                )
+
+        except Exception:
+            print(traceback.format_exc())
+            QMessageBox.warning(
+                self,
+                "Copy path",
+                f"Error!\n{traceback.format_exc()}",
+                QMessageBox.Ok,
+                QMessageBox.Ok,
             )
 
     # Get a folder full of multimedia files to work with
@@ -457,34 +546,42 @@ class Window(QWidget):
         # set new active image id
         self.active_image_id = imageId
 
-            # Removes a video from screen if shown:
-            self.videoPlayer.stop()
-            self.videoField.hide()
-            self.imageField.show()
+        # Removes a video from screen if shown:
+        self.videoPlayer.stop()
+        self.videoField.hide()
+        self.imageField.show()
+        # show image buttons
+        self.imageCopyButton.show()
+        self.imageViewButton.show()
+        self.imageOpenDirButton.show()
+        self.imageDeleteButton.show()
 
-            self.imageDataField.setText(
-                f"""Name: {IMAGE_PATH_DICT[imageId]["name"]}\
-                HxW: {IMAGE_PATH_DICT[imageId]['additional_attrs']['height']}px x {IMAGE_PATH_DICT[imageId]['additional_attrs']['width']}px
-	            """
+        # show image and additional data
+        self.imageNameField.setText(f"{IMAGE_PATH_DICT[imageId]['name']}")
+        self.imageParamsField.setText(
+            f"HxW: {IMAGE_PATH_DICT[imageId]['additional_attrs']['height']}px"
+            + f" x {IMAGE_PATH_DICT[imageId]['additional_attrs']['width']}px"
+        )
+
+        # Shows animated images
+        if IMAGE_PATH_DICT[imageId]["name"].lower().endswith("gif"):
+            gif = QMovie(IMAGE_PATH_DICT[imageId]["full_path"])
+            gifSize = QSize(
+                *self.smooth_gif_resize(IMAGE_PATH_DICT[imageId]["full_path"], 600, 600)
+            )
+            gif.setScaledSize(gifSize)
+            self.imageField.setMovie(gif)
+            gif.start()
+
+        # Shows static images
+        else:
+            self.imageField.setPixmap(
+                QPixmap(IMAGE_PATH_DICT[imageId]["full_path"]).scaled(
+                    600, 600, Qt.KeepAspectRatio, Qt.SmoothTransformation
+                )
             )
 
-            # Shows animated images:
-            if imageItemPath.lower().endswith("gif"):
-                gif = QMovie(imageItemPath)
-                gifSize = QSize(*self.smooth_gif_resize(imageItemPath, 600, 600))
-                gif.setScaledSize(gifSize)
-                self.imageField.setMovie(gif)
-                gif.start()
-
-            # Shows static images:
-            else:
-                self.imageField.setPixmap(
-                    QPixmap(imageItemPath).scaled(
-                        600, 600, Qt.KeepAspectRatio, Qt.SmoothTransformation
-                    )
-                )
-
-        if column == 3:
+        if column == self.COLUMNS_DICT["Dup"]["index"]:
             self.duplicateWindow = DuplicateWindow(
                 image_data=IMAGE_PATH_DICT[imageId], raw_id=imageId
             )
@@ -511,17 +608,6 @@ class Window(QWidget):
             self.imageField.hide()
             self.videoField.show()
             self.videoPlayer.play()
-
-    # Remove a row of a duplicate image after it was deleted in DuplicateWindow
-    def delete_image_row(self, itemId):
-        self.imageField.setText(
-            ""
-        )  # Rewrite imageField to prevent PermissionError if file was opened
-        rows = self.imageListTable.rowCount()
-        for row in range(rows):
-            if self.imageListTable.item(row, 0).text() == itemId:
-                self.imageListTable.removeRow(row)
-                break  # Stop loop after row deletion to prevent AttributeError
 
     # Remove a previously added reference from a dict if a DuplicateWindow was closed
     # so it can be opened again
