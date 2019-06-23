@@ -166,6 +166,9 @@ class Window(QWidget):
     def __init__(self, statusBar):
         super().__init__()
 
+        # store active image ID
+        self.active_image_id = str()
+
         # Saves multiple duplicate windows references:
         self.duplicateRefs = {}
 
@@ -449,12 +452,10 @@ class Window(QWidget):
 
     # Show an image upon clicking its name in the table
     def show_image(self, row, column):
-        imageItem = self.imageListTable.item(row, column)
         imageId = self.imageListTable.item(row, 0).text()
 
-        # Prevents from KeyError when clicking the second column:
-        if imageItem.text() == IMAGE_PATH_DICT[imageId]["name"]:
-            imageItemPath = IMAGE_PATH_DICT[imageId]["full_path"]
+        # set new active image id
+        self.active_image_id = imageId
 
             # Removes a video from screen if shown:
             self.videoPlayer.stop()
