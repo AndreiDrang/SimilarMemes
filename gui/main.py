@@ -421,7 +421,7 @@ class Window(QWidget):
                 QMessageBox.information(
                     self,
                     "Copy path",
-                    "Success!\nFile path copied to clipboard!",
+                    "Success!\nFile copied to clipboard!",
                     QMessageBox.Ok,
                     QMessageBox.Ok,
                 )
@@ -1118,7 +1118,7 @@ class DuplicateWindow(QWidget):
                     QMessageBox.information(
                         self,
                         "Copy path",
-                        "Success!\nFile path copied to clipboard!",
+                        "Success!\nFile copied to clipboard!",
                         QMessageBox.Ok,
                         QMessageBox.Ok,
                     )
