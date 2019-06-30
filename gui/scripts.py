@@ -36,6 +36,4 @@ def open_path(path: str):
         os.startfile(path)
     else:
         opener = "open" if sys.platform == "darwin" else "xdg-open"
-        subprocess.call(
-            [opener, path]
-        )
+        subprocess.call([opener, path])
