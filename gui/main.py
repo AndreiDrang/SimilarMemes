@@ -200,19 +200,15 @@ class Window(QWidget):
         self.imageCopyButton = QPushButton("Copy image")
         self.imageCopyButton.setIcon(QIcon("gui/static/icon_copy.png"))
         self.imageCopyButton.clicked.connect(self.copy_image_path)
-        self.imageCopyButton.hide()
         self.imageViewButton = QPushButton("View image")
         self.imageViewButton.setIcon(QIcon("gui/static/icon_open_image.svg"))
         self.imageViewButton.clicked.connect(self.open_image_file)
-        self.imageViewButton.hide()
         self.imageOpenDirButton = QPushButton("Open dir")
         self.imageOpenDirButton.setIcon(QIcon("gui/static/icon_open_folder.svg"))
         self.imageOpenDirButton.clicked.connect(self.open_image_path)
-        self.imageOpenDirButton.hide()
         self.imageDeleteButton = QPushButton("Delete")
         self.imageDeleteButton.setIcon(QIcon("gui/static/icon_delete_file.png"))
         self.imageDeleteButton.clicked.connect(self.delete_image)
-        self.imageDeleteButton.hide()
 
         self.videoField = QVideoWidget()
         self.videoPlayer = QMediaPlayer()
@@ -306,6 +302,8 @@ class Window(QWidget):
 
         # filling table while first run
         self.reindex_db_data()
+        # hide image interface
+        self.hide_active_image()
 
     def set_columns_width(self):
         # looping all columns and set with
@@ -378,6 +376,24 @@ class Window(QWidget):
                 idx, self.COLUMNS_DICT["Dup"]["index"], duplicateIcon
             )
 
+    def hide_active_image(self):
+        self.imageField.hide()
+        self.imageCopyButton.hide()
+        self.imageViewButton.hide()
+        self.imageOpenDirButton.hide()
+        self.imageDeleteButton.hide()
+        self.imageNameField.hide()
+        self.imageParamsField.hide()
+
+    def show_active_image(self):
+        self.imageField.show()
+        self.imageCopyButton.show()
+        self.imageViewButton.show()
+        self.imageOpenDirButton.show()
+        self.imageDeleteButton.show()
+        self.imageNameField.show()
+        self.imageParamsField.show()
+
     def open_image_file(self):
         open_path(path=IMAGE_PATH_DICT[self.active_image_id]["full_path"])
 
@@ -404,6 +420,7 @@ class Window(QWidget):
             # delete image key from dict
             del IMAGE_PATH_DICT[self.active_image_id]
 
+            self.hide_active_image()
             QMessageBox().information(
                 self,
                 "File deletion",
@@ -552,12 +569,8 @@ class Window(QWidget):
         # Removes a video from screen if shown:
         self.videoPlayer.stop()
         self.videoField.hide()
-        self.imageField.show()
-        # show image buttons
-        self.imageCopyButton.show()
-        self.imageViewButton.show()
-        self.imageOpenDirButton.show()
-        self.imageDeleteButton.show()
+        # show active image
+        self.show_active_image()
 
         # show image and additional data
         self.imageNameField.setText(f"{IMAGE_PATH_DICT[imageId]['name']}")
