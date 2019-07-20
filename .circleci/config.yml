@@ -9,6 +9,7 @@ jobs:
       - run:
           name: Install requirements
           command: pip install -r requirements.txt
+          
   build_lints:
     docker:
       - image: python:3.6
@@ -29,5 +30,5 @@ workflows:
   version: 2.1
   build_and_test:
     jobs:
-      - build_req_install
+      - build_install
       - build_lints
