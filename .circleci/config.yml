@@ -1,19 +1,33 @@
 version: 2.1
 
 jobs:
-  build_req_install:
-    docker: # use the docker executor type; machine and macos executors are also supported
-      - image: python:3.6 # the primary container, where your job's commands are run
+  build_install:
+    docker:
+      - image: python:3.6
     steps:
-      - checkout # check out the code in the project directory
-      - run:
-          name: Just echo comnmand
-          command: echo "hello world" # run the `echo` command
+      - checkout
       - run:
           name: Install requirements
           command: pip install -r requirements.txt
+  build_lints:
+    docker:
+      - image: python:3.6
+    steps:
+      - checkout
+      - run:
+          name: Black check
+          command: |
+            pip install black
+            black --check database/ image_processing/ gui/ indexing/ video_processing/ run.py
+      - run:
+          name: Install requirements
+          command: |
+            pip install flake8
+            flake8 database/ image_processing/ indexing/ gui/ run.py
+
 workflows:
   version: 2.1
-  build_and_test: # name of your workflow
+  build_and_test:
     jobs:
       - build_req_install
+      - build_lints
