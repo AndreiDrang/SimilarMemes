@@ -1,7 +1,7 @@
 version: 2.1
 
 jobs:
-  req_install:
+  build_req_install:
     docker: # use the docker executor type; machine and macos executors are also supported
       - image: python:3.6 # the primary container, where your job's commands are run
     steps:
