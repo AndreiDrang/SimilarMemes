@@ -13,6 +13,7 @@ jobs:
   build_lints:
     docker:
       - image: python:3.6
+    parallelism: 2
     steps:
       - checkout
       - run:
