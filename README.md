@@ -1,6 +1,7 @@
 # SimilarMemes
 
 [![Build Status](https://semaphoreci.com/api/v1/andreidrang/similarmemes/branches/master/shields_badge.svg)](https://semaphoreci.com/andreidrang/similarmemes)
+[![CircleCI](https://circleci.com/gh/AndreiDrang/SimilarMemes/tree/master.svg?style=svg)](https://circleci.com/gh/AndreiDrang/SimilarMemes/tree/master)
 ![Callback_Server_Status Run](https://img.shields.io/badge/Version-0.1-blue.svg)
 
 
