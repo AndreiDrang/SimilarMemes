@@ -1,10 +1,4 @@
-# TODO:
-# Thread processing duplicates
-# Menu settings
-
 import os
-import sys
-import subprocess
 import traceback
 from collections import OrderedDict
 
@@ -13,11 +7,27 @@ from PIL import Image as Pil_Image
 from pony.orm import db_session
 from pony.orm import flush as db_flush
 
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-from PyQt5.QtMultimedia import *
-from PyQt5.QtMultimediaWidgets import *
+from PyQt5.QtWidgets import (
+    QTableWidgetItem,
+    QWidget,
+    QMainWindow,
+    QStatusBar,
+    QMenuBar,
+    QLineEdit,
+    QPushButton,
+    QCheckBox,
+    QTabWidget,
+    QTableWidget,
+    QLabel,
+    QGridLayout,
+    QMessageBox,
+    QComboBox,
+    QFileDialog,
+)
+from PyQt5.QtGui import QIcon, QPixmap, QSpinBox, QMovie
+from PyQt5.QtCore import QThread, pyqtSignal, Qt, QUrl, QSize
+from PyQt5.QtMultimedia import QMediaContent
+from PyQt5.QtMultimediaWidgets import QVideoWidget, QMediaPlayer
 
 from indexing import index_folder_files, reindex_image_files, reindex_video_files
 from image_processing import image_processing, feature_description
