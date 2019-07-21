@@ -898,7 +898,7 @@ class DuplicateWindow(QWidget):
     COLUMNS_DICT = {
         # "Column label": {'index': column_ID, 'width': column_width}
         "ID": {"index": 0, "width": 50},
-        "File name": {"index": 1, "width": 350},
+        "File name": {"index": 1, "width": 300},
         "Similarity": {"index": 2, "width": 70},
         "Directory": {"index": 3, "width": 75},
         "View": {"index": 4, "width": 50},
@@ -1015,7 +1015,7 @@ class DuplicateWindow(QWidget):
             "folder": self.sourceImage["folder"],
             "full_path": self.sourceImage["full_path"],
         }
-        self.duplicateTable.setRowCount(1)
+        self.duplicateTable.setRowCount(10)
 
         str_image_idx = str(1)
 
@@ -1048,7 +1048,7 @@ class DuplicateWindow(QWidget):
 
             if result:
                 for idx, duplicate_data in enumerate(result, 2):
-                    self.duplicateTable.setRowCount(idx)
+                    self.duplicateTable.insertRow(idx)
                     # parse duplicate data
                     image, similarity_param = duplicate_data[0], str(duplicate_data[1])
 
@@ -1066,38 +1066,34 @@ class DuplicateWindow(QWidget):
                     }
 
                     self.duplicateTable.setItem(
-                        idx - 1,
+                        idx,
                         self.COLUMNS_DICT["ID"]["index"],
                         QTableWidgetItem(str_image_idx),
                     )
                     self.duplicateTable.setItem(
-                        idx - 1,
+                        idx,
                         self.COLUMNS_DICT["File name"]["index"],
                         QTableWidgetItem(image.image_name),
                     )
                     self.duplicateTable.setItem(
-                        idx - 1,
+                        idx,
                         self.COLUMNS_DICT["Similarity"]["index"],
                         QTableWidgetItem(similarity_param),
                     )
 
                     self.duplicateTable.setItem(
-                        idx - 1,
+                        idx,
                         self.COLUMNS_DICT["Directory"]["index"],
                         self.open_folder_icon(),
                     )
                     self.duplicateTable.setItem(
-                        idx - 1,
-                        self.COLUMNS_DICT["View"]["index"],
-                        self.open_image_icon(),
+                        idx, self.COLUMNS_DICT["View"]["index"], self.open_image_icon()
                     )
                     self.duplicateTable.setItem(
-                        idx - 1,
-                        self.COLUMNS_DICT["Copy"]["index"],
-                        self.copy_path_icon(),
+                        idx, self.COLUMNS_DICT["Copy"]["index"], self.copy_path_icon()
                     )
                     self.duplicateTable.setItem(
-                        idx - 1,
+                        idx,
                         self.COLUMNS_DICT["Delete"]["index"],
                         self.delete_image_icon(),
                     )
