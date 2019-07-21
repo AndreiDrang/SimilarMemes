@@ -1,7 +1,10 @@
 import sys
 import traceback
 
-from gui import QApplication, MainWindow
+
+from PyQt5.QtWidgets import QApplication
+
+from gui import MainWindow
 from logger import BackInfoLogger, BackErrorsLogger
 
 import database

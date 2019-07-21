@@ -23,11 +23,12 @@ from PyQt5.QtWidgets import (
     QMessageBox,
     QComboBox,
     QFileDialog,
+    QSpinBox,
 )
-from PyQt5.QtGui import QIcon, QPixmap, QSpinBox, QMovie
+from PyQt5.QtGui import QIcon, QPixmap, QMovie
 from PyQt5.QtCore import QThread, pyqtSignal, Qt, QUrl, QSize
-from PyQt5.QtMultimedia import QMediaContent
-from PyQt5.QtMultimediaWidgets import QVideoWidget, QMediaPlayer
+from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
+from PyQt5.QtMultimediaWidgets import QVideoWidget
 
 from indexing import index_folder_files, reindex_image_files, reindex_video_files
 from image_processing import image_processing, feature_description
