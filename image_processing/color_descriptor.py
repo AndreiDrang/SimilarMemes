@@ -50,9 +50,7 @@ class ColorDescriptor:
     def histogram(self, image, mask):
         # extract a 3D color histogram from the masked region of the
         # image, using the supplied number of bins per channel
-        hist = cv2.calcHist(
-            [image], [0, 1, 2], mask, self.bins, [0, 180, 0, 256, 0, 256]
-        )
+        hist = cv2.calcHist([image], [0, 1, 2], mask, self.bins, [0, 180, 0, 256, 0, 256])
 
         hist = cv2.normalize(hist, hist).flatten()
 

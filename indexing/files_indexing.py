@@ -109,9 +109,7 @@ def reindex_image_files():
                 # filter files
                 # if files not exist in FS but exist in DB - they deleted by user
                 # and we need clean DB
-                deletable_files = (
-                    image[1] for image in files if image[0] not in path_files
-                )
+                deletable_files = (image[1] for image in files if image[0] not in path_files)
                 # looping in cycle and delete already deleted files(in FS) from DB
                 for deleted_file in deletable_files:
                     # delete file selected by ID
@@ -144,9 +142,7 @@ def reindex_video_files():
                 # filter files
                 # if files not exist in FS but exist in DB - they deleted by user
                 # and we need clean DB
-                deletable_files = (
-                    video[1] for video in files if video[0] not in path_files
-                )
+                deletable_files = (video[1] for video in files if video[0] not in path_files)
                 # looping in cycle and delete already deleted files(in FS) from DB
                 for deleted_file in deletable_files:
                     # delete file selected by ID

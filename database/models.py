@@ -83,10 +83,7 @@ class Image(db.Entity):
             )[:]
         )
         # restore descriptor from bytes
-        result = [
-            (np.frombuffer(descriptor, dtype=np.float32), id_)
-            for descriptor, id_ in result
-        ]
+        result = [(np.frombuffer(descriptor, dtype=np.float32), id_) for descriptor, id_ in result]
         # reshape descriptor
         result = [(descriptor.reshape(5, 288), id_) for descriptor, id_ in result]
 
@@ -197,9 +194,7 @@ def connection():
         BackInfoLogger.info("DB params success read")
 
         if configs_data["provider"] == "sqlite":
-            db.bind(
-                provider="sqlite", filename=configs_data["filename"], create_db=True
-            )
+            db.bind(provider="sqlite", filename=configs_data["filename"], create_db=True)
         elif configs_data["provider"] == "postgres":
             # bind to DB with provider and settings
             db.bind(

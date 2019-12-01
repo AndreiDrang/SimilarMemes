@@ -30,8 +30,7 @@ def save_new_files(indexed_files: list, file_type: str):
                 # if current video+path not exist
                 if not Video.get(video_path=video_data["namepath"][1]):
                     Video(
-                        video_name=video_data["namepath"][0],
-                        video_path=video_data["namepath"][1],
+                        video_name=video_data["namepath"][0], video_path=video_data["namepath"][1]
                     )
         else:
             raise ValueError("Wrong `file_type` param set")
@@ -63,18 +62,14 @@ def save_images_duplicates(pairs: list):
             # if current pair not exist
             if not image_duplicates:
                 ImageDuplicates(
-                    image_src_id=pair[0],
-                    image_dup=Image[pair[1]],
-                    images_similarity=pair[2],
+                    image_src_id=pair[0], image_dup=Image[pair[1]], images_similarity=pair[2]
                 )
         except Exception:
             BackErrorsLogger.error(traceback.format_exc())
             continue
 
 
-def get_image_duplicates(
-    image_id: int, similarity_threshold: float
-) -> [(Image, float)]:
+def get_image_duplicates(image_id: int, similarity_threshold: float) -> [(Image, float)]:
     """
     Return list of Image-objects - duplicates of certain image
 
@@ -126,9 +121,7 @@ def group_image_files() -> dict:
         all_images_paths = Image.group_images_paths()
         for path in all_images_paths:
             path_files = select(
-                (image.image_name, image.id)
-                for image in Image
-                if image.image_path == path
+                (image.image_name, image.id) for image in Image if image.image_path == path
             )[:]
             result.update({path: path_files})
     except Exception:
@@ -158,9 +151,7 @@ def group_video_files() -> dict:
         all_video_paths = Video.group_video_paths()
         for path in all_video_paths:
             path_files = select(
-                (video.video_name, video.id)
-                for video in Video
-                if video.video_path == path
+                (video.video_name, video.id) for video in Video if video.video_path == path
             )[:]
             result.update({path: path_files})
     except Exception:

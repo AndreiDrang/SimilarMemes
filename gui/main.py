@@ -79,10 +79,7 @@ class ProcessingThread(QThread):
             IMAGE_PATH_DICT[str_image_idx] = {
                 "id": image.id,
                 "name": image.image_name,
-                "additional_attrs": {
-                    "height": image.image_height,
-                    "width": image.image_width,
-                },
+                "additional_attrs": {"height": image.image_height, "width": image.image_width},
                 "folder": image.image_path,
                 "type": (image.image_name.split(".")[-1]).lower(),
                 "full_path": image.full_path(),
@@ -303,10 +300,7 @@ class Window(QWidget):
 
         # Creates a QThread instance:
         self.thread = ProcessingThread(
-            self.folderField,
-            self.imageListTable,
-            self.videoListTable,
-            self.folderTreeCheckbox,
+            self.folderField, self.imageListTable, self.videoListTable, self.folderTreeCheckbox
         )
 
         self.thread.finishedTrigger.connect(self.finish_thread)
@@ -356,19 +350,14 @@ class Window(QWidget):
             IMAGE_PATH_DICT[str_image_idx] = {
                 "id": image.id,
                 "name": image.image_name,
-                "additional_attrs": {
-                    "height": image.image_height,
-                    "width": image.image_width,
-                },
+                "additional_attrs": {"height": image.image_height, "width": image.image_width},
                 "folder": image.image_path,
                 "type": (image.image_name.split(".")[-1]).lower(),
                 "full_path": image.full_path(),
             }
 
             self.imageListTable.setItem(
-                idx,
-                self.COLUMNS_DICT["ID"]["index"],
-                self.center_widget_item(str_image_idx),
+                idx, self.COLUMNS_DICT["ID"]["index"], self.center_widget_item(str_image_idx)
             )
             self.imageListTable.setItem(
                 idx,
@@ -383,9 +372,7 @@ class Window(QWidget):
 
             duplicateIcon = QTableWidgetItem()
             duplicateIcon.setIcon(QIcon("gui/static/icon_view_duplicates.png"))
-            self.imageListTable.setItem(
-                idx, self.COLUMNS_DICT["Dup"]["index"], duplicateIcon
-            )
+            self.imageListTable.setItem(idx, self.COLUMNS_DICT["Dup"]["index"], duplicateIcon)
 
     def hide_active_image(self):
         self.imageField.hide()
@@ -433,11 +420,7 @@ class Window(QWidget):
 
             self.hide_active_image()
             QMessageBox().information(
-                self,
-                "File deletion",
-                "File success deleted",
-                QMessageBox.Ok,
-                QMessageBox.Ok,
+                self, "File deletion", "File success deleted", QMessageBox.Ok, QMessageBox.Ok
             )
         elif message == QMessageBox.No:
             pass
@@ -756,9 +739,7 @@ class DatabaseSettings(QWidget):
 
     # Updates the json settings with the new folder depth value:
     def ok_event(self):
-        json_settings.db_json_update(
-            "provider", self.providersBox.currentText().lower()
-        )
+        json_settings.db_json_update("provider", self.providersBox.currentText().lower())
         if self.providersBox.currentText() == "SQLite":
             json_settings.db_json_update("filename", self.databaseFilenameField.text())
         else:
@@ -835,9 +816,7 @@ class DatabaseSettings(QWidget):
             self.databaseNameField.setDisabled(False)
             # fill data from config
             self.databaseUserField.setText(str(json_settings.db_json_read("user")))
-            self.databasePasswordField.setText(
-                str(json_settings.db_json_read("password"))
-            )
+            self.databasePasswordField.setText(str(json_settings.db_json_read("password")))
             self.databaseHostField.setText(str(json_settings.db_json_read("host")))
             self.databasePortField.setText(str(json_settings.db_json_read("port")))
             self.databaseNameField.setText(str(json_settings.db_json_read("database")))
@@ -1023,9 +1002,7 @@ class DuplicateWindow(QWidget):
             0, self.COLUMNS_DICT["ID"]["index"], QTableWidgetItem(str_image_idx)
         )
         self.duplicateTable.setItem(
-            0,
-            self.COLUMNS_DICT["File name"]["index"],
-            QTableWidgetItem(self.sourceImage["name"]),
+            0, self.COLUMNS_DICT["File name"]["index"], QTableWidgetItem(self.sourceImage["name"])
         )
         self.duplicateTable.setItem(
             0, self.COLUMNS_DICT["Similarity"]["index"], QTableWidgetItem("src")
@@ -1033,12 +1010,8 @@ class DuplicateWindow(QWidget):
         self.duplicateTable.setItem(
             0, self.COLUMNS_DICT["Directory"]["index"], self.open_folder_icon()
         )
-        self.duplicateTable.setItem(
-            0, self.COLUMNS_DICT["View"]["index"], self.open_image_icon()
-        )
-        self.duplicateTable.setItem(
-            0, self.COLUMNS_DICT["Copy"]["index"], self.copy_path_icon()
-        )
+        self.duplicateTable.setItem(0, self.COLUMNS_DICT["View"]["index"], self.open_image_icon())
+        self.duplicateTable.setItem(0, self.COLUMNS_DICT["Copy"]["index"], self.copy_path_icon())
 
     def table_data_init(self):
         with db_session():
@@ -1066,9 +1039,7 @@ class DuplicateWindow(QWidget):
                     }
 
                     self.duplicateTable.setItem(
-                        idx - 1,
-                        self.COLUMNS_DICT["ID"]["index"],
-                        QTableWidgetItem(str_image_idx),
+                        idx - 1, self.COLUMNS_DICT["ID"]["index"], QTableWidgetItem(str_image_idx)
                     )
                     self.duplicateTable.setItem(
                         idx - 1,
@@ -1082,33 +1053,23 @@ class DuplicateWindow(QWidget):
                     )
 
                     self.duplicateTable.setItem(
-                        idx - 1,
-                        self.COLUMNS_DICT["Directory"]["index"],
-                        self.open_folder_icon(),
+                        idx - 1, self.COLUMNS_DICT["Directory"]["index"], self.open_folder_icon()
                     )
                     self.duplicateTable.setItem(
-                        idx - 1,
-                        self.COLUMNS_DICT["View"]["index"],
-                        self.open_image_icon(),
+                        idx - 1, self.COLUMNS_DICT["View"]["index"], self.open_image_icon()
                     )
                     self.duplicateTable.setItem(
-                        idx - 1,
-                        self.COLUMNS_DICT["Copy"]["index"],
-                        self.copy_path_icon(),
+                        idx - 1, self.COLUMNS_DICT["Copy"]["index"], self.copy_path_icon()
                     )
                     self.duplicateTable.setItem(
-                        idx - 1,
-                        self.COLUMNS_DICT["Delete"]["index"],
-                        self.delete_image_icon(),
+                        idx - 1, self.COLUMNS_DICT["Delete"]["index"], self.delete_image_icon()
                     )
 
     def table_click_event(self, row, column):
         image_id = self.duplicateTable.item(row, 0).text()
 
         # show selected image info
-        self.duplicateImageNameField.setText(
-            self.local_IMAGE_PATH_DICT[image_id]["name"]
-        )
+        self.duplicateImageNameField.setText(self.local_IMAGE_PATH_DICT[image_id]["name"])
 
         # show selected image name
         self.duplicateImageParamsField.setText(
@@ -1180,11 +1141,7 @@ class DuplicateWindow(QWidget):
                 Image[int(image_id)].custom_delete()
 
             QMessageBox().information(
-                self,
-                "File deletion",
-                "File success deleted",
-                QMessageBox.Ok,
-                QMessageBox.Ok,
+                self, "File deletion", "File success deleted", QMessageBox.Ok, QMessageBox.Ok
             )
         elif message == QMessageBox.No:
             pass
