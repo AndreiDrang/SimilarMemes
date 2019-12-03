@@ -1,14 +1,16 @@
 import os
 import re
+import logging
 import collections
 import traceback
 
 from pony.orm import db_session
 
 from indexing import IMAGE_FORMATS, VIDEO_FORMATS, FILE_EXTENSION_RE
-
 from database import group_image_files, group_video_files, Image, Video, delete
-from logger import BackErrorsLogger
+
+
+logger = logging.getLogger(__name__)
 
 
 def is_image(file_name: str) -> bool:
@@ -85,7 +87,7 @@ def index_folder_files(
             else:
                 break
     except Exception:
-        BackErrorsLogger.error(traceback.format_exc())
+        logger.error(traceback.format_exc())
 
     return image_files_list, video_files_list
 
@@ -119,7 +121,7 @@ def reindex_image_files():
                 # delete path if not exist
                 delete(image for image in Image if image.image_path == path)
         except Exception:
-            BackErrorsLogger.error(traceback.format_exc())
+            logger.error(traceback.format_exc())
             continue
 
 
@@ -152,5 +154,5 @@ def reindex_video_files():
                 # delete path if not exist
                 delete(video for video in Video if video.video_path == path)
         except Exception:
-            BackErrorsLogger.error(traceback.format_exc())
+            logger.error(traceback.format_exc())
             continue

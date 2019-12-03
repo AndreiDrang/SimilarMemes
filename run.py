@@ -1,14 +1,17 @@
 import sys
+import logging
 import traceback
-
 
 from PyQt5.QtWidgets import QApplication
 
-from gui import MainWindow
-from logger import BackInfoLogger, BackErrorsLogger
+from logger import prepare_logging
+prepare_logging()
 
+from gui import MainWindow
 import database
 
+
+logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
     try:
@@ -20,9 +23,9 @@ if __name__ == "__main__":
         screen = MainWindow()
         screen.show()
 
-        BackInfoLogger.info("App success starting")
+        logger.info("App success starting")
 
         sys.exit(app.exec_())
 
     except Exception:
-        BackErrorsLogger.critical(traceback.format_exc())
+        logger.critical(traceback.format_exc())

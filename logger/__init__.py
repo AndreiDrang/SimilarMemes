@@ -1,1 +1,1 @@
-from .logger import BackInfoLogger, BackErrorsLogger
+from .logger import prepare_logging

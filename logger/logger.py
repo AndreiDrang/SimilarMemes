@@ -1,9 +1,11 @@
 import os
-import logging
-from logging.config import fileConfig
+from logging.config import dictConfig
 
 
-os.makedirs("logs", exist_ok=True)
+def prepare_logging():
+    # setup logs
+    os.makedirs("logs", exist_ok=True)
+    dictConfig(LOGGING)
 
 MEGABYTE = 1024 * 1024
 
@@ -21,18 +23,43 @@ LOGGING = {
             "maxBytes": 50 * MEGABYTE,  # 50mb
             "backupCount": 10,
         },
-        "celery": {
+        "database": {
             "level": "DEBUG",
             "class": "logging.handlers.RotatingFileHandler",
             "formatter": "standard",
-            "filename": "logs/celery.log",
+            "filename": "logs/database.log",
+            "maxBytes": 50 * MEGABYTE,  # 50mb
+            "backupCount": 10,
+        },
+        "gui": {
+            "level": "DEBUG",
+            "class": "logging.handlers.RotatingFileHandler",
+            "formatter": "standard",
+            "filename": "logs/gui.log",
+            "maxBytes": 50 * MEGABYTE,  # 50mb
+            "backupCount": 10,
+        },
+        "image_processing": {
+            "level": "DEBUG",
+            "class": "logging.handlers.RotatingFileHandler",
+            "formatter": "standard",
+            "filename": "logs/image_processing.log",
+            "maxBytes": 50 * MEGABYTE,  # 50mb
+            "backupCount": 10,
+        },
+        "indexing": {
+            "level": "DEBUG",
+            "class": "logging.handlers.RotatingFileHandler",
+            "formatter": "standard",
+            "filename": "logs/indexing.log",
             "maxBytes": 50 * MEGABYTE,  # 50mb
             "backupCount": 10,
         },
     },
     "loggers": {
-        "webmtube": {"handlers": ["stdout", "main"], "level": "DEBUG", "propagate": True},
-        "webmtube.tasks": {"handlers": ["stdout", "celery"], "level": "DEBUG", "propagate": True},
-        "gunicorn": {"handlers": ["stdout"], "level": "INFO", "propagate": True},
+        "database": {"handlers": ["stdout", "database", "main"], "level": "DEBUG", "propagate": True},
+        "gui": {"handlers": ["stdout", "gui", "main"], "level": "DEBUG", "propagate": True},
+        "image_processing": {"handlers": ["stdout", "image_processing", "main"], "level": "DEBUG", "propagate": True},
+        "indexing": {"handlers": ["stdout", "indexing", "main"], "level": "DEBUG", "propagate": True},
     },
 }

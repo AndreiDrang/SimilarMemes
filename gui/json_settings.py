@@ -1,10 +1,12 @@
 import os
 import json
+import logging
 import traceback
 
 from PyQt5.QtWidgets import *
 
-from logger import BackErrorsLogger
+
+logger = logging.getLogger(__name__)
 
 
 # Reads the json settings file and returns a needed setting value:
@@ -16,7 +18,7 @@ def user_json_read(settingName: str):
 
     except Exception as ex:
         warning_message(ex)
-        BackErrorsLogger.critical(traceback.format_exc())
+        logger.critical(traceback.format_exc())
 
 
 # Updates a needed setting and rewrites the json settings file:
@@ -32,7 +34,7 @@ def user_json_update(settingName: str, settingNewValue: int):
 
     except Exception as ex:
         warning_message(ex)
-        BackErrorsLogger.critical(traceback.format_exc())
+        logger.critical(traceback.format_exc())
 
 
 # Reads the json settings file and returns a needed setting value:
@@ -44,7 +46,7 @@ def db_json_read(settingName: str):
 
     except Exception as ex:
         warning_message(ex)
-        BackErrorsLogger.critical(traceback.format_exc())
+        logger.critical(traceback.format_exc())
 
 
 # Updates a needed setting and rewrites the json settings file:
@@ -60,7 +62,7 @@ def db_json_update(settingName: str, settingNewValue: str):
 
     except Exception as ex:
         warning_message(ex)
-        BackErrorsLogger.critical(traceback.format_exc())
+        logger.critical(traceback.format_exc())
 
 
 # Reads the json settings file and returns a needed setting value:
@@ -72,7 +74,7 @@ def processing_json_read(settingName: str):
 
     except Exception as ex:
         warning_message(ex)
-        BackErrorsLogger.critical(traceback.format_exc())
+        logger.critical(traceback.format_exc())
 
 
 # Updates a needed setting and rewrites the json settings file:
@@ -88,7 +90,7 @@ def processing_json_update(settingName: str, settingNewValue: float):
 
     except Exception as ex:
         warning_message(ex)
-        BackErrorsLogger.critical(traceback.format_exc())
+        logger.critical(traceback.format_exc())
 
 
 # Shows a dialog if an error occurs (e.g., if the file is missing):

@@ -1,5 +1,6 @@
 import os
 import json
+import logging
 import collections
 import traceback
 from datetime import datetime
@@ -7,7 +8,8 @@ from datetime import datetime
 import numpy as np
 from pony.orm import Required, Optional, Set, Database, select, composite_key, delete
 
-from logger import BackInfoLogger, BackErrorsLogger
+
+logger = logging.getLogger(__name__)
 
 db = Database()
 
@@ -191,7 +193,7 @@ def connection():
         with open("database/db_config.json", "rt") as configs:
             configs_data = json.loads(configs.read())
 
-        BackInfoLogger.info("DB params success read")
+        logger.info("DB params success read")
 
         if configs_data["provider"] == "sqlite":
             db.bind(provider="sqlite", filename=configs_data["filename"], create_db=True)
@@ -218,11 +220,11 @@ def connection():
                 create_db=True,
             )
 
-        BackInfoLogger.info("DB success connection")
+        logger.info("DB success connection")
 
         db.generate_mapping(create_tables=True)
 
-        BackInfoLogger.info("All DB tables success created")
+        logger.info("All DB tables success created")
 
     except Exception:
-        BackErrorsLogger.critical(traceback.format_exc())
+        logger.critical(traceback.format_exc())

@@ -1,8 +1,10 @@
 import os
 import json
+import logging
 import traceback
 
-from logger import BackErrorsLogger
+
+logger = logging.getLogger(__name__)
 
 
 def get_settings() -> dict:
@@ -17,4 +19,4 @@ def get_settings() -> dict:
 
         return settings_data
     except Exception:
-        BackErrorsLogger.critical(traceback.format_exc())
+        logger.critical(traceback.format_exc())

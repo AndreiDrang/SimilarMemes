@@ -1,5 +1,6 @@
 import os
 import hashlib
+import logging
 import collections
 import traceback
 from multiprocessing import Pool
@@ -8,9 +9,10 @@ import cv2
 import imageio
 import numpy as np
 
-from logger import BackInfoLogger, BackErrorsLogger
-
 from .color_descriptor import ColorDescriptor
+
+
+logger = logging.getLogger(__name__)
 
 module = ColorDescriptor((8, 12, 3))
 
@@ -41,12 +43,12 @@ def count_descriptor(image_file):
                 ).hexdigest(),
             }
         else:
-            BackInfoLogger.warning(
+            logger.warning(
                 f"Can`t read image while `count_descriptor`, full path - {image_file[1] + os.sep + image_file[0]}"
             )
             return None
     except Exception:
-        BackErrorsLogger.error(traceback.format_exc())
+        logger.error(traceback.format_exc())
         print(traceback.format_exc())
         return None
 
@@ -70,6 +72,6 @@ def image_processing(image_list: collections.deque) -> list:
         # filter only indexed files
         processed_files = [file for file in res if file is not None]
     except Exception:
-        BackErrorsLogger.critical(traceback.format_exc())
+        logger.critical(traceback.format_exc())
     finally:
         return processed_files

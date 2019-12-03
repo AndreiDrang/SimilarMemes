@@ -1,12 +1,14 @@
+import logging
 import itertools
 import traceback
 from multiprocessing import Pool
 
 import numpy as np
 
-from logger import BackInfoLogger, BackErrorsLogger
-
 from .settings import get_settings
+
+
+logger = logging.getLogger(__name__)
 
 similarity_threshold = get_settings()["similarity_threshold"]
 
@@ -18,7 +20,7 @@ def count_pairs(pair: tuple):
         if mean >= similarity_threshold:
             return pair[0][1], pair[1][1], mean
     except Exception:
-        BackErrorsLogger.error(traceback.format_exc())
+        logger.error(traceback.format_exc())
         return None
 
 
@@ -44,7 +46,7 @@ def feature_description(images_list: tuple) -> list:
     """
     similar_pairs = []
     try:
-        BackInfoLogger.info("Feature description run")
+        logger.info("Feature description run")
         images_pairs = itertools.combinations(images_list, 2)
 
         pool = Pool()
@@ -55,6 +57,6 @@ def feature_description(images_list: tuple) -> list:
         # filter only indexed files
         similar_pairs = [pair for pair in pairs if pair is not None]
     except Exception:
-        BackErrorsLogger.critical(traceback.format_exc())
+        logger.critical(traceback.format_exc())
     finally:
         return similar_pairs

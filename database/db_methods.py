@@ -1,7 +1,10 @@
+import logging
 import traceback
 
-from logger import BackErrorsLogger
 from database import Image, Video, ImageDuplicates, select, desc
+
+
+logger = logging.getLogger(__name__)
 
 
 def save_new_files(indexed_files: list, file_type: str):
@@ -36,7 +39,7 @@ def save_new_files(indexed_files: list, file_type: str):
             raise ValueError("Wrong `file_type` param set")
 
     except Exception:
-        BackErrorsLogger.error(traceback.format_exc())
+        logger.error(traceback.format_exc())
 
 
 def save_images_duplicates(pairs: list):
@@ -65,7 +68,7 @@ def save_images_duplicates(pairs: list):
                     image_src_id=pair[0], image_dup=Image[pair[1]], images_similarity=pair[2]
                 )
         except Exception:
-            BackErrorsLogger.error(traceback.format_exc())
+            logger.error(traceback.format_exc())
             continue
 
 
@@ -125,7 +128,7 @@ def group_image_files() -> dict:
             )[:]
             result.update({path: path_files})
     except Exception:
-        BackErrorsLogger.critical(traceback.format_exc())
+        logger.critical(traceback.format_exc())
     finally:
         return result
 
@@ -155,6 +158,6 @@ def group_video_files() -> dict:
             )[:]
             result.update({path: path_files})
     except Exception:
-        BackErrorsLogger.critical(traceback.format_exc())
+        logger.critical(traceback.format_exc())
     finally:
         return result
