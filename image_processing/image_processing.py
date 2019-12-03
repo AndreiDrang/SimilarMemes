@@ -10,6 +10,7 @@ import imageio
 import numpy as np
 
 from .color_descriptor import ColorDescriptor
+from .settings import CPUS
 
 
 logger = logging.getLogger(__name__)
@@ -65,9 +66,9 @@ def image_processing(image_list: collections.deque) -> list:
     """
     processed_files = []
     try:
-        pool = Pool()
-        # run tasks in separate process
-        res = pool.map(count_descriptor, image_list)
+        with Pool(processes=CPUS-1) as pool:
+            # run tasks in separate process
+            res = pool.map(count_descriptor, image_list)
 
         # filter only indexed files
         processed_files = [file for file in res if file is not None]

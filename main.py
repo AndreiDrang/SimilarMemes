@@ -1,4 +1,5 @@
 import time
+from pony.orm import db_session
 
 from indexing import index_folder_files, reindex_image_files, reindex_video_files
 from image_processing import image_processing, feature_description
@@ -40,20 +41,25 @@ image_files_list, video_files_list = index_folder_files(
     path=path, max_depth=4, indexing_type="all"
 )
 
-print(image_files_list)
-print(video_files_list)
+#print(image_files_list)
+#print(video_files_list)
 
 print("Files indexed")
 
 
-video_processing(video_files_list)
+#video_processing(video_files_list)
+print(len(image_files_list))
 image_processing(image_files_list)
+print((time.time() - start_time)/len(image_files_list))
 
-image_files_query = Image.get_images_descriptors()
+
+with db_session():
+    image_files_query = Image.get_descriptors()
 
 
 feature_description(images_list=image_files_query)
-
+print((time.time() - start_time)/len(image_files_query))
+raise Exception
 
 print(len(image_files_list))
 print(len(image_files_query))

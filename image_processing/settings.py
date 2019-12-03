@@ -2,9 +2,12 @@ import os
 import json
 import logging
 import traceback
+from multiprocessing import cpu_count
 
 
 logger = logging.getLogger(__name__)
+
+CPUS = cpu_count()
 
 
 def get_settings() -> dict:

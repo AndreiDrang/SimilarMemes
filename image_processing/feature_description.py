@@ -5,7 +5,7 @@ from multiprocessing import Pool
 
 import numpy as np
 
-from .settings import get_settings
+from .settings import get_settings, CPUS
 
 
 logger = logging.getLogger(__name__)
@@ -49,10 +49,9 @@ def feature_description(images_list: tuple) -> list:
         logger.info("Feature description run")
         images_pairs = itertools.combinations(images_list, 2)
 
-        pool = Pool()
-
-        # run tasks in separate process
-        pairs = pool.map(count_pairs, images_pairs)
+        with Pool(processes=CPUS-1) as pool:
+            # run tasks in separate process
+            pairs = pool.map(count_pairs, images_pairs)
 
         # filter only indexed files
         similar_pairs = [pair for pair in pairs if pair is not None]
