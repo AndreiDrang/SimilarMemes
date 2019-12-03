@@ -41,16 +41,16 @@ image_files_list, video_files_list = index_folder_files(
     path=path, max_depth=4, indexing_type="all"
 )
 
-#print(image_files_list)
-#print(video_files_list)
+# print(image_files_list)
+# print(video_files_list)
 
 print("Files indexed")
 
 
-#video_processing(video_files_list)
+# video_processing(video_files_list)
 print(len(image_files_list))
 image_processing(image_files_list)
-print((time.time() - start_time)/len(image_files_list))
+print((time.time() - start_time) / len(image_files_list))
 
 
 with db_session():
@@ -58,7 +58,7 @@ with db_session():
 
 
 feature_description(images_list=image_files_query)
-print((time.time() - start_time)/len(image_files_query))
+print((time.time() - start_time) / len(image_files_query))
 raise Exception
 
 print(len(image_files_list))

@@ -5,6 +5,7 @@ import traceback
 from PyQt5.QtWidgets import QApplication
 
 from logger import prepare_logging
+
 prepare_logging()
 
 from gui import MainWindow

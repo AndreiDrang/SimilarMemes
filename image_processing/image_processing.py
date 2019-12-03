@@ -66,7 +66,7 @@ def image_processing(image_list: collections.deque) -> list:
     """
     processed_files = []
     try:
-        with Pool(processes=CPUS-1) as pool:
+        with Pool(processes=CPUS - 1) as pool:
             # run tasks in separate process
             res = pool.map(count_descriptor, image_list)
 

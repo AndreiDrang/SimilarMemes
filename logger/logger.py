@@ -7,6 +7,7 @@ def prepare_logging():
     os.makedirs("logs", exist_ok=True)
     dictConfig(LOGGING)
 
+
 MEGABYTE = 1024 * 1024
 
 LOGGING = {
@@ -57,9 +58,21 @@ LOGGING = {
         },
     },
     "loggers": {
-        "database": {"handlers": ["stdout", "database", "main"], "level": "DEBUG", "propagate": True},
+        "database": {
+            "handlers": ["stdout", "database", "main"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
         "gui": {"handlers": ["stdout", "gui", "main"], "level": "DEBUG", "propagate": True},
-        "image_processing": {"handlers": ["stdout", "image_processing", "main"], "level": "DEBUG", "propagate": True},
-        "indexing": {"handlers": ["stdout", "indexing", "main"], "level": "DEBUG", "propagate": True},
+        "image_processing": {
+            "handlers": ["stdout", "image_processing", "main"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
+        "indexing": {
+            "handlers": ["stdout", "indexing", "main"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
     },
 }

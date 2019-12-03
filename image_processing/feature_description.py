@@ -49,7 +49,7 @@ def feature_description(images_list: tuple) -> list:
         logger.info("Feature description run")
         images_pairs = itertools.combinations(images_list, 2)
 
-        with Pool(processes=CPUS-1) as pool:
+        with Pool(processes=CPUS - 1) as pool:
             # run tasks in separate process
             pairs = pool.map(count_pairs, images_pairs)
 
