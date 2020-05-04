@@ -6,7 +6,7 @@ pony==0.7.*
 # PyQt5
 pyqt5==5.13.0
 pyQt5-sip==4.19.*
-pyqt5-stubs==5.12.1.0
+pyqt5-stubs==5.14.2.2
 # Image processing
 imageio==2.5.*
 opencv-python==4.1.*
