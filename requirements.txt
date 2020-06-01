@@ -5,7 +5,7 @@ mysql-connector==2.2.*
 pony==0.7.*
 # PyQt5
 pyqt5==5.13.0
-pyQt5-sip==4.19.*
+pyQt5-sip==12.8.*
 pyqt5-stubs==5.12.1.0
 # Image processing
 imageio==2.5.*
